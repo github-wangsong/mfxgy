@@ -7,11 +7,11 @@ export default defineConfig({
   description: "",
   outDir: './public',
   themeConfig: {
-    siteTitle: 'MF',
+    siteTitle: 'mfxgy',
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: '首页', link: '/' },
-      // { text: 'Github', link: 'https://github.com/NexusLin' },
+      // { text: 'Github', link: 'https://github.com/github-wangsong/mfxgy.git' },
       // { text: 'About Me', items: [ { text: '介绍和技术栈', link: '/item-1' }, { text: '文章', link: '/item-2' }, { text: '其他', link: '/item-3' } ] }
     ],
 
@@ -46,7 +46,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+      { icon: 'github', link: 'https://github.com/github-wangsong/mfxgy.git' }
     ],
     search: {
       provider: "local",
