@@ -7,13 +7,18 @@
     "dev": "vitepress dev",
     "docs:dev": "vitepress dev",
     "docs:build": "vitepress build",
-    "docs:preview": "vitepress preview"
+    "docs:preview": "vitepress preview",
+    "register:components": "vitepress-rc --docsDir ./"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.7.0",
   "devDependencies": {
-    "vitepress": "^1.6.3"
+    "vitepress": "^1.6.3",
+    "vitepress-theme-demoblock": "^3.1.1"
+  },
+  "dependencies": {
+    "element-plus": "^2.9.7"
   }
 }

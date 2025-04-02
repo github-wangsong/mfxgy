@@ -22,8 +22,10 @@
 ```
 ## 3 根据标题生成目录
 
+[[toc]]
+
 ```markdown
-[TOC]
+[[toc]]
 
 ```
 ## 4 引用
@@ -54,12 +56,27 @@
 
 ```
 
-## 5 语法高亮
-` hello world`
+## 5 字体
+*斜体*
 
+**粗体**
+
+~~删除线~~
+
+`高亮`
+
+<u>下划线</u>
+
+<span style="border-bottom:2px dashed yellow;">加下划线用的是html代码</span>
 ```markdown
-` hello world`
+  *斜体*
+  **粗体** 
+  ~~删除线~~
+  `高亮`
+  <u>下划线</u>
+  <span style="border-bottom:2px dashed yellow;
 ```
+
 ## 6 插入链接
 [百度1](http://www.baidu.com/ "百度一下")
 
@@ -106,19 +123,18 @@
 ```
 
 ## 9 任务列表
-
-- [ ] a task list item
-  - [x] completed
-  - [ ] incomplete
+* [ ] a task list item
+  * [x] completed
+  * [ ] incomplete
 - [ ] list syntax required
 - [x] completed
 
 ```markdown
-- [ ] a task list item
-  - [x] completed
-  - [ ] incomplete
-- [ ] list syntax required
-- [x] completed
+* [ ] a task list item
+  * [x] completed
+  * [ ] incomplete
+* [ ] list syntax required
+* [x] completed
 ```
 
 ## 10 表格
@@ -159,5 +175,81 @@ ___
   </code></pre>
 </details>
 ```
+## 13 容器
 
-<a id="test2"></a>
+::: info
+这是一条info，自定义格式：info+空格+自定义文字
+:::
+
+::: tip 提示
+这是一个提示，自定义格式：tip+空格+自定义文字
+:::
+
+::: warning 警告
+这是一条警告，自定义格式：warning+空格+自定义文字
+:::
+
+::: danger 危险
+这是一个危险警告，自定义格式：danger+空格+自定义文字
+:::
+
+::: details 点我查看
+这是一条详情，自定义格式：details+空格+自定义文字
+:::
+
+
+```markdown
+  ::: info
+  这是一条info，自定义格式：info+空格+自定义文字
+  :::
+
+  ::: tip 提示
+  这是一个提示，自定义格式：tip+空格+自定义文字
+  :::
+
+  ::: warning 警告
+  这是一条警告，自定义格式：warning+空格+自定义文字
+  :::
+
+  ::: danger 危险
+  这是一个危险警告，自定义格式：danger+空格+自定义文字
+  :::
+
+  ::: details 点我查看
+  这是一条详情，自定义格式：details+空格+自定义文字
+  :::
+
+```
+
+## 14 代码组
+
+::: code-group
+
+```sh [pnpm]
+#查询pnpm版本
+pnpm -v
+```
+
+```sh [yarn]
+#查询yarn版本
+yarn -v
+```
+
+:::
+
+````markdown
+  ::: code-group
+
+  ```sh [pnpm]
+  #查询pnpm版本
+  pnpm -v
+  ```
+
+  ```sh [yarn]
+  #查询yarn版本
+  yarn -v
+  ```
+
+  :::
+
+````

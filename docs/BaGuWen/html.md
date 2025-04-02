@@ -1,5 +1,4 @@
   ## 1. h5有哪些新特性?*****
-
   - 新语义化标签,header/footer/section/nav/aside/article/main
   - 新增表单类型属性:input中的type='color/date/email/month/number/search/tel/time/url/'
   - 音视频标签:audio/video
