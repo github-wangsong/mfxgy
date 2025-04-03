@@ -5,3 +5,15 @@
 @import './hidden.css';
 @import './vp-code.css';
 @import './vp-code-group.css';
+
+details {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 10px 0;
+}
+ 
+details summary {
+  cursor: pointer;
+  font-weight: bold;
+}

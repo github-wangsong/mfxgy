@@ -23,6 +23,6 @@ features:
   - title: 八股文
     link: /BaGuWen/html
   - title: 组件库
-    link: /demo/guild/installation
+    link: /demo/examples/button
 ---
 

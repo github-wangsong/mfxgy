@@ -112,12 +112,29 @@
 ```
 
 ## 8 列表
+* Green （比较推荐）
+- Red  （比较好用）
+  - 111
+  - 222
+    - 333
++ Blue
+
+1. First paragraph
+   1. 333
+   2. 4444
+2. Second paragraph
+3. Third paragraph
 ```markdown
 * Green （比较推荐）
 - Red  （比较好用）
-+   Blue
+  - 111
+  - 222
+    - 333
++ Blue
 
 1. First paragraph
+   1. 333
+   2. 4444
 2. Second paragraph
 3. Third paragraph
 ```
@@ -197,59 +214,59 @@ ___
 这是一条详情，自定义格式：details+空格+自定义文字
 :::
 
+:::: code-group
 
-```markdown
-  ::: info
-  这是一条info，自定义格式：info+空格+自定义文字
-  :::
-
-  ::: tip 提示
-  这是一个提示，自定义格式：tip+空格+自定义文字
-  :::
-
-  ::: warning 警告
-  这是一条警告，自定义格式：warning+空格+自定义文字
-  :::
-
-  ::: danger 危险
-  这是一个危险警告，自定义格式：danger+空格+自定义文字
-  :::
-
-  ::: details 点我查看
-  这是一条详情，自定义格式：details+空格+自定义文字
-  :::
-
+```markdown [info]
+::: info
+这是一条info，自定义格式：info+空格+自定义文字
+:::
 ```
+
+```markdown [tip]
+::: tip 提示
+这是一个提示，自定义格式：tip+空格+自定义文字
+:::
+```
+```markdown [warning]
+::: warning 警告
+这是一条警告，自定义格式：warning+空格+自定义文字
+:::
+```
+```markdown [danger]
+::: danger 危险
+这是一个危险警告，自定义格式：danger+空格+自定义文字
+:::
+```
+```markdown [details]
+::: details 点我查看
+这是一条详情，自定义格式：details+空格+自定义文字
+:::
+```
+::::
 
 ## 14 代码组
 
 ::: code-group
-
 ```sh [pnpm]
 #查询pnpm版本
 pnpm -v
 ```
-
 ```sh [yarn]
 #查询yarn版本
 yarn -v
 ```
-
 :::
 
 ````markdown
   ::: code-group
-
   ```sh [pnpm]
   #查询pnpm版本
   pnpm -v
   ```
-
   ```sh [yarn]
   #查询yarn版本
   yarn -v
   ```
-
   :::
 
 ````
