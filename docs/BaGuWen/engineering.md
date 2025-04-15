@@ -46,12 +46,16 @@
     - image-loader : 加载并且压缩图片文件
     - css-loader : 加载 CSS，支持模块化、压缩、文件导入等特性
     - style-loader : 把 CSS 代码注入到 JavaScript 中，通过 DOM 操作去加载 CSS
+    - file-loader：解析文件路径，将文件赋值到输出目录，并返回文件路径。
+    - url-loader：类似于file-loader，但是可以将小于指定大小的文件转成base64编码的Data URL格式
     - eslint-loader : 通过 ESLint 检查 JavaScript 代码
     - tslint-loader : 通过 TSLint检查 TypeScript 代码
     - babel-loader : 把 ES6 转换成 ES5
+    - vue-loader：将Vue单文件组件编译成JavaScript代码
   - Plugin
     - define-plugin : 定义环境变量
     - html-webpack-plugin : 简化 HTML 文件创建
+    - CleanWebpackPlugin：清除输出目录。
     - webpack-parallel-uglify-plugin : 多进程执行代码压缩，提升构建速度
     - webpack-bundle-analyzer : 可视化 Webpack 输出文件的体积
     - speed-measure-webpack-plugin : 可以看到每个 Loader 和 Plugin 执行耗时 (整个打包耗时、每个 Plugin 和 - Loader 耗时)
@@ -60,10 +64,8 @@
 
   ## 那你再说一说Loader和Plugin的区别？
   - 功能不同：
-
     - Loader本质是一个函数，它是一个转换器。webpack只能解析原生js文件，对于其他类型文件就需要用loader进行转换。
     - Plugin它是一个插件，用于增强webpack功能。webpack在运行的生命周期中会广播出许多事件，Plugin 可以监听这些事件，在合适的时机通过 webpack 提供的 API 改变输出结果。
-
   - 用法不同：
 
     - Loader的配置是在module.rules下进行。类型为数组，每⼀项都是⼀个 Object ，⾥⾯描述了对于什么类型的⽂件（ test ），使⽤什么加载( loader )和使⽤的参数（ options ）
@@ -102,10 +104,10 @@
     通常Webopack会将所有代码打包到一个单独的bundle中，然后在页面加载时一次性加载整个bundle。这样的做法可能导致初始加载时间过长，尤其是在大型应用程序中，因为用户需要等待所有代码加载完成才能访问应用程序。
     Code Splitting 解决了这个问题，它将应用程序的代码划分为多个代码块，每个代码块代表不同的功能或路由。这些代码块可以在需要时被动态加载，使得页面只加载当前所需的功能，而不必等待整个应用程序的所有代码加载完毕。
     在Webpack中通过optimization.splitChunks配置项来开启代码分割。
-    Webpack的Source Map是什么？如何配置生成Source Map？
+    ## Webpack的Source Map是什么？如何配置生成Source Map？
     Source Map是一种文件，它建立了构建后的代码与原始源代码之间的映射关系。通常在开发阶段开启，用来调试代码，帮助找到代码问题所在。
     可以在Webpack配置文件中的devtool选项中指定devtool: 'source-map'来开启。
-    Webpack的Tree Shaking原理
+    ## Webpack的Tree Shaking原理
     Tree Shaking 也叫摇树优化，是一种通过移除多于代码，从而减小最终生成的代码体积，生产环境默认开启。
     原理：
 
@@ -122,7 +124,7 @@
     使用Tree Shaking: 配置Webpack的Tree Shaking机制，去除未使用的代码，减小生成的文件体积
     移除不必要的插件: 移除不必要的插件和配置，避免不必要的复杂性和性能开销。
 
-    如何减少打包后的代码体积
+    ## 如何减少打包后的代码体积
 
     代码分割（Code Splitting）：将应用程序的代码划分为多个代码块，按需加载。这可以减小初始加载的体积，使页面更快加载。
     Tree Shaking：配置Webpack的Tree Shaking机制，去除未使用的代码。这可以从模块中移除那些在项目中没有被引用到的部分。
@@ -131,14 +133,14 @@
     使用压缩工具：使用现代的压缩工具，如Brotli和Gzip，来对静态资源进行压缩，从而减小传输体积。
     利用CDN加速：将项目中引用的静态资源路径修改为CDN上的路径，减少图片、字体等静态资源等打包。
 
-    vite比webpack快在哪里
+    ## vite比webpack快在哪里
     他们都是前端构建工具，但vite构建速度相对于webpack还是有一些速度优势
 
-    冷启动速度：vite是利用浏览器的原生ES moudle，采用按需加载的当时，而不是将整个项目打包。而webpack是将整个项目打包成一个或多个bundle，构建过程复杂。
-    HMR热更新： vite使用浏览器内置的ES模块功能，使得在开发模式下的热模块替换更加高效，那个文件更新就加载那个文件。它通过WebSocket在模块级别上进行实时更新，而不是像Webpack那样在热更新时重新加载整个包。
-    构建速度： 在生产环境下，Vite的构建速度也通常比Webpack快，因为Vite的按需加载策略避免了将所有代码打包到一个大文件中。而且，Vite对于缓存、预构建等方面的优化也有助于减少构建时间。
-    缓存策略： Vite利用浏览器的缓存机制，将依赖的模块存储在浏览器中，避免重复加载。这使得页面之间的切换更加迅速。
-    不需要预编译： Vite不需要预编译或生成中间文件，因此不会产生大量的临时文件，减少了文件IO操作，进一步提升了速度。
+    - 冷启动速度：vite是利用浏览器的原生ES moudle，采用按需加载的当时，而不是将整个项目打包。而webpack是将整个项目打包成一个或多个bundle，构建过程复杂。
+    - HMR热更新： vite使用浏览器内置的ES模块功能，使得在开发模式下的热模块替换更加高效，那个文件更新就加载那个文件。它通过WebSocket在模块级别上进行实时更新，而不是像Webpack那样在热更新时重新加载整个包。
+    - 构建速度： 在生产环境下，Vite的构建速度也通常比Webpack快，因为Vite的按需加载策略避免了将所有代码打包到一个大文件中。而且，Vite对于缓存、预构建等方面的优化也有助于减少构建时间。
+    - 缓存策略： Vite利用浏览器的缓存机制，将依赖的模块存储在浏览器中，避免重复加载。这使得页面之间的切换更加迅速。
+    - 不需要预编译： Vite不需要预编译或生成中间文件，因此不会产生大量的临时文件，减少了文件IO操作，进一步提升了速度。
 
     ## 说一下你对Monorepo的理解
     Monorepo是一种将多个项目代码存储在一个仓库的代码管理方式，将不同的项目代码放在一个仓库中，优缺点如下：
@@ -210,5 +212,6 @@
     节约磁盘空间： pnpm 的链接依赖方式可以减少磁盘占用。相同的依赖包在不同项目中共享，不会造成重复存储。
     提升安装速度：由于依赖都是同一管理在pnpm store中，所以相同依赖不需要重复下载，这样使得pnpm 的安装和构建速度相对更快，特别是在项目中存在大量依赖项时。
     创建非扁平的node_modules目录：由于npm和yarn安装依赖时所有包都会提升到根目录下，会造成幽灵依赖和依赖安全问题，而pnpm采用非扁平的形式，有效解决。
+
   
 

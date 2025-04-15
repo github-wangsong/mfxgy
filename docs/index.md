@@ -22,6 +22,8 @@ features:
     link: /markdown
   - title: 八股文
     link: /BaGuWen/html
+  - title: 高级
+    link: /document/advanced
   - title: 组件库
     link: /demo/examples/button
 ---

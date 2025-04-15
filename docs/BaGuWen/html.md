@@ -7,13 +7,6 @@
   - webworker,  websocket
   - 新增本地存储 localStorage和sessionStorage
 
-
-  <details> <summary>Title</summary>
-    <pre><code>
-      contents ...
-    </code></pre>
-  </details>
-
   ## 2. 什么是语义化(对语义化的理解)？
   - 语义化标签的使用能够让览器更好的读取页面结构，利于SEO。
   - 提高代码可读性，能便于团队开发和维护
@@ -28,21 +21,77 @@
   - Link的权重高于@import;
   - js操作dom修改样式时只能修改ilnk中的
   ## 5、什么是webSocket?
-  Websocket是h5下的一种新协议。他实现了浏览器与服务器之间的通信，能够更好的洁身服务器资源和宽带，并且达到实时通讯的目的。
+  Websocket是h5下的一种新协议。他实现了浏览器与服务器之间的通信，能够更好的洁身服务器资源和宽带，并且达到实时通讯的目的。\
+
+::: code-group
+  ```js [客户端]
+    // 1. 创建连接
+    const socket = new WebSocket('wss://example.com/chat');
+
+    // 2. 事件监听
+    socket.onopen = () => console.log('连接建立');
+    socket.onmessage = (event) => {
+      console.log('收到消息:', event.data);
+    };
+    socket.onclose = () => console.log('连接关闭');
+
+    // 3. 发送数据
+    socket.send(JSON.stringify({user: 'Alice', msg: 'Hello'}));
+
+    // 4. 关闭连接
+    socket.close(1000, '正常关闭');
+  ```
+  ```js [服务端]
+    const WebSocket = require('ws');
+    const wss = new WebSocket.Server({ port: 8080 });
+    wss.on('connection', (ws) => {
+      ws.on('message', (message) => {
+        console.log('收到客户端消息:', message);
+        ws.send('服务器已接收');
+      });
+
+      // 定时推送示例
+      const interval = setInterval(() => {
+        ws.send(JSON.stringify({time: Date.now()}));
+      }, 1000);
+
+      ws.on('close', () => clearInterval(interval));
+    });
+  ```
+:::
   ## 6、Webworker?
-  - webWorker是h5新增的内容。由于js是单线程的，所以它可以让js变成多线程工作
-  - web worker是运行在浏览器后台的js程序，他不影响主程序的运行，是另开的一个js线程，
-  可以用这个线程执行复杂的数据操作，然后把操作结果通过
-  postMessage传递给主线程，这样在进行复杂且耗时的操作时就不会阻塞主线程了。
+  - webWorker拥有与主线程完全隔离的JavaScript执行环境
+  - 因线程安全限制，无法操作DOM或使用window对象
+  - 基于postMessage和onmessage的异步消息传递
+  
+  类型 | 生命周期 |共享范围|应用场景|
+  | :------ | :------- | :------ |:---
+  Dedicated Worker | 随创建页面关闭而终止 | 仅创建它的页面 | 复杂计算、大数据处理
+  Shared Worker | 需显式关闭或所有页面关闭	| 同源跨页面共享 | 多Tab协同（如状态同步）
+  Service Worker | 可独立于页面存在 | 控制同源所有页 | PWA、离线缓存、网络代理
+
   ## 7、XHTML和HTML的区别？
-  - XHTML和HTML4.0标准没有太大的不同，HTML是一种基本的web网页设计语言，而XHTML是一个基于XML的语言，看起来两者有些相似，只是有些小但是挺重要的区分；比如说：XHTML元素必须被正确的桥套，XHTML元素必须被关闭。标签必须用小写、XHTML文档必须有根元素。
-  - (html 和 xhtml 的区别简单来说，xhtml 可以认为是 xml 版本的 html，为符合 xml 要求，xhtml 语法上要求更严谨些。 以下是 xhtml 相对 html 的几大区别： xhtml 要求正确嵌套 xhtml 所有元素必须关闭 xhtml 区分大小写 xhtml 属性值要用双引号 xhtml 用 id 属性代替 name 属性 xhtml 特殊字符的处理 xhtml 要求正确嵌套 xhtml 区分大小写 html 不区分大小写，但是 xhtml 是区分大小写的。 xhtml 语法上要求更严谨些。要积极的看待这个问题。 xhtml 的所有标记和属性都要小写。 xhtml 所有元素必须关闭)
+  维度 | HTML | XHTML
+  | :------ | :------- | :------
+   语法基础 | SGML应用 | XML应用
+   设计目标 | 容错性强（宽松语法） | 	严格规范（强制良好格式）
+   MIME类型 | text/html | application/xhtml+xml
+
+  -  xhtml 要求正确嵌套
+  -  xhtml 所有元素必须关闭
+  -  xhtml 区分大小写 
+  -  xhtml 属性值要用双引号
+  -  xhtml 用 id 属性代替 name 属性 
+  -  xhtml 特殊字符的处理
+ 
   ## 8、图片格式区别？如.jpg，.png？ 
   - jpeg（jpg）  支持颜色比较多，不支持透明效果；适合显示照片
   - gif  支持的颜色比较少，支持简单透明，支持动图
   - png  支持的颜色的丰富，支持复杂透明
   - webp  google专门为网页设计一种图片格式，颜色丰富，复杂透明，支持动图，内存小，兼容性差，主要是对于IE
   - 通过base64编码的图片（特殊情况使用）
+    - 减少HTTP请求, 增加HTML/CSS体积,是原来的4/3,适合小资源(<2kb)
+    - 避免资源加载阻塞, 无法利用浏览器缓存
   ## 9、严格模式和混杂模式？
   1. 严格模式应该称为标准模式，演示按照标准执行代码，使浏览器根据规范呈现页面、排版和js运作模式，以浏览器最高标准来运行；
   2. 混杂模式也被成为怪异模式，是一种比较宽松的向后兼容模式，通常模拟老浏览器的操作行为，避免老站点无法运转，但由于各个浏览器解析代码的方式不一样，所以也称为混杂模式；

@@ -16,9 +16,11 @@
 ## 4 JS的类型检测?
   - typeof，对象类型不详细，无法检测array；不能检测null；返回的是字符串
   - instanceof 检测当前实例是否属于这个类；只要当前类出现在实例的原型链上，结果是true；原型指向可以修改，结果不准确；不能检测基本数据类型
-  - constructor 可以检测基本数据类型；原型指向可以修改，结果不准确
+  - constructor 支持检测基本数据类型；原型指向可以修改，结果不准确
   - Object.prototype.toString.call()  标准的检测方法
   - Array.isArray() 判断是否是数组
+  - Number.isNaN(NaN); 是否是NAN
+  - Number.isSafeInteger(42); 是否是安全整数
   
   一些其他：
   - object.hasOwnProperty(proName) 函数方法是返回一个布尔值，判断是否是该对象的私有属性。
@@ -31,24 +33,32 @@
   解决方案: 将其先转换成整数，再相加之后转回小数。具体做法为先乘10相加后除以10
 
 ## 6 数组(Array)常用的一些API？
-  - Push：向数组尾部添加一个元素，并返回数组的长度；
-  - Pop: 删除最后一个元素，并返回删除的元素
-  - Unshift: 向数组头部添加一个元素，并返回数组长度;
-  - Shift: 删除并返回删除的元素
-  - splice: 替换(添加或者删除)，返回被删除元素组成的数组，会改变
-  - reverse：反转数组，会改变
-  - sort ：排序，默认按照unicode从小到大排，会改变
-  - concat: 合并并返回新的数组，不改变
-  - slice:提取数组，返回新数组，不改变原数组
-  - join：数组转字符串，不改变
-  - indexOf: 查询指定元素，有返回下标，否则返回-1;
-  - includes: 查询指定元素，并Boolean值;
-  - every/some：全为真返回真/有一个真返回真
-  - find/findIndex：找到第一个满足条件的元素/索引值
-  - forEach: 遍历元素;
-  - filter: 根据条件来返回符合规范的元素，不改变原数组;
-  - map: 返回处理后的数组元素，不改变原数组;
-  - reduce：累加，第一个参数是上一次的返回值
+| push() | 末尾添加元素 | 改变原数组 | 返回数组的长度|
+| :------ | :------- | :------ |:----|
+pop() | 删除末尾元素 | 改变原数组 | 返删除数据
+unshift() | 开头添加元素 | 改变原数组 | 返回数组的长度
+shift() | 删除开头元素 | 改变原数组 | 返删除数据
+splice() | 删除/替换元素 | 改变原数组 | 返回被删除元素组成的数组
+reverse() | 反转数组 | 改变原数组 | 返回反转的数组
+sort() | 排序 | 改变 | `arr.sort((a,b) => a - b)`
+slice() | 截取子数组 | 不改变 | 新数组
+join() | 数组转字符串 | 不改变 | 字符串
+forEach() | 简单遍历 | 不改变 | undefined
+map() | 映射新数组 | 不改变 | 新数组
+filter() | 过滤元素 | 不改变 | 新数组
+find() | 查找首个符合条件的元素 | 不改变 | 元素/undefined
+findIndex() | 查找首个符合元素索引 | 不改变 | 索引/-1
+every() | 全部为真返回真 | 不改变 | boolean
+some() | 一个为真返回真 | 不改变 | boolean
+reduce() |累加 | 不改变 | `const sum = [1,2,3].reduce((acc, cur) => acc + cur, 0); // 6`
+includes() |是否包含 | 不改变 | boolean
+flat() |数组扁平化 | 不改变 | 新数组
+flatMap() |映射后扁平化 | 不改变 | 新数组
+at() |支持负索引访问 | 不改变 | 索引指向的元素
+findLast() |倒序查找元素 | 不改变 | 元素/undefined
+Array.from() |类数组转数组 | -- | 新数组
+Array.of() |参数转数组 | -- | 新数组
+Array.isArray() |类型检测 | -- | boolean
 
 ## 7 字符串(String)常用的API?
   - indexOf/lastIndexOf: 从左/右开始查询指定元素，有返回下标，否则返回-1;
@@ -66,7 +76,17 @@
   - trim: 去除两边空白;
   - toLowerCase/toUpperCase：转小写/转大写
   - toString: 转为字符串;
+##  object常用api
 
+| Object.keys() | 获取对象可枚举属性名数组	 | Object.keys({a:1}) → ['a']|
+| :------ | :------- | :------ |
+| Object.values() | 获取对象可枚举属性值数组	 | Object.values({a:1}) → [1]
+| Object.entries() | 获取键值对数组	 | Object.entries({a:1}) → [['a',1]]
+| Object.create() | 以指定原型创建对象	 | const child = Object.create(parent)
+| Object.is() | 增强型比较（解决NaN和±0问题）	 | Object.is(NaN, NaN) → true
+| hasOwnProperty()/ hasOwn() | 是否包含某个属性(仅自身, 和in区别)	 | --
+|Object.assign() | 浅拷贝合并对象	 | Object.assign({}, {a:1})
+|structuredClone() | 深拷贝	 | structuredClone(obj)
 ## 8 ES6新特性？
   - 新的变量定义方式：let/cost/import/class
   - 结构赋值：数组/对象/字符串/数值和布尔/函数参数， 
@@ -126,6 +146,20 @@
 ## 22 闭包？
   - 一个函数调用时使用了其外层函数的变量，此时形成一个闭包
   - 适当使用闭包可以延长变量的生命周期，节省资源，而且还能让变量无法污染；但是滥用的话，那么js无法回收那些不需要使用的变量，从而会引起内存泄露；
+## 内存泄漏
+  内存未释放导致持续累积
+  - 意外的全局变量
+  - 未清理的定时器与回调
+  - DOM引用未释放
+  - 闭包滥用
+  - 未解绑的事件监听
+## 内存溢出
+  瞬时内存需求超过上限
+  - 超大数据结构 `new Array(Number.MAX_SAFE_INTEGER); // 抛出RangeError`
+  - 未清理的定时器与回调
+  - DOM引用未释放
+  - 闭包滥用
+  - 未解绑的事件监听
 
 ## 23 原型、原型链？
   - 原型：
@@ -135,9 +169,10 @@
   - 原型链: 当我们访问一个对象的属性时，如果这个对象内部不存在这个属性，那么它就会去它的原型对象里找这个属性，这个原型对象又会有自己的原型，于是就这样一直找下去，也就是原型链的概念
 
 ## 24 JS回收机制？
-  js回收机制，简单来说分为两种，一种是引用法、一种是标记法。引用法就是判断一个对象的引用数，如果引用数为0就回收掉，大于0旧不会收；
+  js回收机制，简单来说分为两种，一种是引用法、一种是标记法。引用法就是判断一个对象的引用数，如果引用数为0就回收掉，大于0就不会收；
 
-  但引用法在某种情况下会造成内存泄露的问题；比如说创建两个对象，1对	象.a=2对象；2对象.a=1对象；那么这种相互引用他们得引用数都不小于0；	js旧无法去回收他们；另一种是标记法：标记法就是判断对象是否可达，如	果是得话，那么就不回收。反之回收；那么什么是可达呢？这就要来聊聊可	达性这个问题了。可达性他其实就是从根对象得指针开始，向下搜索子节点。	如果子节点被搜索到了，那么就说明这个子节点得引用对象可达，并标记他；	然后继续进行一个递归搜索得操作，直至遍历完成；这时候所有没有被标记	的节点，会被当成没有被任何地方引用，就会被认为是可以回收释放掉的对	象，可以被垃圾回收器回收。
+  - 但引用法在某种情况下会造成内存泄露的问题；比如说创建两个对象，1对	象.a=2对象；2对象.a=1对象；那么这种相互引用他们得引用数都不小于0；	js旧无法去回收他们；
+  - 另一种是标记法：标记法就是判断对象是否可达，如果是得话，那么就不回收。反之回收；那么什么是可达呢？这就要来聊聊可	达性这个问题了。可达性他其实就是从根对象得指针开始，向下搜索子节点。	如果子节点被搜索到了，那么就说明这个子节点得引用对象可达，并标记他；	然后继续进行一个递归搜索得操作，直至遍历完成；这时候所有没有被标记	的节点，会被当成没有被任何地方引用，就会被认为是可以回收释放掉的对	象，可以被垃圾回收器回收。
   首先聊聊Js内存管理：js内存的流程分为3步：
   分配给使用者所需的内存；
   使用者拿到内存后并且使用；
@@ -152,8 +187,8 @@
 
 
 ## 26 宏任务与微任务？
-  - 宏任务：ajax，定时器，文件操作，dom事件
-  - 微任务：Promise.then，process.nextTick，MutationObserver
+  - 宏任务：ajax，定时器，文件操作，dom事件, requestAnimationFrame
+  - 微任务：Promise.then，process.nextTick，MutationObserver, Generator函数
 
 ## 27普通函数和箭头函数？
   主要解决This的指向问题(继承上级，本身没有this)，普通函数指向全局也就是window,但是箭头函数指向他的上级； 
@@ -553,9 +588,60 @@
     - 默认不会带cookie，需要添加配置项
     - fetch没有办法原生监测请求的进度，而XHR可以。
 
+## 实现图片懒加载
+使用 loading="lazy"（原生方式）
+
+```html
+<img src="image.jpg" loading="lazy" alt="Lazy Loaded Image">
+
+```
+
+使用 Intersection Observer API
+```js
+  const ob = new IntersectionObserver((entries) => {  
+  //entries是一个数组，包含所有被观察的元素的状态信息
+      for(const entry of entries){
+        if(entry.isIntersecting){
+          const img = entry.target;
+          img.src = img.dataset.src; // 将图片的实际 URL 从 data-src 属性赋值给 src 属性
+          ob.unobserve(img); // 取消观察
+        }
+      }
+  },
+  {  // 配置参数
+      root:null,  // 默认为null，观察视口
+      rootMargin:'0px', // 基于视口扩散或收缩的距离，默认为'0px'
+      threshold:0  // 阈值 默认为0,即接触就运行回调，1为完整进入才运行回调
+  })
+  
+  const imgs = document.querySelectorAll("img[data-src]"); // 拿到所有data-src的图片
+  imgs.forEach((img) => {  // 循环观察图片
+      ob.observe(img); 
+  }
+```
+
+## 大文件上传
+
+```js
+async function uploadFile(file) {
+  const chunkSize = 5 * 1024 * 1024; // 5MB
+  const chunks = Math.ceil(file.size / chunkSize); // 向上取整，确保所有文件内容都被分片。
+  
+  for (let i = 0; i < chunks; i++) {
+    const start = i * chunkSize;
+    const end = start + chunkSize;
+    const chunk = file.slice(start, end); // 使用 File.slice 方法从文件中提取当前分片。
+    
+    const formData = new FormData(); // 构建表单数据的对象，用于文件上传
+    formData.append("file", chunk);  // 当前分片
+    formData.append("index", i);   // 当前分片索引
+    formData.append("total", chunks);  // 总分片数
+
+   // 上传的目标地址是 /upload，使用 POST 方法，请求体为 formData
+    await fetch("/upload", { method: "POST", body: formData }); 
+  }
+}
+
+```
+
 ----------------
-
-
-
-
-
