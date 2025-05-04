@@ -30,5 +30,7 @@ features:
     link: /demo/examples/button
   - title: react
     link: /document/react/index
+  - title: HarmonyOS
+    link: /document/HarmonyOS
 ---
 

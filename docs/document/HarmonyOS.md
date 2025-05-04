@@ -3,14 +3,14 @@
 ## 1. 开发准备
 - 开发工具：[DevEco Studio](https://developer.harmonyos.com/cn/docs/documentation/doc-guides-V3/software_install-0000001053582415-V3)
 - 开发语言：[ArkTS](https://developer.harmonyos.com/cn/docs/documentation/doc-guides-V3/arkts-get-started-0000001504769321-V3)
-- UI框架：[ArkUI]()
+- UI框架：[ArkUI](https://developer.huawei.com/consumer/cn/doc/harmonyos-references/arkui-api)
 
 ## 2. DevEco Studio的下载与安装
   [跳转](https://b11et3un53m.feishu.cn/wiki/space/7294187573134884867?ccm_open_type=lark_wiki_spaceLink&open_tab_from=wiki_home)
 ## 3. ArkTS介绍
-  HarmonyOS的ArkTS语言是一种基于[TypeScript]()开发的语言，它专为HarmonyOS系统开发而设计
+  HarmonyOS的ArkTS语言是一种基于`TypeScript`开发的语言，它专为HarmonyOS系统开发而设计
 ### 3-1 ArkTS的基本组成
-  使用DevEco Studio新建项目, 打开entry/src/main/ets/pages/index.ets,见到如下所示
+  使用DevEco Studio新建项目, 打开`entry/src/main/ets/pages/index.ets`,见到如下所示
 
 ![图片1](https://alliance-communityfile-drcn.dbankcdn.com/FileServer/getFile/cmtyPub/011/111/111/0000000000011111111.20231227152826.68978747729929417932749507993929:50001231000000:2800:B44BA8980A3587F0957937999D38C66140AD85390E5F17FC2CB1A661D3E1875C.png?needInitFileName=true?needInitFileName=true?needInitFileName=true?needInitFileName=true?needInitFileName=true)
 
