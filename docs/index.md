@@ -24,7 +24,11 @@ features:
     link: /BaGuWen/html
   - title: 高级
     link: /document/advanced
+  - title: Canvas
+    link: /document/canvas/canvas
   - title: 组件库
     link: /demo/examples/button
+  - title: react
+    link: /document/react/index
 ---
 

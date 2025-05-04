@@ -1,5 +1,8 @@
 import { defineConfig } from 'vitepress'
 import { demoblockPlugin, demoblockVitePlugin } from 'vitepress-theme-demoblock'
+import path from 'path'
+// import vue from '@vitejs/plugin-vue'
+import { containerPreview, componentPreview } from '@vitepress-demo-preview/plugin'
 export default defineConfig({
   base: '/mfxgy/',
   title: "MuFengXingGuYing",
@@ -85,6 +88,18 @@ export default defineConfig({
           ],
         },
       ],
+      "/document/react/": [
+        {
+          collapsed: false, // 折叠/展开
+          text: '使用create-react-app初始化react项目',
+          link: '/document/react/index.md'
+        },
+        {
+          collapsed: false, // 折叠/展开
+          text: '从vue3学习react',
+          link: '/document/react/patch.md'
+        },
+      ]
     },
 
     socialLinks: [
@@ -102,11 +117,21 @@ export default defineConfig({
     build: {
       emptyOutDir: true, // 构建前清空输出目录
     },
+    resolve: {
+      alias: {
+        // '@vitepress-demo-preview/component': path.resolve(
+        //   __dirname,
+        //   'node_modules/@vitepress-demo-preview/component'
+        // ),
+      },
+    },
     plugins: [demoblockVitePlugin()]
   },
   markdown: {
     config: (md) => {
       md.use(demoblockPlugin)
+      md.use(containerPreview)
+      md.use(componentPreview)
     },
     image: {
       // 开启图片懒加载
