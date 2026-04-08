@@ -160,9 +160,11 @@
 
   ## script标签中defer和async的区别?
 
-  他俩都是表示异步加载外部JS脚本，不会阻碍页面的加载解析。 **区别:**
+  他俩都是表示异步加载外部JS脚本，不会阻碍页面的加载解析。 **区别:
+
+  - 无属性时，同步加载 + 阻塞解析
   - 执行顺序：有多个async标签不能保证先后加载顺序，而多个defer标签可以按先后顺序加载。
-  - 是否立即执行：async加载完脚本后会立即执行，defer是要等文档解析完成后才执行
+  - 是否立即执行：async下载后会立即执行，defer是要等文档解析完成后才执行
   ``` 
     <script async src="script.js"></script>
     <script defer src="myscript.js"></script>
@@ -172,7 +174,6 @@
 
   - 添加节点document.appendChild(dom)
   - 移除节点document.removeChild(dom)
-  - 移动节点document.appendChild(targetDom)
   - 复制节点dom.cloneNode(true)，参数true表示是否复制子节点
   - 创建节点document.createElement(dom)
   - 查找节点:

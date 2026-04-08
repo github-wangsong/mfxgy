@@ -41,6 +41,7 @@ export default defineConfig({
           collapsed: false, // 折叠/展开
           text: '八股文',
           items: [
+            { text: '快速', link: '/BaGuWen/kuai.md' },
             { text: 'HTML', link: '/BaGuWen/html.md' },
             { text: 'CSS', link: '/BaGuWen/css.md' },
             { text: 'JavaScript', link: '/BaGuWen/javascript.md' },
