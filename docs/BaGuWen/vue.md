@@ -1,9 +1,11 @@
 
 
   ## 为什么使用vue?
-  - 优点：
-    - 单页面开发，高效率；单向数据流；渐进式编程(周边衍生工具库，如Vuex, Vue-Router)；响应式编程；虚拟DOM；数据与视图分开;易用, 灵活, 高效,组件化 
-  - 缺点：不利于SEO、不兼容IE(10以上才行，vue3好像的12以上)、首屏加载过长；
+  - 渐进式框架，可以根据项目需求逐步引入功能
+  - 响应式编程
+  - 组件化开发， 高内聚低耦合， 可复用性强
+  - 单页面开发，高效率
+  - 虚拟DOM,性能好
   ## vue的生命周期？分别作用？
   Vue 实例从创建到销毁的过程，就是生命周期
   - beforeCreate: `实例创建之初`，未初始化和响应式数据
@@ -20,12 +22,25 @@
   ## 调用接口在那个生命周期？
   create和mount都可以(听说mount调用会存在线程阻塞的问题)
   ## 获取DOM在那个生命周期？
-  Mount？因为在beforeCreated和created以及beforeMounted这几个钩子上都还没挂在到实例上，所以一般在mount钩子中去获取DOM；
+  mounted？因为在beforeCreated和created以及beforeMounted这几个钩子上都还没挂在到实例上，所以一般在mounted钩子中去获取DOM；
   ## 双向绑定原理？
-    采用数据劫持结合发布者-订阅者模式的方式，data数据在初始化的时候，会实例化一个Observe类，在它会将data数据进行递归遍历，并通过Object.defineProperty方法，给每个值添加上一个getter和一个setter。在数据读取的时候会触发getter进行依赖（Watcher）收集，当数据改变时，会触发setter，对刚刚收集的依赖进行触发，并且更新watcher通知视图进行渲染。
+    采用数据劫持结合发布者-订阅者模式的方式，
+    - 1. 数据劫持： Vue 2 用 Object.defineProperty 递归遍历 data 所有属性，为每个属性定义 getter/setter；Vue 3 用 Proxy 代理整个对象，性能更好且能监听属性增删和数组变化
+    - 2. 依赖收集： 每个属性有自己的 Dep 实例。组件渲染时，会创建 Watcher 并读取数据，触发 getter 把当前 Watcher 添加到 Dep 中。
+    - 3. 派发更新： 数据变化时触发 setter，调用 dep.notify()，通知所有 Watcher 执行 update，触发重新渲染。
+    - 4. View → Model 方向： v-model 本质是语法糖，:value + @input 事件监听，视图变化时通过事件回调更新数据
+    - Vue 2 的局限性： 无法监听对象属性增删（需 $set）、数组索引修改（需 $set 或 splice）、需要递归遍历性能较差。
+    - Vue 3 的改进： 使用 Proxy 解决了上述所有问题，支持懒代理按需响应，TypeScript 支持更好，但无法兼容 IE。**
+
   ## 虚拟DOM(Vnode)?
-  Vnode是一个对象，他将真实的DOM节点转换成一个对象，在Vue中每次数据更新时，新旧Vnode都会相互进行同层对比;（用js对象的形式去添加dom，更适合批量修改dom）
-  而diff算法会在这时去做一个优化； 
+  Vnode是一个对象，他将真实的DOM节点转换成一个对
+  在Vue中每次数据更新时，生成新的虚拟 DOM 树，
+  通过 Diff 算法对比新旧两棵树，计算最小更新路径
+  批量更新真实 DOM
+  - 主要优势：
+    - 性能优化：将多次 DOM 操作合并为一次，减少重排重绘
+    - 跨平台：虚拟 DOM 是普通 JS 对象，可以渲染到不同环境（浏览器、Native、小程序）
+    - 声明式编程：开发者只需描述 UI 应该长什么样，框架负责实现
   ## Diff算法？
   调用patch方法，传入新旧Vnode，开始同层对比；然后调用isSameNode方法，对比新旧Vnode是否属于同类型节点；如果不同，新节点就会替换掉旧节点；如果相同，调用patchNode进行对比节点；如果就节点没有但新节点有就新增上去，反之删除；
   ## 谈谈对MVVM的理解?
