@@ -50,7 +50,7 @@ export default defineConfig({
             { text: '浏览器', link: '/BaGuWen/browser.md' },
             { text: '工程化', link: '/BaGuWen/engineering.md' },
           ]
-        }
+        },
       ],
       "/demo/guild/": [
         {
@@ -99,6 +99,20 @@ export default defineConfig({
           collapsed: false, // 折叠/展开
           text: '从vue3学习react',
           link: '/document/react/patch.md'
+        },
+      ],
+      "/document/mysql/": [
+        {
+          collapsed: false, // 折叠/展开
+          text: 'MYSQL',
+          link: '/document/mysql/index.md'
+        },
+      ],
+      "/document/dingcan/": [
+        {
+          collapsed: false, // 折叠/展开
+          text: '订餐系统',
+          link: '/document/dingcan/index.md'
         },
       ]
     },

@@ -32,5 +32,9 @@ features:
     link: /document/react/index
   - title: HarmonyOS
     link: /document/HarmonyOS
+  - title: MySql
+    link: /document/mysql/index
+  - title: 从0开发订餐系统
+    link: /document/dingcan/index
 ---
 
