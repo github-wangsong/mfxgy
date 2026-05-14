@@ -112,7 +112,13 @@ export default defineConfig({
         {
           collapsed: false, // 折叠/展开
           text: '订餐系统',
-          link: '/document/dingcan/index.md'
+          // link: '/document/dingcan/index.md'
+          items: [
+            { text: '基础', link: '/document/dingcan/doc1.md' },
+            { text: '功能', link: '/document/dingcan/doc2.md' },
+            { text: '后端核心', link: '/document/dingcan/doc3.md' },
+           
+          ]
         },
       ]
     },
