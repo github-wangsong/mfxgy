@@ -36,5 +36,7 @@ features:
     link: /document/mysql/index
   - title: 从0开发订餐系统
     link: /document/dingcan/index
+  - title: java
+    link: /document/java/java
 ---
 

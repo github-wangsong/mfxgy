@@ -108,17 +108,16 @@ export default defineConfig({
           link: '/document/mysql/index.md'
         },
       ],
-      "/document/dingcan/": [
+      "/document/java/": [
         {
           collapsed: false, // 折叠/展开
-          text: '订餐系统',
-          // link: '/document/dingcan/index.md'
-          items: [
-            { text: '基础', link: '/document/dingcan/doc1.md' },
-            { text: '功能', link: '/document/dingcan/doc2.md' },
-            { text: '后端核心', link: '/document/dingcan/doc3.md' },
-           
-          ]
+          text: 'java',
+          link: '/document/java/java.md'
+        },
+        {
+          collapsed: false, // 折叠/展开
+          text: 'ssm',
+          link: '/document/java/ssm.md'
         },
       ]
     },
