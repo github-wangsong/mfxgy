@@ -271,7 +271,7 @@ export default defineConfig({
 #### 8-2 环境变量配置
 
 创建.env.development文件
-```env
+```txt
 # 变量必须以VITE_开头
 NODE_ENV='development'
 VITE_APP_TITLE = 'vue3+vite'
@@ -280,7 +280,7 @@ VITE_SERVE = 'http://localhost:8080'
 ```
 
 创建.env.production文件
-```env
+```txt
 # 变量必须以VITE_开头
 NODE_ENV='production'
 VITE_APP_TITLE = 'vue3+vite'
@@ -288,7 +288,7 @@ VITE_APP_BASE_API = '/prod-api'
 VITE_SERVE = 'http://localhost:8080'
 ```
 创建.env.test文件
-```env
+```txt
 # 变量必须以VITE_开头
 NODE_ENV='test'
 VITE_APP_TITLE = 'vue3+vite'

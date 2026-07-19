@@ -108,16 +108,11 @@ export default defineConfig({
           link: '/document/mysql/index.md'
         },
       ],
-      "/document/java/": [
+      "/document/vibeCoding/": [
         {
           collapsed: false, // 折叠/展开
-          text: 'java',
-          link: '/document/java/java.md'
-        },
-        {
-          collapsed: false, // 折叠/展开
-          text: 'ssm',
-          link: '/document/java/ssm.md'
+          text: 'vibeCoding',
+          link: '/document/vibeCoding/index.md'
         },
       ]
     },
@@ -160,5 +155,9 @@ export default defineConfig({
     //行号显示
     lineNumbers: true,
     toc: {level: [1,2,3,4,5,6]},
+  },
+  optimizeDeps: {
+    include: ['pdf'],
+    exclude: [],
   },
 })

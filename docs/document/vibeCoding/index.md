@@ -1,16 +1,17 @@
 
-## 1. 概念
-### 1-1 Vibe Coding: 感觉驱动的编程新范式
+# 1. 概念
+
+## 1-1 Vibe Coding: 感觉驱动的编程新范式
 - 意图优先
 - 快速迭代
 - 信任但验证
 - 上下文经营
-### 1-2 为什么纯Vibe Coding在大项目中不够用
+## 1-2 为什么纯Vibe Coding在大项目中不够用
 - 代码质量不可控
 - 前后矛盾
 - 缺乏全局视角
 - 难以协作
-### 1-3 核心概念
+## 1-3 核心概念
 | 概念 | 一句话解释 |
 |------|-----------|
 | AI辅助编程 | 用自然语言指挥AI写代码，人类从"写代码"变成"指挥AI写代码" |
@@ -21,8 +22,8 @@
 | PRD | 产品需求文档，描述"做什么" |
 | SPEC | 技术规范文档，描述"怎么做" |
 
-## 2. Claude Code
-### 2-1 “脚手架”比“模型”更重要：Harness 体系
+# 2. Claude Code
+## 2-1 “脚手架”比“模型”更重要：Harness 体系
 
 官方反复强调一个观点：**决定 Claude Code 表现的，不只是背后的模型，还有围绕模型搭建的“脚手架 Harness”。**
 
@@ -59,7 +60,7 @@ graph TB
 
 ---
 
-### 2-2 安装
+## 2-2 安装
 
 **npm安装**
 ```bash
@@ -71,14 +72,14 @@ npm install -g @anthropic-ai/claude-code
 ```bash
 $ claude --version
 ```
-### 2-3 cc-switch安装
+## 2-3 cc-switch安装
 **cc-switch** 是社区开源的一款桌面小工具，可以让你在多个 Claude Code 配置间一键切换。
 
 - **项目地址**：https://github.com/farion1231/cc-switch
 - **下载**：进入 Releases 页面，选对应系统（Windows、macOS、Linux）的安装包
 - **使用**：打开 cc-switch → 点击“新增” → 填入 API Key 和 BaseURL → 起个名字（如 “Anthropic-官方”、“DeepSeek”、“GLM-CodingPlan”）保存 → 需要哪个点哪个
 
-### 2-4 模型选择与切换
+## 2-4 模型选择与切换
 
 **方法一：启动时指定（临时使用）**
 
@@ -103,7 +104,7 @@ $ claude --model "deepseek-v4-pro[1m]"
 > /model opus       # 直接切换到 Opus
 ```
 
-### 2-5 核心配置详解
+## 2-5 核心配置详解
 Claude Code 有多层配置体系，从全局到项目级，层层覆盖。
 
 **配置层级：**
@@ -119,7 +120,7 @@ Claude Code 有多层配置体系，从全局到项目级，层层覆盖。
   └── 项目根目录/CLAUDE.md ← 最重要！
 ```
 
-#### 2-5-1 settings.json 配置文件
+### 2-5-1 settings.json 配置文件
 Claude Code 的配置文件位于 `~/.claude/settings.json`（全局）或项目目录下的 `.claude/settings.json`（项目级）。
 
 常用配置项：
@@ -148,7 +149,7 @@ Claude Code 的配置文件位于 `~/.claude/settings.json`（全局）或项目
 > **注意**：权限设置要谨慎。过于宽松的权限可能导致AI执行你不期望的操作。建议初学者保持默认设置，让 Claude Code 在执行每个操作前都询问你确认。
 
 
-#### 2-5-2 CLAUDE.md：你的项目"说明书"
+### 2-5-2 CLAUDE.md：你的项目"说明书"
 CLAUDE.md 是 Claude Code 中**最重要的配置文件之一**。有了 CLAUDE.md，它一启动就知道项目的全部背景，效率大幅提升。
 
 **CLAUDE.md 模板（可直接复制修改）：**
@@ -216,7 +217,7 @@ CLAUDE.md 是 Claude Code 中**最重要的配置文件之一**。有了 CLAUDE.
 - **`/memory` 编辑全局级**：在 cc 会话里输入 `/memory` 选择“全局 CLAUDE.md”，会用默认编辑器打开该文件供你修改。**修改全局后需重启 cc 才生效。**
 
 
-#### 2-5-3 第二层记忆：Auto Memory（cc 自己的笔记本）
+### 2-5-3 第二层记忆：Auto Memory（cc 自己的笔记本）
 如果说 CLAUDE.md 是**你主动立下的规矩**，那 Auto Memory 就是 **cc 在干活过程中默默记下的设计笔记**。你没显式写进 CLAUDE.md 的习惯、反馈、项目踩坑，会被一个后台 agent 静静记录。
 
 **如何启用：**
@@ -239,7 +240,7 @@ CLAUDE.md 是 Claude Code 中**最重要的配置文件之一**。有了 CLAUDE.
 | `reference` | 外部资源索引 | “某份设计文档在 docs/design.md” |
 
 
-#### 2-5-4 第三层记忆：自建参考文档（渐进式披露）
+### 2-5-4 第三层记忆：自建参考文档（渐进式披露）
 
 **应用场景**：某些东西不适合全部塞进 CLAUDE.md（太长、太专门），但 cc 需要的时候必须能查到。比如做个产品，你希望：
 - **品牌视觉规范**：颜色、字体、间距 → `docs/brand-visual.md`
@@ -272,9 +273,9 @@ dist/            # 编译输出
 .env             # 环境变量（包含敏感信息）
 ```
 
-### 2-6 核心命令
+## 2-6 核心命令
 
-#### 2-6-1 启动与基本交互
+### 2-6-1 启动与基本交互
 
 ```bash
 # 最基本的启动方式（在当前目录启动）
@@ -290,7 +291,7 @@ $ claude --model sonnet
 $ claude -p "请列出当前目录下所有的 JavaScript 文件"
 ```
 
-#### 2-6-2 核心斜杠命令详解
+### 2-6-2 核心斜杠命令详解
 在 Claude Code 对话中，以 `/` 开头的命令是“斜杠命令”，用来控制Claude Code 的行为。在输入框里打一个 `/` 就会弹出完整命令清单；`/help` 列出所有可用指令。
 
 **基础高频命令：**
@@ -399,7 +400,7 @@ AI: 正在审查项目代码...
 注意： components/BookmarkList.tsx：建议添加 loading 状态
  发现潜在安全问题：SQL 查询未使用参数化查询
 ```
-#### 2-6-3 自定义斜杠命令（Custom Slash Commands）
+### 2-6-3 自定义斜杠命令（Custom Slash Commands）
 
 在项目根目录创建 `.claude/commands/` 目录，然后添加 Markdown 文件：
 
@@ -419,7 +420,7 @@ AI: 正在审查项目代码...
 ```
 > /deploy
 ```
-#### 2-6-4 交互高级技巧
+### 2-6-4 交互高级技巧
 
 **1. `!` 进入 Bash 模式（不用新开终端跑命令）**
 
@@ -468,14 +469,14 @@ claude --permission-mode plan       # 启动后直接进 Plan Mode（8 节）
 claude --dangerously-skip-permissions # "危险模式"：一路绿灯不问任何确认
 ```
 
-### 2-7 Claude Code 实战工作流
-#### 2-7-1 官方推荐工作流：**Explore → Plan → Implement → Commit**
+## 2-7 Claude Code 实战工作流
+### 2-7-1 官方推荐工作流：**Explore → Plan → Implement → Commit**
 
 1. **Explore（探索）**：Plan Mode 下读代码、搜引用，搞清楚现状
 2. **Plan（规划）**：出方案、评估边界情况，你审核
 3. **Implement（实施）**：切出 Plan Mode，按方案执行
 4. **Commit（提交）**：生成 commit message，提交
-#### 2-7-2 完整示例：用 Claude Code 创建一个 Express Hello World API
+### 2-7-2 完整示例：用 Claude Code 创建一个 Express Hello World API
 
 
   **Step 1：初始化项目**
@@ -584,9 +585,561 @@ claude --dangerously-skip-permissions # "危险模式"：一路绿灯不问任�
 
 
 
-  ## 3.skill
+## 4 什么是AI技能（Skill）
 
-  ### 
+#### 4.1.1 Skill 的定义
+
+**Skill（技能）** 是一个**封装了特定能力的可复用指令集**。
+
+打个比方：你每次做一道菜，都要从头回忆配料和步骤，很容易忘这忘那。但如果你把菜谱写下来，下次照着做就行了，还能分享给别人。Skill 就是给AI写的"菜谱" —— 把一个复杂的任务标准化、流程化，让AI每次都能按照固定的高质量标准执行。
+
+**Skill vs 单次 Prompt：**
+
+| 维度 | 单次 Prompt | Skill |
+|------|-----------|-------|
+| 性质 | 一次性指令 | 可复用的标准流程 |
+| 一致性 | 每次输出可能不同 | 每次按照同样的标准执行 |
+| 效率 | 每次重新写一遍 | 一键触发 |
+| 维护 | 用完即弃 | 可版本管理、持续优化 |
+| 比喻 | 口头交代任务 | 书面的标准操作手册（SOP） |
+
+#### 4.1.2 Skill 的核心价值
+
+1. **一致性**：确保AI每次执行都遵循相同标准（不会这次用Tab缩进，下次用空格）
+2. **效率**：复杂流程一键触发，无需每次重写Prompt
+3. **可复用**：跨项目、跨团队共享最佳实践
+4. **可迭代**：持续优化和升级，越用越好
+
+#### 4.1.3 Skill 的组成结构
+
+很多人以为 Skill 就是一个 Markdown 文件，其实不是。**一个完整的 Skill 是一个目录**，可以包含多种类型的文件，就像一个"能力包"。
+
+打个比方：如果把 Skill 比作一本食谱，那么：
+- **SKILL.md** 就是食谱本身（菜名、步骤、注意事项）
+- **scripts/** 就是配套的厨房小工具（削皮刀、量杯 —— 封装好的辅助脚本）
+- **resources/** 就是附赠的食材包和调料配比表（模板、示例数据、配置）
+- **references/** 就是食谱末尾的"参考书目"（营养学标准、食品安全规范 —— AI 可随时查阅的参考资料）
+
+**标准 Skill 目录结构：**
+
+```
+skill-xxx/               # Skill 根目录（命名规范：小写+短横线）
+├── SKILL.md              # 核心：技能描述文件（必选）
+├── scripts/              # 辅助脚本目录（可选）
+│   ├── helper.py          # Python 辅助脚本
+│   └── utils.js           # JavaScript 工具函数
+├── resources/            # 配套资源目录（可选）
+│   ├── template/          # 模板文件（如代码模板、报告模板）
+│   ├── examples/          # 示例文件（如输入/输出示例数据）
+│   └── config/            # 配置文件（如规则定义、默认参数）
+├── references/            # 参考文档目录（可选）
+│   ├── best-practices.md    # 最佳实践文档
+│   ├── api-docs.md         # API 参考文档
+│   └── standards.md        # 行业/团队编码规范
+└── requirements.txt        # 依赖声明（可选，列出脚本需要的第三方包）
+```
+
+> **提示**：Skill 的核心是 `SKILL.md`，其余文件均为辅助。如果你的 Skill 只需要一份指令说明，只放一个 `SKILL.md` 就够了。但当 Skill 涉及复杂逻辑（如数据处理、格式转换）时，配上 `scripts/`、`resources/` 和 `references/` 会大幅提升 Skill 的能力和可维护性。
+
+**各组成部分详解：**
+
+**1. SKILL.md（必选）—— 技能的"说明书"**
+
+这是 Skill 的核心载体。它包含两部分：头部的**元数据（Frontmatter）**和正文的**具体指令**。
+
+```markdown
+---
+# 元数据（Frontmatter，YAML 格式）
+name: react-component-generator   # 技能名称（唯一标识）
+version: 1.0                  # 技能版本
+description: 根据需求生成符合项目规范的 React 组件文件集  # 技能简介
+trigger: ["创建组件", "新建React组件", "生成组件"]      # 触发关键词
+tools: ["typescript", "react"]    # 依赖工具
+author: your-name              # 技能作者
+---
+
+# React 组件生成器
+
+## 执行步骤
+1. 确认组件名称和功能需求
+2. 在 src/components/{componentName}/ 目录下创建文件
+3. 按照 resources/template/ 中的模板生成代码
+4. 运行 scripts/validate.js 验证组件结构
+
+## 输出规范
+- 所有文件创建完成后，报告创建的文件列表
+- 给出组件的使用示例代码
+
+## 错误处理
+- 如果目录已存在，提示用户确认是否覆盖
+- 如果缺少依赖包，提示安装命令
+
+## 示例
+给一个完整的输入→输出示例。
+```
+
+> **注意**：Frontmatter（元数据）是可选的，很多简单的 Skill 可以省略它。但如果你的 Skill 需要被 Agent 系统自动发现和匹配，Frontmatter 中的 `trigger` 和 `description` 就非常重要 —— Agent 启动时只读取元数据，只有当用户任务匹配触发条件时，才会加载完整指令。这种"**渐进式披露**"的设计可以节省上下文窗口空间。
+
+**2. scripts/（可选）—— 辅助脚本**
+
+当 Skill 需要执行复杂逻辑时（如数据预处理、文件批量操作、格式验证），把这些逻辑封装到脚本中比写在 SKILL.md 里更清晰：
+
+```python
+# scripts/helper.py —— 辅助脚本示例
+def fill_missing_value(df, column, strategy="mean"):
+   """缺失值填充：把复杂逻辑封装成函数，SKILL.md 中只需调用即可"""
+   if strategy == "mean":
+      df[column].fillna(df[column].mean(), inplace=True)
+   elif strategy == "empty":
+      df[column].fillna("", inplace=True)
+   return df
+```
+
+**3. resources/（可选）—— 配套资源**
+
+- `template/`：存放代码模板、文档模板。例如 React 组件的标准结构模板，AI 可以基于模板快速生成代码
+- `examples/`：存放输入/输出示例。帮助 AI 理解"好的输出长什么样"
+- `config/`：存放配置文件（JSON/YAML），定义规则和参数，避免在 SKILL.md 中硬编码
+
+**4. references/（可选）—— 参考文档**
+
+与 `resources/` 不同，`references/` 存放的不是"模板和配置"，而是 **AI 执行任务时可以查阅的知识性文档**。比如：
+
+- 编码规范文档（团队的代码风格指南）
+- 安全审计标准（如 OWASP Top 10 清单）
+- API 文档（第三方服务的接口说明）
+- 技术选型文档（为什么用 A 不用 B 的决策记录）
+
+> **提示**：`references/` 和 `resources/` 的区别可以这样理解 —— `resources/` 是"生产材料"（模板、配置，直接用于生成输出），`references/` 是"参考书"（规范、标准、文档，用于指导 AI 做出正确决策）。
+
+**5. requirements.txt（可选）—— 依赖声明**
+
+如果 `scripts/` 中的脚本依赖第三方库，在这里声明，方便部署时一键安装：
+
+```
+pandas>=2.0.0
+openpyxl>=3.1.0
+```
+
+**简单 vs 完整 Skill 的选择：**
+
+| 场景 | 推荐结构 | 说明 |
+|------|---------|------|
+| 简单的编码规范 | 只需 SKILL.md | 如 Git 提交规范、命名约定 |
+| 代码生成类 | SKILL.md + resources/template/ | 模板驱动，保证生成代码的一致性 |
+| 数据处理类 | SKILL.md + scripts/ + resources/config/ | 复杂逻辑封装到脚本，配置外部化 |
+| 质量审查类 | SKILL.md + references/ | 参考文档驱动，确保审查有据可依 |
+| 完整工程流程 | 全套目录 | 如项目初始化、CI/CD 配置等复杂流程 |
+
+#### 4.1.4 Skill 的类型分类
+
+| 类型 | 描述 | 示例 |
+|------|------|------|
+| 代码生成类 | 按模板生成代码 | React组件生成器、API端点生成器 |
+| 工程流程类 | 执行标准化流程 | 项目初始化、CI/CD配置 |
+| 质量保障类 | 代码审查与测试 | 安全审计Skill、代码审查Skill |
+| 文档生成类 | 自动生成文档 | API文档生成、变更日志生成 |
+| 调试修复类 | 排查和修复问题 | 错误诊断Skill、性能调优Skill |
+
+---
+
+### 4.2 官方与社区 Skill 资源
+
+你不必从零开始造轮子。Skill 生态已经非常成熟，从 Anthropic 官方到头部大厂、再到社区开发者，已经沉淀了大量可直接使用的高质量 Skill。学会"找到好 Skill → 评估 → 安装 → 在此基础上定制"，是比从头写更高效的路径。
+
+#### 4.2.1 Anthropic 官方 Skill 库
+
+**仓库地址**：https://github.com/anthropics/skills
+
+这是 Anthropic 官方维护的 Skill 库，质量最高、最值得优先使用。官方对 Skill 的定义是：
+
+> *"Skills are folders of instructions, scripts, and resources that Claude loads dynamically to improve performance on specialized tasks."*
+> （Skill 是由指令、脚本和资源组成的文件夹，Claude 会动态加载它们以提升在专业任务上的表现。）
+
+**官方 Skill 分类总览：**
+
+| 类别 | Skill 示例 | 说明 |
+|------|-----------|------|
+| **文档处理** | `docx`、`pdf`、`pptx`、`xlsx` | 生成和处理 Office 文档、PDF，生产级质量 |
+| **创意设计** | `algorithmic-art`、`canvas-design`、`slack-gif-creator` | 生成算法艺术、设计画布、动图 |
+| **开发技术** | `frontend-design`、`mcp-builder`、`webapp-testing`、`artifacts-builder` | 前端设计、MCP Server 生成、Web 应用测试 |
+| **企业沟通** | `brand-guidelines`、`internal-comms` | 品牌规范、内部沟通模板 |
+| **工具** | `skill-creator` | 用 AI 创建新 Skill 的 Skill（"元技能"） |
+
+**安装方式（使用 Vercel Skills CLI）：**
+
+```bash
+# 安装 Anthropic 官方全部 Skill（全局安装）
+$ npx skills add anthropics/skills -g
+
+# 只安装指定 Skill（推荐按需安装）
+$ npx skills add anthropics/skills@frontend-design -g
+$ npx skills add anthropics/skills@mcp-builder -g
+$ npx skills add anthropics/skills@skill-creator -g
+```
+
+> **提示**：`skill-creator` 是一个非常有趣的"元技能" —— 它的功能是帮你创建新的 Skill。如果你刚开始学习 Skill 编写，可以先安装它，然后告诉 AI"帮我创建一个 XXX Skill"，它会按照标准规范帮你生成 SKILL.md 和目录结构。
+
+**手动安装（不使用 CLI）：**
+
+如果你不想用 `npx skills` 命令，也可以手动操作：
+
+```bash
+# 克隆官方仓库到本地
+$ git clone https://github.com/anthropics/skills.git
+
+# 将需要的 Skill 目录复制到你的项目中
+$ cp -r skills/skills/frontend-design .claude/skills/
+```
+
+#### 4.2.2 Vercel 官方 Skill 库
+
+**仓库地址**：https://github.com/vercel-labs/skills
+
+Vercel（Next.js 的母公司）维护的 Skill 库，专注于 **React、Next.js、AI SDK、部署** 等前端生态。如果你用 Next.js 技术栈开发，这个库非常有价值。
+
+**Vercel Skill 分类：**
+
+| 类别 | 覆盖内容 |
+|------|---------|
+| **React / Next.js** | React 最佳实践、Next.js App Router、性能优化 |
+| **AI SDK** | Vercel AI SDK 集成、AI 应用开发 |
+| **设计与 UI** | 无障碍设计、高性能 UI 组件 |
+| **浏览器自动化** | 浏览器交互自动化测试 |
+| **部署** | Vercel 平台部署流程 |
+| **商业** | 电商和支付体验 |
+| **工作流** | 持久化、弹性工作流 |
+| **通用工具** | `find-skills`（搜索发现新 Skill） |
+
+**安装方式：**
+
+```bash
+# 安装 Vercel 全部 Skill
+$ npx skills add vercel-labs/skills -g
+
+# 安装 find-skills（推荐首先安装，用于搜索发现其他 Skill）
+$ npx skills add vercel-labs/skills@find-skills -g -y
+```
+
+> **提示**：`find-skills` 是一个"技能发现者" Skill —— 当你需要完成某个任务但不知道有没有现成的 Skill 时，它会自动帮你搜索并推荐最合适的 Skill。**强烈建议首先安装它**。
+
+#### 4.2.3 Vercel Skills CLI：Skill 的"包管理器"
+
+Vercel 还提供了一个命令行工具 `npx skills`，可以把它理解为 **Skill 世界的 npm** —— 用来搜索、安装、管理各种 Skill。
+
+**基本用法：**
+
+```bash
+# 搜索 Skill（按关键词）
+$ npx skills find "react testing"
+
+# 安装 Skill（从 GitHub 仓库）
+$ npx skills add <owner/repo>        # 安装仓库中的全部 Skill
+$ npx skills add <owner/repo>@<name>   # 安装指定 Skill
+$ npx skills add <owner/repo> -g      # 全局安装（所有项目可用）
+
+# 列出已安装的 Skill
+$ npx skills list
+
+# 初始化（在当前项目创建 Skill 目录）
+$ npx skills init
+```
+
+**支持的 AI 工具**：Claude Code、GitHub Copilot、Cursor、Qoder、OpenAI Codex、Cline、Windsurf 等多种 AI 编程工具。具体支持范围会随 CLI 版本变化，安装前以项目 README 为准。
+
+![Skills 搜索命令输出示意](./images/skills-find-terminal.svg)
+
+#### 4.2.4 社区 Skill 库
+
+除了官方库，社区贡献了大量 Skill 资源：
+
+**精选 GitHub 仓库：**
+
+| 仓库 | Skill 数量 | 特色 |
+|------|-----------|------|
+| **ComposioHQ/awesome-claude-skills** | 127+ | 10大分类，含59个SaaS应用集成Skill |
+| **alirezarezvani/claude-skills** | 235+ | 9大领域，含25个POWERFUL级高级Skill |
+| **travisvn/awesome-claude-skills** | 持续更新 | 精选列表，社区投票排名 |
+| **glebis/claude-skills** | 专项 | 专注特定工作流的高质量Skill |
+
+**alirezarezvani/claude-skills 领域覆盖（235+ Skill）：**
+
+```
+工程核心（37）：架构、前端、后端、QA、DevOps、安全、AI/ML
+高级工程（45）：Agent设计器、RAG架构师、数据库设计、CI/CD构建器、MCP构建器
+产品（16）：产品经理、UX研究员、UI设计、落地页、SaaS脚手架
+营销（44）：内容、SEO、CRO、渠道、增长、情报、销售
+项目管理（9）：Scrum Master、Jira集成、Confluence集成
+C-Level顾问（34）：全套C-Suite角色（CTO、CFO等）
+合规与质量（14）：ISO 13485、GDPR、FDA合规
+商业与增长（5）：客户成功、销售工程师、收入运营
+财务（4）：财务分析、SaaS指标教练
+```
+
+**安装社区 Skill：**
+
+```bash
+# 从社区仓库安装
+$ npx skills add alirezarezvani/claude-skills -g
+$ npx skills add ComposioHQ/awesome-claude-skills -g
+
+# 手动安装（克隆后复制需要的目录）
+$ git clone https://github.com/alirezarezvani/claude-skills.git
+$ cp -r claude-skills/engineering-team/frontend .claude/skills/
+```
+
+**国内大厂 Skill 库（ 国内用户推荐）：**
+
+国内头部科技公司也在积极拥抱 Skill 生态，维护了多个高质量的 Skill 库：
+
+| 厂商 | 仓库/平台 | 特色 Skill | 说明 |
+|------|----------|-----------|------|
+| **字节跳动/火山引擎** | GitHub: bytedance/agentkit-samples | 联网搜索、文本转语音（TTS）、图像理解 | 基于火山引擎 API，企业级 AgentKit 示例 |
+| **科大讯飞** | GitHub: iflytek/iFly-Skills | 语音合成（TTS）、语音转写、PDF/图片OCR、发票OCR、机器翻译、文本校对 | 讯飞 AI 能力的 Skill 封装，语音和 OCR 最强 |
+| **科大讯飞** | GitHub: iflytek/skillhub | 企业级 Skill 注册中心 | 私有部署的 Skill 商店，支持团队协作管理 |
+| **阿里巴巴/通义灵码** | 通义灵码内置 | 代码审查、日志分析、API 文档生成 | 支持 SKILL.md 格式，可在 `~/.lingma/skills/` 自定义 |
+| **腾讯/CodeBuddy** | CodeBuddy Agent 平台 | 自定义 Skill 构建 | 支持 Skill 创建和集成，与腾讯云生态打通 |
+
+**安装国内大厂 Skill 示例：**
+
+```bash
+# 科大讯飞 iFly-Skills（语音、OCR、翻译等 AI 能力）
+$ git clone https://github.com/iflytek/iFly-Skills.git
+$ cp -r iFly-Skills/ifly-pdf-image-ocr .claude/skills/
+# 注意：需要在讯飞开放平台申请 API Key，配置 XFEI_APP_ID 等环境变量
+
+# 字节跳动 AgentKit Samples
+$ git clone https://github.com/bytedance/agentkit-samples.git
+$ cp -r agentkit-samples/skills/byted-web-search .claude/skills/
+# 注意：需要火山引擎 API Key
+```
+
+> **提示**：国内大厂的 Skill 大多基于各自的云服务 API，使用前需要注册对应平台并获取 API Key。但它们在**中文处理、语音识别、OCR** 等方面的能力远超海外同类 Skill，非常适合国内开发者。
+
+#### 4.2.5 Skill 聚合平台
+
+如果觉得逐个找仓库太麻烦，还有专门的 Skill 聚合搜索平台：
+
+| 平台 | 地址 | Skill 数量 | 特色 |
+|------|------|-----------|------|
+| **skills.sh** | https://skills.sh | 48,000+ | Vercel 官方推荐的发现平台 |
+| **SkillsMP** | https://skillsmp.com/zh | 900,000+ | 最大的 Skill 市场，支持中文界面 |
+| **AgentSkills.io** | https://agentskills.io | 开放标准 | Agent Skills 开放标准定义 |
+
+在这些平台上，你可以按分类浏览、按关键词搜索，找到需要的 Skill 后一键安装。
+
+> **提示**：SkillsMP 从 GitHub 上自动索引包含 SKILL.md 的仓库，所以你在 GitHub 上发布的 Skill 也可能被收录进去。
+
+#### 4.2.6 Cursor 规则库
+
+Cursor 使用 Rules 作为项目级 AI 行为规范。旧版常见 `.cursorrules`，新版更推荐 `.cursor/rules/*.mdc`。它和 Skill 不完全相同，但都属于“把经验写成可复用上下文”的做法。社区贡献了大量现成模板：
+
+| 资源 | 地址 | 说明 |
+|------|------|------|
+| **cursor.directory** | https://cursor.directory/ | 按技术栈分类的规则模板集合 |
+| **cursorrules.org** | https://cursorrules.org/ | 可参考旧版规则写法，再迁移到 `.cursor/rules/*.mdc` |
+| **awesome-cursorrules** | GitHub: PatrickJS/awesome-cursorrules | 社区精选规则合集 |
+
+#### 4.2.7 使用第三方 Skill 的安全评估
+
+Skill 本质上是给 AI 的"操作指令"，某些恶意 Skill 可能包含危险操作。在使用任何第三方 Skill 之前，**必须进行安全评估**：
+
+| 维度 | 检查项 | 举例 |
+|------|--------|------|
+| **安全性** | 是否包含危险命令？是否会泄露敏感信息？ | 检查有无 `rm -rf`、`curl` 发送数据到外部 |
+| **维护状态** | 最近更新时间？作者是否活跃？ | 超过6个月未更新的慎用 |
+| **文档完整性** | SKILL.md 是否清晰？有无使用说明和示例？ | 缺少文档的 Skill 质量可能不高 |
+| **兼容性** | 是否与你使用的工具版本兼容？ | 检查 Frontmatter 中的 tools 字段 |
+| **来源可信度** | 是官方/知名组织还是个人？Star 数？ | 优先选用官方库和高 Star 仓库 |
+
+**安全检查的最佳实践：**
+
+```bash
+# 1. 安装前先浏览 Skill 内容（不要盲目安装）
+# 在 GitHub 上直接阅读 SKILL.md
+
+# 2. 检查 scripts/ 目录中的脚本（如果有的话）
+# 确保没有网络请求、文件删除等危险操作
+
+# 3. 在测试项目中先试用，确认安全后再用于正式项目
+```
+
+> **注意**：永远不要盲目使用来历不明的 Skill。安装前至少通读一遍 SKILL.md 的内容和 scripts/ 目录中的脚本代码，确保没有危险操作。**官方库（Anthropic、Vercel）优先，社区高 Star 仓库其次，个人仓库最后。**
+
+#### 4.2.8 经典 Skill 实操体验
+
+在学习"如何创建 Skill"之前，先来体验几个经典的现有 Skill，建立直观感受。
+
+**案例一：用 skill-creator 让 AI 帮你创建 Skill**
+
+`skill-creator` 是 Anthropic 官方提供的一个"元技能" —— 它的功能就是帮你创建新的 Skill。这相当于请了一位 Skill 专家替你写"操作手册"。
+
+```bash
+# Step 1：安装 skill-creator
+$ npx skills add anthropics/skills@skill-creator -g
+```
+
+安装后，在 Claude Code 中输入：
+
+```
+> 用 skill-creator 帮我创建一个名为 weekly-report-generator 的技能。
+> 功能：每周自动扫描本周的 Git 提交记录和 TODO 变更，
+> 生成一份结构化的周报 Markdown 文件。
+> 需要的工具：Read、Glob、Bash（用于 git log）。
+```
+
+Claude 会按照 skill-creator 的规范，自动帮你生成完整的 Skill 目录：
+
+```
+预期输出：
+~/.claude/skills/weekly-report-generator/
+├── SKILL.md        # 包含 Frontmatter 和详细执行步骤
+├── scripts/
+│   └── collect-commits.sh   # 收集本周提交的脚本
+└── resources/
+   └── template/
+      └── weekly-report.md  # 周报模板
+```
+
+> **提示**：skill-creator 会交互式地询问你一些问题（技能名称、触发词、执行步骤等），然后生成符合规范的 SKILL.md。**初学者强烈建议先用 skill-creator 生成 Skill，再根据需要手动调整**，比从零开始写效率高得多。
+
+**案例二：使用官方 PDF 文档处理 Skill**
+
+Anthropic 官方的 `pdf` Skill 可以让 Claude 处理 PDF 文件 —— 解析内容、提取信息、生成摘要等。
+
+```bash
+# 安装 PDF 技能
+$ npx skills add anthropics/skills@pdf -g
+```
+
+安装后即可直接使用：
+
+```
+> 请读取 docs/产品需求文档.pdf，提取其中的核心功能列表和技术要求，
+> 整理成一份 Markdown 格式的摘要。
+```
+
+Claude 会调用 pdf Skill 中的脚本解析 PDF 文件结构，提取文本内容并按你的要求整理输出。
+
+> **提示**：同类的官方文档处理 Skill 还有 `docx`（Word 文档）、`xlsx`（Excel 表格）、`pptx`（PowerPoint 演示文稿）。它们的工作方式类似 —— 把文档格式（本质是 ZIP + XML）"翻译"成 Claude 能理解的结构，然后进行处理。
+
+**案例三：使用官方 frontend-design Skill**
+
+`frontend-design` Skill 让 Claude 具备专业的前端设计能力 —— 生成像素级精确的 UI 组件。
+
+```bash
+# 安装前端设计技能
+$ npx skills add anthropics/skills@frontend-design -g
+```
+
+使用示例：
+
+```
+> 请使用 frontend-design 技能，为书签管理器设计一个响应式的卡片列表页面。
+> 要求：支持暗色模式，卡片包含标题、URL、标签和收藏时间。
+> 技术栈：React + Tailwind CSS。
+```
+
+---
+
+### 4.3 构建自己的 Skill
+
+这是本部分最核心的内容。我们通过三个实战案例，手把手教你创建自己的Skill。
+
+#### 4.3.1 识别 Skill 化的机会
+
+观察你日常使用AI时的重复行为：
+
+- 你是否经常给AI写**类似的Prompt**？→ 把它变成Skill
+- 你的项目是否有**固定的开发模式**？→ 把它变成Skill
+- 你是否有**标准化的审查流程**？→ 把它变成Skill
+
+> **提示**：DRY原则（Don't Repeat Yourself）不仅适用于代码，也适用于Prompt。如果你发现自己连续3次写了类似的Prompt，就是时候把它Skill化了。
+
+#### 4.3.2 实战：创建一个 React 组件生成 Skill
+
+**需求**：每次创建新的React组件时，需要遵循统一的文件结构和编码规范。我们来创建一个包含模板和验证脚本的**完整 Skill 包**。
+
+**Step 1：创建 Skill 目录结构**
+
+在项目根目录下创建如下结构：
+
+```bash
+# 一次性创建完整的 Skill 目录
+$ mkdir -p .claude/skills/react-component/scripts
+$ mkdir -p .claude/skills/react-component/resources/template
+$ mkdir -p .claude/skills/react-component/resources/examples
+```
+
+创建后的目录结构：
+
+```
+.claude/skills/react-component/    # Skill 根目录
+├── SKILL.md                  # 核心指令文件
+├── scripts/                  # 辅助脚本
+│   └── validate.js             # 组件结构验证脚本
+└── resources/                 # 配套资源
+   ├── template/               # 代码模板
+   │   ├── component.tsx.tpl      # 组件主文件模板
+   │   └── test.tsx.tpl         # 测试文件模板
+   └── examples/               # 示例
+      └── BookmarkCard-example/   # 一个完整的示例组件供参考
+```
+
+**Step 2：编写 SKILL.md（核心指令）**
+
+创建 `.claude/skills/react-component/SKILL.md`：
+
+````markdown
+---
+name: react-component-generator
+version: 1.0
+description: 根据组件名称和功能描述，生成符合项目规范的 React 组件文件集
+trigger: ["创建组件", "新建React组件", "生成组件"]
+tools: ["typescript", "react", "tailwindcss"]
+author: your-name
+---
+
+# React 组件生成器
+
+## 触发条件
+当用户要求创建新的 React 组件时使用此 Skill。
+
+## 输入参数
+- componentName（必填）：组件名称，使用 PascalCase 格式
+- description（必填）：组件功能描述
+- hasProps（可选，默认true）：是否需要 Props 类型定义
+- hasState（可选，默认false）：是否需要状态管理
+
+## 执行步骤
+
+1. 在 `src/components/` 目录下创建组件文件夹：
+   `src/components/{componentName}/`
+
+2. 参考 `resources/template/` 中的模板文件创建以下文件：
+   - `index.tsx` - 组件主文件（参考 component.tsx.tpl）
+   - `types.ts` - TypeScript 类型定义（如果 hasProps=true）
+   - `{componentName}.test.tsx` - 测试文件（参考 test.tsx.tpl）
+
+3. 组件代码规范：
+   - 使用函数式组件 + TypeScript
+   - Props 使用 interface 定义，命名为 {componentName}Props
+   - 使用 Tailwind CSS 处理样式
+   - 导出使用 named export
+   - 添加 JSDoc 注释说明组件功能
+
+4. 测试代码规范：
+   - 使用 @testing-library/react
+   - 至少包含：渲染测试、Props 传递测试
+
+5. 创建完成后，可运行 `scripts/validate.js` 验证组件结构完整性。
+
+## 输出规范
+- 所有文件创建完成后，报告创建的文件列表
+- 给出组件的使用示例代码
+
+## 参考示例
+参见 `resources/examples/BookmarkCard-example/` 中的完整示例。
 
 
 

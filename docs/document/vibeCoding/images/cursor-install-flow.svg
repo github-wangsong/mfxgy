@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <rect width="1200" height="520" fill="#f7f8fb"/>
+  <text x="60" y="76" font-family="Microsoft YaHei, Arial, sans-serif" font-size="34" font-weight="700" fill="#172033">Cursor 安装与初始化流程示意</text>
+  <text x="60" y="116" font-family="Microsoft YaHei, Arial, sans-serif" font-size="18" fill="#5b6472">用于说明安装步骤，不代表真实界面截图</text>
+  <g font-family="Microsoft YaHei, Arial, sans-serif">
+    <rect x="70" y="180" width="210" height="150" rx="10" fill="#ffffff" stroke="#d9dee8"/>
+    <text x="105" y="230" font-size="24" font-weight="700" fill="#172033">1. 下载</text>
+    <text x="105" y="270" font-size="18" fill="#5b6472">访问 cursor.com</text>
+    <text x="105" y="300" font-size="18" fill="#5b6472">选择系统安装包</text>
+    <path d="M295 255h70" stroke="#6374ff" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="380" y="180" width="210" height="150" rx="10" fill="#ffffff" stroke="#d9dee8"/>
+    <text x="415" y="230" font-size="24" font-weight="700" fill="#172033">2. 导入</text>
+    <text x="415" y="270" font-size="18" fill="#5b6472">导入 VS Code</text>
+    <text x="415" y="300" font-size="18" fill="#5b6472">设置与插件</text>
+    <path d="M605 255h70" stroke="#6374ff" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="690" y="180" width="210" height="150" rx="10" fill="#ffffff" stroke="#d9dee8"/>
+    <text x="725" y="230" font-size="24" font-weight="700" fill="#172033">3. 登录</text>
+    <text x="725" y="270" font-size="18" fill="#5b6472">注册或登录账号</text>
+    <text x="725" y="300" font-size="18" fill="#5b6472">选择模型与隐私设置</text>
+    <path d="M915 255h70" stroke="#6374ff" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="1000" y="180" width="130" height="150" rx="10" fill="#172033"/>
+    <text x="1028" y="235" font-size="24" font-weight="700" fill="#ffffff">开始</text>
+    <text x="1028" y="275" font-size="18" fill="#d7dcff">Tab</text>
+    <text x="1028" y="305" font-size="18" fill="#d7dcff">Cmd/Ctrl+K</text>
+  </g>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6374ff"/>
+    </marker>
+  </defs>
+</svg>

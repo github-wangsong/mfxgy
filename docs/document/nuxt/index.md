@@ -11,6 +11,6 @@ SSR是一种将服务端渲染和客户端渲染结合起来的技术， 可以�
 
 # 创建项目
 
-```bush
+```
 git clone -b v3 https://github.com/nuxt/starter.git nuxt3-app
 ```

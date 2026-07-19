@@ -40,5 +40,7 @@ features:
     link: /document/java/java
   - title: python
     link: /document/python/base
+  - title: vibeCoding
+    link: /document/vibeCoding/index
 ---
 

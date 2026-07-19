@@ -547,7 +547,7 @@ DispatcherServlet 初始化自己的 Web 子容器，加载 spring-mvc.xml，其
 
 这里只贴出 userList.jsp 示例，其余的添加、编辑页面你可以参考书写（练习一下）。
 
-```jsp
+```xml
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
@@ -590,7 +590,7 @@ DispatcherServlet 初始化自己的 Web 子容器，加载 spring-mvc.xml，其
 ## 第十章：启动项目验证
 配置 Tomcat（建议 Tomcat 8/9），部署这个 Maven 项目。
 
-启动后，浏览器访问 http://localhost:8080/ssm-demo/user/list（前缀根据你的上下文路径可能不同）。
+启动后，浏览器访问`http://localhost:8080/ssm-demo/user/list`（前缀根据你的上下文路径可能不同）。
 
 如果能看到用户列表页面，并且可以正常添加、修改、删除数据，恭喜你，SSM 框架整合成功！
 
