@@ -3,7 +3,7 @@
   pnpm create vite
 ```
 
-### 安装eslint
+### 1. 安装eslint（代码检查工具配置）
 
 安装
 ```sh
@@ -29,7 +29,7 @@ package.json配置运行脚本
   "fix": "eslint src --fix"
 }
 ```
-### 安装prettier
+### 2. 安装prettier（代码格式工具配置）
 ```sh
   pnpm i prettier eslint-plugin-prettier eslint-config-prettier -D
 ```
@@ -54,7 +54,7 @@ package.json配置运行脚本
 
   ```
 
-  ### 配置stylelint
+  ### 3. 配置stylelint（css的lint 工具）
   安装
   ```sh
   pnpm i sass sass-loader stylelint postcss postcss-scss postcss-html stylelint-config-standard stylelint-config-prettier stylelint-config-recess-order stylelint-config-recommended-scss stylelint-config-standard-vue stylelint-scss stylelint-order stylelint-config-standard-scss -D
@@ -64,7 +64,7 @@ package.json配置运行脚本
   ```js
   module.exports = {
     extends: [
-      'stylelint-config-standard',
+      'stylelint-config-standard', 
       'stylelint-config-prettier',
       'stylelint-config-html/vue',
       'stylelint-config-standard-scss',
@@ -82,25 +82,36 @@ package.json配置运行脚本
   ```
 
 
-### 配置husky
+### 4. 配置husky(代码提交前触发git hooks)
 
-安装
+#### 安装
 ```sh
 pnpm install husky -D
 ```
 
-执行
+#### 执行
 ```sh
 npx husky install
 ```
+会在根目录下生成一个.husky文件夹,在该目录下有一个pre-commit文件，
+在 .husky/pre-commit文件中添加
+```
+# !/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+pnpm run format
+```
+当对代码commit之前会执行.husky/pre-commit文件中的脚本，执行命令，格式化后再提交。
 
 
-### 配置commitlint
-安装
+
+
+
+### 5. 配置commitlint(commit信息规范配置)
+#### 安装
 ```sh
 pnpm install @commitlint/cli @commitlint/config-conventional -D
 ```
-添加配置文件commitlint.config.cjs
+#### 添加配置文件commitlint.config.cjs
 ```js
 module.exports = { extends: ['@commitlint/config-conventional'],
   rules: {
@@ -132,13 +143,42 @@ module.exports = { extends: ['@commitlint/config-conventional'],
   }
  }
  ```
+#### package.json中配置scripts
+```json
+"scripts": {
+  "commitlint": "commitlint --config .commitlintrc.config.cjs -e -V",
+}
+```
+配置结束，当我们填写commit信息时，需要携带以下subject
+
+```
+'feat', //新增功能
+'fix', // 修复bug
+'docs', // 文档修改
+'style', // 样式修改
+'refactor', // 重构
+'perf', // 性能优化
+'test', // 测试
+'build', // 构建
+'ci', // 持续集成
+'chore', // 构建流程或辅助工具修改
+'revert', // 回退
+```
+
  配置husky
  ```sh
  npx husky add .husky/commit-msg
  ```
+ 在生成的commit-msg文件中添加
+ ```
+ #!/usr/bin/env sh
+ . "$(dirname -- "$0")/_/husky.sh"
+ pnpm commitlint
+ ```
+ 当我们commit提交信息时不能随意写了，必须按照`fix: xxx`
 
 
- ### 强制使用pnpm
+ ### 6. 强制使用pnpm（统一包管理工具）
  创建scripts/preinstall.js
  ```js
   if (!/pnpm/.test(process.env.npm_execpath || '')) {
@@ -149,7 +189,7 @@ module.exports = { extends: ['@commitlint/config-conventional'],
   }
 
 ```
-package.json中配置
+package.json中配置scripts
 ```json
 "scripts": {
   "preinstall": "node ./scripts/preinstall.js"
@@ -171,14 +211,14 @@ package.json中配置
   "preinstall": "node ./scripts/preinstall.js"
 }
 ```
-### element-plus配置
+### 7. element-plus配置（组件库配置）
 
-安装
+#### 安装
 ```sh
 pnpm i element-plus
 ```
 
-配置
+#### 配置
 ```ts
 // main.ts
 import { createApp } from 'vue'
@@ -198,9 +238,9 @@ app.use(ElementPlus)
 app.mount('#app')
 ```
 
-### 其他配置
+### 8. 其他配置
 
-#### 配置路径别名
+#### 8-1 配置路径别名
 ```ts
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -228,7 +268,7 @@ export default defineConfig({
 }
 ```
 
-#### 环境变量配置
+#### 8-2 环境变量配置
 
 创建.env.development文件
 ```env
@@ -266,7 +306,7 @@ VITE_SERVE = 'http://localhost:8080'
 
 通过 `import.meta.env` 获取环境变量
 
-#### svg图标配置
+#### 8-3 svg图标配置
 
 安装
 ```sh
@@ -338,7 +378,7 @@ createApp(App).component('SvgIcon', SvgIcon).mount('#app')
 ```
 
 
-#### 配置sass
+#### 8-4 配置sass
 创建src/styles/reset.scss
 ```scss
 
@@ -537,7 +577,7 @@ main.ts全局引入
 import '@/styles/index.scss'
 ```
 
-#### moke数据
+#### 8-5 moke数据
 
 安装
 ```sh
@@ -551,17 +591,85 @@ export default defineConfig(({ command })) => {
   return {
     plugins: [
       viteMockServe({
-        localEnabled: command === 'serve'
+        localEnabled: command === 'serve' // 保证开发阶段时才开启mock
       })
     ]
   }
 })
 ```
-创建mock文件夹
+在项目根目录创建mock文件夹，创建一个user.ts文件
+```ts
+export default [
+  { 
+    url: '/api/user', 
+    method: 'get', 
+    response: (request) => { 
+      return { 
+        code: 200, 
+        data: { 
+          name: '张三'
+          age: 18
+        }
+      }
+    }
+  }
+]
+```
 
+#### 8-6 封装axios
 
-#### 封装axios
+安装
+```sh
+pnpm i axios -D
+```
+创建src/utils/request.ts
+```ts
 
+import axios from 'axios'
+let request = axios.create({
+  baseURL: import.meta.env.VITE_BASE_API, // 接口域名
+  timeout: 5000 // 请求超时时间
+})
+// 请求拦截器
+request.interceptors.request.use((config) => {
+
+  return config
+})
+
+// 响应拦截器
+request.interceptors.response.use((response) => { 
+  return response.data
+}, (error) => {
+  // 失败回调
+  
+  let message = ''
+  const status = error.response.status
+  switch (status) {
+    case 401:
+      message = 'token 失效'
+      break
+    case 403:
+      message = '无权限'
+      break
+    case 404:
+      message = '请求地址错误'
+      break
+    case 500:
+      message = '服务器故障'
+      break
+    default:
+      message = '网络故障'
+  }
+  // 提示错误信息
+  ElMessage({
+    type: 'error',
+    message,
+  })
+
+  return Promise.reject(error)
+})
+export default request
+```
 ### scale实现数据大屏适配
 
 

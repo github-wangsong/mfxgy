@@ -1,0 +1,593 @@
+
+## 1. 概念
+### 1-1 Vibe Coding: 感觉驱动的编程新范式
+- 意图优先
+- 快速迭代
+- 信任但验证
+- 上下文经营
+### 1-2 为什么纯Vibe Coding在大项目中不够用
+- 代码质量不可控
+- 前后矛盾
+- 缺乏全局视角
+- 难以协作
+### 1-3 核心概念
+| 概念 | 一句话解释 |
+|------|-----------|
+| AI辅助编程 | 用自然语言指挥AI写代码，人类从"写代码"变成"指挥AI写代码" |
+| Vibe Coding | 跟着感觉走的编程方式，适合快速原型和小项目 |
+| Agentic Engineering | 系统化的AI驱动开发方法，适合大型项目 |
+| Agent（智能体） | 能自主规划、执行、验证任务的AI系统 |
+| SDD（规范驱动开发） | 先写规范（PRD/SPEC），再让AI按规范执行 |
+| PRD | 产品需求文档，描述"做什么" |
+| SPEC | 技术规范文档，描述"怎么做" |
+
+## 2. Claude Code
+### 2-1 “脚手架”比“模型”更重要：Harness 体系
+
+官方反复强调一个观点：**决定 Claude Code 表现的，不只是背后的模型，还有围绕模型搭建的“脚手架 Harness”。**
+
+>  **理解方式**：模型能力决定下限，项目上下文、工具权限、规则文件和工作流决定上限。实际生产中，围绕模型搭建的工具生态会显著影响最终表现。
+
+本教程把 Claude Code 的工程化能力抽象成 **7 个扩展点**，建议按“从底到顶”的顺序理解——先打好上下文和规则基础，再接入更复杂的外部工具：
+
+```mermaid
+graph TB
+   L7["⑦ Subagents（子代理）<br/>独立上下文窗口去调研/执行"]
+   L6["⑥ MCP Servers<br/>接入外部工具与数据源"]
+   L5["⑤ LSP（语言服务器）<br/>给 AI 装上 IDE 导航能力"]
+   L4["④ Plugins<br/>Skills+Hooks+MCP 打包分发"]
+   L3["③ Skills<br/>按需加载的专业知识包"]
+   L2["② Hooks<br/>会话生命周期钩子"]
+   L1["① CLAUDE.md<br/>项目上下文文件"]
+   Base[" 模型本身（地板）"]
+
+   Base --> L1 --> L2 --> L3 --> L4 --> L5 --> L6 --> L7
+```
+*图：Harness 的 7 层扩展点——下三层是“纪律”（项目上下文、钩子、知识），上四层是“武器”（包分发、IDE、外部、子代理）*
+
+| 层 | 组件 | 作用 | 加载时机 |
+|----|------|------|---------|
+| ① | **CLAUDE.md** | 项目上下文文件（项目背景、约定、禁区） | 每次会话自动加载 |
+| ② | **Hooks** | 会话生命周期钩子（启动/结束/文件写入等事件） | 事件触发 |
+| ③ | **Skills** | 可复用的任务方法论（如“代码审查”“部署”） | 按需加载 |
+| ④ | **Plugins** | 打包一整套 Skills + Hooks + MCP 配置 | 装上后始终生效 |
+| ⑤ | **LSP**（语言服务器） | 给 AI 装上“跳到定义/查找引用”等 IDE 级导航 | 始终生效 |
+| ⑥ | **MCP 服务器** | 打通 Claude 与外部工具（数据库、文档、票务系统） | 始终生效 |
+| ⑦ | **Subagents**（子代理） | 独立上下文窗口的 Claude 实例，只返回结论 | 任务发出时创建 |
+
+> 注意： **顺序重要！** 初学者不要在基础还没搭好时就急着上 MCP 或 Subagents。先把 CLAUDE.md、Hooks、Skills 这三层基本功做扎实再说。
+
+---
+
+### 2-2 安装
+
+**npm安装**
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+**验证安装：**
+
+```bash
+$ claude --version
+```
+### 2-3 cc-switch安装
+**cc-switch** 是社区开源的一款桌面小工具，可以让你在多个 Claude Code 配置间一键切换。
+
+- **项目地址**：https://github.com/farion1231/cc-switch
+- **下载**：进入 Releases 页面，选对应系统（Windows、macOS、Linux）的安装包
+- **使用**：打开 cc-switch → 点击“新增” → 填入 API Key 和 BaseURL → 起个名字（如 “Anthropic-官方”、“DeepSeek”、“GLM-CodingPlan”）保存 → 需要哪个点哪个
+
+### 2-4 模型选择与切换
+
+**方法一：启动时指定（临时使用）**
+
+```bash
+# 使用模型别名（推荐，自动指向最新版本）
+$ claude --model opus      # 最强推理
+$ claude --model sonnet    # 日常编码（默认）
+$ claude --model haiku     # 快速轻量
+
+# 使用具体模型名时，请以当前服务商官方文档为准
+$ claude --model opus
+$ claude --model "deepseek-v4-pro[1m]"
+```
+
+**方法二：运行中切换（使用斜杠命令）**
+
+在 Claude Code 对话中直接输入：
+
+```
+> /model           # 打开模型选择器（交互式）
+> /model sonnet      # 直接切换到 Sonnet
+> /model opus       # 直接切换到 Opus
+```
+
+### 2-5 核心配置详解
+Claude Code 有多层配置体系，从全局到项目级，层层覆盖。
+
+**配置层级：**
+
+```
+全局配置（影响所有项目）
+  └── ~/.claude/settings.json
+
+项目级配置（只影响当前项目）
+  └── 项目根目录/.claude/settings.json
+
+项目上下文文件（告诉AI项目背景信息）
+  └── 项目根目录/CLAUDE.md ← 最重要！
+```
+
+#### 2-5-1 settings.json 配置文件
+Claude Code 的配置文件位于 `~/.claude/settings.json`（全局）或项目目录下的 `.claude/settings.json`（项目级）。
+
+常用配置项：
+
+```json
+{
+  // 允许 Claude Code 执行的操作（不再需要每次确认）
+  "permissions": {
+   "allow": [
+     "Read",        // 读取文件
+     "Write",       // 写入文件
+     "Bash(npm *)",   // 执行 npm 命令
+     "Bash(git *)",   // 执行 git 命令
+     "Bash(node *)"   // 执行 node 命令
+   ],
+   "deny": [
+     "Bash(rm -rf *)" // 禁止执行危险的删除命令
+   ]
+  },
+  // 默认使用的模型
+  "model": "sonnet",
+  // 自动紧凑阈值（上下文使用超过此比例时自动压缩）
+  "autoCompactThreshold": 80
+}
+```
+> **注意**：权限设置要谨慎。过于宽松的权限可能导致AI执行你不期望的操作。建议初学者保持默认设置，让 Claude Code 在执行每个操作前都询问你确认。
+
+
+#### 2-5-2 CLAUDE.md：你的项目"说明书"
+CLAUDE.md 是 Claude Code 中**最重要的配置文件之一**。有了 CLAUDE.md，它一启动就知道项目的全部背景，效率大幅提升。
+
+**CLAUDE.md 模板（可直接复制修改）：**
+
+````markdown
+  # 项目名称
+
+  ## 项目概述
+  一句话描述这个项目做什么。
+
+  ## 技术栈
+  - 前端：Next.js 14 + TypeScript + Tailwind CSS
+  - 后端：Next.js API Routes
+  - 数据库：Prisma + SQLite
+  - 部署：Vercel
+
+  ## 项目结构
+  ​```
+  src/
+  ├── app/         # Next.js App Router 页面
+  │   ├── api/      # API 路由
+  │   ├── layout.tsx # 全局布局
+  │   └── page.tsx   # 首页
+  ├── components/   # React 组件
+  │   ├── ui/      # 通用UI组件
+  │   └── features/  # 业务组件
+  ├── lib/         # 工具函数和配置
+  ├── prisma/      # 数据库 schema 和迁移
+  └── types/       # TypeScript 类型定义
+  ​```
+
+  ## 编码规范
+  - 使用函数式组件 + React Hooks
+  - 组件文件使用 PascalCase 命名（如 BookmarkCard.tsx）
+  - 工具函数使用 camelCase 命名
+  - API 路由返回统一格式：{ success: boolean, data?: any, error?: string }
+  - 所有数据库操作通过 Prisma Client 执行
+
+  ## 当前开发状态
+  -  项目初始化完成
+  -  数据库 Schema 设计完成
+  -  书签 CRUD API 开发中
+  -  前端页面待开发
+  -  搜索功能待开发
+
+  ## 注意事项
+  - SQLite 数据库文件在 prisma/dev.db，不要提交到 Git
+  - 环境变量在 .env 文件中，不要提交到 Git
+  - 所有新功能先创建 Git 分支再开发
+````
+
+**CLAUDE.md 的三个层级（由顶向下叠加生效）：**
+
+| 层级 | 路径 | 作用范围 | 适合写什么 |
+|------|------|----------|------------|
+| **全局级** | `~/.claude/CLAUDE.md` | 所有项目都会读 | 个人习惯、身份、翻译偏好（如"永远用中文回答"、"我是 xx、从事 xx"） |
+| **项目级** | 项目根目录/`CLAUDE.md` | 仅本项目 | 项目技术栈、架构、规范、进度（可提交 Git，团队共享） |
+| **文件夹级** | 子目录/`CLAUDE.md` | 仅该子目录 | 模块专属约定（如 `src/payment/CLAUDE.md` 写支付模块踩过的坑） |
+
+三层叠加生效，不冲突。优先级：文件夹级 > 项目级 > 全局级。
+
+**两个官方推荐的创建姿势：**
+
+- **`/init` 创建项目级**：在项目根目录下运行 `claude` 后输入 `/init`，cc 会自动扫描项目并生成一份 CLAUDE.md 初稿，你再调整。官方建议：**项目有一定规模再 `/init` 效果更好**（太空它扫不出什么东西）。
+- **`/memory` 编辑全局级**：在 cc 会话里输入 `/memory` 选择“全局 CLAUDE.md”，会用默认编辑器打开该文件供你修改。**修改全局后需重启 cc 才生效。**
+
+
+#### 2-5-3 第二层记忆：Auto Memory（cc 自己的笔记本）
+如果说 CLAUDE.md 是**你主动立下的规矩**，那 Auto Memory 就是 **cc 在干活过程中默默记下的设计笔记**。你没显式写进 CLAUDE.md 的习惯、反馈、项目踩坑，会被一个后台 agent 静静记录。
+
+**如何启用：**
+
+```bash
+# 在 cc 会话中输入
+/memory
+
+# 在弹出的菜单里选第一个选项 “启用 Auto Memory”
+# 启用后菜单里会多出“打开自动记忆文件夹”选项
+```
+
+**Auto Memory 会记哪几类东西：**
+
+| 类型 | 含义 | 举例 |
+|------|------|------|
+| `user` | 关于你 | 你的角色、偏好（如“不喜欢深色 UI”） |
+| `feedback` | 你给过的反馈 | “不要这样做"、“对，就这样" |
+| `project` | 项目相关 | 进度、决策、技术选型 |
+| `reference` | 外部资源索引 | “某份设计文档在 docs/design.md” |
+
+
+#### 2-5-4 第三层记忆：自建参考文档（渐进式披露）
+
+**应用场景**：某些东西不适合全部塞进 CLAUDE.md（太长、太专门），但 cc 需要的时候必须能查到。比如做个产品，你希望：
+- **品牌视觉规范**：颜色、字体、间距 → `docs/brand-visual.md`
+- **产品文本风格**：语调、术语表 → `docs/copywriting-style.md`
+- **API 约定**：请求响应格式、错误码 → `docs/api-conventions.md`
+
+然后在 CLAUDE.md 里加上指引：
+
+```markdown
+## 外部参考文档
+
+- 修改前端视觉、调颜色、调间距时 → 必读 `docs/brand-visual.md`
+- 写产品文案、按钮文字、提示语时 → 必读 `docs/copywriting-style.md`
+- 写 API 、定义返回格式时 → 必读 `docs/api-conventions.md`
+```
+
+这样 cc 只在"需要的时候"才去读完整文档，既保证了准确性，又不占多余上下文。
+
+
+#### 2-5.5 .claudeignore 文件
+
+类似于 `.gitignore`，用来告诉 Claude Code 哪些文件/目录不需要关注：
+
+```
+# .claudeignore 示例
+node_modules/      # 依赖包目录（太大了，AI不需要看）
+.next/            # Next.js 构建产物
+dist/            # 编译输出
+*.log            # 日志文件
+.env             # 环境变量（包含敏感信息）
+```
+
+### 2-6 核心命令
+
+#### 2-6-1 启动与基本交互
+
+```bash
+# 最基本的启动方式（在当前目录启动）
+$ claude
+
+# 指定项目目录启动
+$ claude --project-dir /path/to/your/project
+
+# 使用指定模型启动
+$ claude --model sonnet
+
+# 单次执行模式（执行完就退出，适合脚本调用）
+$ claude -p "请列出当前目录下所有的 JavaScript 文件"
+```
+
+#### 2-6-2 核心斜杠命令详解
+在 Claude Code 对话中，以 `/` 开头的命令是“斜杠命令”，用来控制Claude Code 的行为。在输入框里打一个 `/` 就会弹出完整命令清单；`/help` 列出所有可用指令。
+
+**基础高频命令：**
+
+| 命令 | 作用 | 使用场景 |
+|------|------|---------|
+| `/help` | 显示帮助信息 | 忘记命令时查看 |
+| `/model` | 查看/切换当前模型（高/中/低档） | 需要换用更强/更快的模型时 |
+| `/compact` | 压缩当前对话的上下文 | 对话太长，AI开始“遗忘”早期内容时 |
+| `/clear` | 完全清空当前对话 | 开始全新的任务时 |
+| `/context` | 详细查看上下文占比（各 MCP/Skill 各占多少） | 优化 token、诊断哪里挨上下文 |
+| `/memory` | 查看/编辑 CLAUDE.md 与自动记忆 | 管理项目/全局记忆、开启 Auto Memory |
+| `/status` | 查看会话状态 | 确认模型、Token 消耗 |
+| `/cost` | 查看当前会话费用 | 监控花了多少钱 |
+| `/review` | 对当前项目进行代码审查 | 完成功能后检查质量 |
+| `/init` | 自动生成项目的 CLAUDE.md | 进入新项目后的第一件事 |
+| `/plan` | 切入 Plan Mode（只读规划模式） | 复杂任务起手（详见 4.9 节） |
+| `/rewind` | 回滚 cc 之前的修改 | “后悔药”，下面重点讲 |
+| `/resume` | 选择历史会话恢复 | 上次话题还没聊完 |
+| `/btw` | “顺便问一句”，不污染主上下文 | 主任务进行中想问个无关问题 |
+
+**扩展管理命令：**
+
+| 命令 | 作用 | 使用场景 |
+|------|------|---------|
+| `/skill <名称>` | 直接调用某个 Skill | 手动触发，不要等 AI 自己决定 |
+| `/agent` | 创建、查看、调用子代理（SubAgent） | 手工创建专项 SubAgent |
+| `/plugin` | 插件管理界面（discover / installed） | 发现、安装、卸载插件 |
+| `/login` | 使用 Claude 官方订阅会员登录 | 有 Claude Pro/Max 会员时首选 |
+| `/simplify` | 派 3 个子 Agent 从代码质量/性能/复用性三个角度优化 | 快速全面优化已有代码 |
+
+
+**最常用的三个命令详解：**
+
+**`/compact` —— 上下文压缩（必须掌握）**
+
+这是解决”用久了 AI 变笨”的核心武器。用 cc 一段时间会发现回答变慢、质量下降——这是因为你聊的每句话、它读的每个文件、它执行的每个操作的结果，都在挤占上下文空间。模型上下文虽然有 200K，但实际有效比例只有 60%-80%，且会随上下文增多能力下降。脑子里塞多了东西，它就容易把握不住重点。
+
+`/compact` 命令会帮你”整理桌面” —— 把前面的对话压缩成摘要，腾出空间。
+
+```
+> /compact
+
+AI: 上下文已压缩。当前对话摘要：
+   - 我们正在开发一个书签管理器项目
+   - 已完成：数据库设计、API端点
+   - 当前正在：前端页面开发
+```
+
+
+**配套命令：`/context` —— 监控上下文余量**
+
+在 `/compact` 之前，先用 `/context` 看看当前状况：它会详细展示上下文占比，包括各个 MCP、Skill 各占用了多少 token，让你知道是什么在”吃掉”上下文。
+
+```
+> /context
+
+上下文使用情况：
+  已使用: 142,000 / 200,000 tokens (71%)
+  ├── 对话历史: 89,000 tokens
+  ├── CLAUDE.md: 2,100 tokens
+  ├── Skills: 12,500 tokens
+  └── MCP 工具: 4,800 tokens
+```
+
+> 提示： **我的习惯**：看到上下文高于 60% 了，就 `/compact` 一下。别等到接近满载、cc 自动压缩才动手——那时候它已经开始”遗忘”了。也可以让 cc 帮你打开常驻显示，重启终端后底部就会一直显示上下文余量。
+
+**`/compact` vs `/clear` —— 什么时候用哪个？**
+
+| 命令 | 效果 | 适用时机 |
+|------|------|---------|
+| `/compact` | 压缩历史为摘要，保留关键决策 | 同一任务对话过长、但还要继续做 |
+| `/clear` | 彻底清空，等于重开 | 一个独立任务彻底结束，要开始全新任务 |
+
+>  **心法**：宁可”多 `/clear` 几次重新介绍背景”，也不要”一直聊一直聊”。每个 `/clear` 都是给 AI 一次重新聚焦的机会。
+
+**`/rewind` —— “后悔药”（双击 ESC 快捷启动）**
+
+当你让 cc 改了一些代码、过后发现不满意（或者项目被改坏了），cc 自带一个回滚机制：**在对话里输入 `/rewind`，或者直接双击 `ESC`**，就会进入回滚界面：
+
+```
+[Rewind] 选择回滚方式：
+  1. 仅回滚对话        → 文件保留，只清除后面几轮对话
+  2. 回滚对话 与 文件编辑 → 推荐！全部返回某个节点
+  3. 仅回滚文件        → 保留对话，只还原文件
+```
+
+> 注意： **底线提醒**：`/rewind` 只能撤销 **cc 自己编辑过的文件**。它跑过的终端命令（安装依赖、下载文件、修改数据库）**撤不了**。真正靠谱的“后悔药”还是 Git（参见 4.5 节“Git 集成最佳实践”）。
+
+**`/memory` —— 记忆管理**
+
+Claude Code 有一个跨会话的“长期记忆”系统。它会自动记住你的偏好和项目信息，下次启动时依然记得。`/memory` 进去后可以编辑全局 / 项目 CLAUDE.md、开启自动记忆
+
+**`/review` —— 代码审查**
+
+完成功能开发后，让 AI 审查你的代码质量：
+
+```
+> /review
+
+AI: 正在审查项目代码...
+
+审查结果：
+ 代码结构清晰
+注意： api/bookmarks.ts 第15行：缺少输入验证
+注意： components/BookmarkList.tsx：建议添加 loading 状态
+ 发现潜在安全问题：SQL 查询未使用参数化查询
+```
+#### 2-6-3 自定义斜杠命令（Custom Slash Commands）
+
+在项目根目录创建 `.claude/commands/` 目录，然后添加 Markdown 文件：
+
+```markdown
+  <!-- .claude/commands/deploy.md -->
+  # 部署检查清单
+
+  请执行以下部署前检查：
+  1. 运行所有测试：npm test
+  2. 检查是否有 lint 错误：npm run lint
+  3. 确认 .env.example 已更新（如果添加了新的环境变量）
+  4. 构建项目：npm run build
+  5. 报告所有检查结果
+```
+
+使用方式：
+```
+> /deploy
+```
+#### 2-6-4 交互高级技巧
+
+**1. `!` 进入 Bash 模式（不用新开终端跑命令）**
+
+在 cc 对话窗口里输入文字默认是在跟 cc 对话，不是跑 shell 命令。要跑命令有两种常见做法：
+
+```bash
+ 推荐：在 cc 会话里以 ! 开头，进入 Bash 模式跑命令
+> !npm run dev
+> !node app.js
+
+# 取代方案：另外开一个终端跑命令
+```
+
+> 提示： **后台运行**：运行中的命令会阻塞跟 cc 的对话（比如 dev 服务起来后不会退出）。这时按 `Ctrl+B`，cc 会把它交到后台跑，你可以继续与 cc 对话。
+
+
+**2. `@文件/目录` 引用（给 cc 精准上下文）**
+
+cc 不会一直把所有项目文件加载到上下文里（项目一大也加不进去），需要时会现场 grep。**你明确 `@` 一个文件，就是在节省 cc 探路的 token 成本**。
+
+```
+# 直接 @ 文件路径（输入时会自动弹出候选）
+> 参考 @src/auth/login.ts 的风格，在 @src/auth/ 下加个 register.ts
+
+# 提示词太长、命令行里打不下？先写到 .md 文档里，再 @ 它
+> 按 @docs/feature-spec.md 的需求实现
+```
+
+> 提示： **反直觉小冗识**：你给 cc 的指令**越短，它反而可能花越多 token**——因为它要多费力探索项目才能猜到你想要什么。描述越具体 + 明确 @ 文件，成本反而低，效果反而准。
+
+
+**3. 贴图片（多模态能力）**
+
+直接将图片拖拽到对话框、或者 Ctrl+V 粘贴。适合：
+
+- 给设计参考图让 cc 实现一个类似的 UI
+- 贴报错截图让 cc 判读
+- 贴架架构图让 cc 按图实现
+
+**4. 三种启动参数（命令行启动时）**
+
+```bash
+claude                        # 默认启动
+claude -c                      # = --continue，启动时直接接上次会话
+claude --permission-mode plan       # 启动后直接进 Plan Mode（8 节）
+claude --dangerously-skip-permissions # "危险模式"：一路绿灯不问任何确认
+```
+
+### 2-7 Claude Code 实战工作流
+#### 2-7-1 官方推荐工作流：**Explore → Plan → Implement → Commit**
+
+1. **Explore（探索）**：Plan Mode 下读代码、搜引用，搞清楚现状
+2. **Plan（规划）**：出方案、评估边界情况，你审核
+3. **Implement（实施）**：切出 Plan Mode，按方案执行
+4. **Commit（提交）**：生成 commit message，提交
+#### 2-7-2 完整示例：用 Claude Code 创建一个 Express Hello World API
+
+
+  **Step 1：初始化项目**
+
+  ```bash
+  # 创建项目目录
+  $ mkdir hello-api
+  $ cd hello-api
+
+  # 启动 Claude Code
+  $ claude
+  ```
+
+  在 Claude Code 中输入：
+
+  ```
+  > 请帮我初始化一个 Node.js Express 项目：
+  > 1. 使用 npm init 创建 package.json
+  > 2. 安装 express
+  > 3. 创建一个 app.js 入口文件
+  > 4. 实现一个 GET /hello 端点，返回 { message: "Hello AI Coding!" }
+  > 5. 端口使用 3000
+  ```
+
+  AI 会依次执行以下操作（每一步都会请求你确认）：
+
+  ```
+  [Claude Code] 将运行命令: npm init -y
+  → 确认？(y/n) y
+
+  [Claude Code] 将运行命令: npm install express
+  → 确认？(y/n) y
+
+  [Claude Code] 将创建文件: app.js
+  → 确认？(y/n) y
+  ```
+
+  预期生成的核心代码（`app.js`）：
+
+  ```javascript
+  // 引入 Express 框架
+  const express = require('express');
+
+  // 创建应用实例
+  const app = express();
+
+  // 定义端口号
+  const PORT = 3000;
+
+  // 定义 GET /hello 路由
+  app.get('/hello', (req, res) => {
+    // 返回 JSON 格式的响应
+    res.json({ message: 'Hello AI Coding!' });
+  });
+
+  // 启动服务器
+  app.listen(PORT, () => {
+    console.log(`服务器已启动，访问 http://localhost:${PORT}/hello`);
+  });
+  ```
+
+  ![Claude Code 创建 Express 项目流程示意](./images/claude-express-workflow.svg)
+
+  **Step 2：运行并验证**
+
+  在 Claude Code 中输入：
+
+  ```
+  > 请启动这个服务器，然后用 curl 测试 /hello 端点
+  ```
+
+  AI 执行的操作：
+
+  ```
+  [Claude Code] 将运行命令: node app.js
+  → 确认？(y/n) y
+
+  输出: 服务器已启动，访问 http://localhost:3000/hello
+  ```
+
+  你也可以打开浏览器访问 `http://localhost:3000/hello`，应该看到：
+
+  ```json
+  {
+    "message": "Hello AI Coding!"
+  }
+  ```
+
+  >  **验证**：如果浏览器能看到上面的 JSON 响应，恭喜！你用 Claude Code 成功创建了第一个 API！
+
+  **Step 3：提交代码**
+
+  ```
+  > 请帮我初始化 Git 仓库并提交当前代码，commit message 为 "初始化 Express Hello World API"
+  ```
+
+  AI 会执行：
+
+  ```
+  git init
+  git add .
+  git commit -m "初始化 Express Hello World API"
+  ```
+
+  ![项目文件结构与 Git 提交流程示意](./images/project-tree-git-flow.svg)
+
+
+
+  ## 3.skill
+
+  ### 
+
+
+
+

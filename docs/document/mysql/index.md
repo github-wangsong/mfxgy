@@ -8,7 +8,8 @@ mysql -u root -p
 mysql>
 
 ```
-## 数据库操作
+## DDL
+### 数据库操作
 ```sql
 -- 1. 创建数据库（如果不存在则创建）
 CREATE DATABASE IF NOT EXISTS `school`;
@@ -32,7 +33,7 @@ DROP DATABASE IF EXISTS `school`;
 
 ```
 
-## 表操作
+### 表操作
 ```sql
 -- ==================== 表操作（DDL） ====================
 
@@ -121,7 +122,10 @@ DELETE FROM `students`;
 `ENUM`|单选（固定几个值）| 
 `JSON`|JSON 格式数据| 
 
-## 约束操作
+数值类型后面加unsigned代表无符号类型,只取0及正值, 如 TINYINT UNSIGNED 是0-255
+不加默认是signed,可取负数
+
+#### 约束操作
 
 类型|作用
 -|:-:|
@@ -137,7 +141,7 @@ DELETE FROM `students`;
 
 -- 1. 创建带各种约束的表
 CREATE TABLE `courses` (
-    `id` INT PRIMARY KEY AUTO_INCREMENT,
+    `id` INT PRIMARY KEY  ,
     `course_code` VARCHAR(10) UNIQUE NOT NULL,        -- UNIQUE + NOT NULL
     `course_name` VARCHAR(100) NOT NULL,
     `credits` TINYINT CHECK (credits BETWEEN 1 AND 6), -- CHECK 约束（MySQL 8.0+ 生效）
@@ -190,8 +194,8 @@ ALTER TABLE `students` ADD CONSTRAINT chk_age CHECK (age >= 0 AND age <= 120);
 -- 12. 删除 CHECK 约束
 ALTER TABLE `students` DROP CONSTRAINT chk_age;
 ```
-
-## 数据插入
+## DML
+### 数据插入
 ```sql
 -- ==================== 插入数据（INSERT） ====================
 
@@ -243,8 +247,85 @@ INSERT INTO students_backup SELECT * FROM students;
 INSERT INTO students (student_no, name) VALUES ('20240099', '获取ID测试');
 SELECT LAST_INSERT_ID();  -- 返回最后插入的自增 ID
 ```
+### 数据更新
+```sql
+-- ==================== 更新数据（UPDATE） ====================
 
-## 数据查询
+-- ⚠️ 警告：不加 WHERE 会更新整张表！先 SELECT 验证条件再 UPDATE
+
+-- 1. 更新单条数据
+UPDATE students SET phone = '13900139001' WHERE name = '张三';
+
+-- 2. 更新多条数据
+UPDATE students SET age = age + 1 WHERE age < 20;  -- 所有小于20岁的年龄+1
+
+-- 3. 更新多个字段
+UPDATE students 
+SET height = 176.5, phone = '13700137001' 
+WHERE student_no = '20240001';
+
+-- 4. 使用表达式更新
+UPDATE students SET age = TIMESTAMPDIFF(YEAR, birthday, CURDATE());  -- 根据生日计算年龄
+
+-- 5. 使用子查询更新
+-- 给每个学生设置班级名称（假设有班级表）
+UPDATE students s 
+SET class_id = (SELECT id FROM classes WHERE class_name = '计算机1班')
+WHERE s.name = '张三';
+
+-- 6. 多表更新（MySQL 特有语法）
+UPDATE students s, classes c
+SET s.class_name = c.class_name
+WHERE s.class_id = c.id;
+
+-- 7. 按顺序更新（配合 ORDER BY 和 LIMIT）
+UPDATE students SET score = score + 5 
+ORDER BY score ASC 
+LIMIT 3;  -- 给分数最低的3个学生加5分
+
+-- 8. 更新时使用 CASE WHEN
+UPDATE students 
+SET grade = CASE 
+    WHEN score >= 90 THEN 'A'
+    WHEN score >= 80 THEN 'B'
+    WHEN score >= 60 THEN 'C'
+    ELSE 'D'
+END;
+```
+### 数据删除
+
+```sql
+-- ==================== 删除数据（DELETE） ====================
+
+-- ⚠️ 警告：不加 WHERE 会删除整张表！先 SELECT 确认条件
+
+-- 1. 删除指定行
+DELETE FROM students WHERE name = '周七';
+
+-- 2. 删除符合条件的所有行
+DELETE FROM students WHERE age > 25;
+
+-- 3. 带排序和限制的删除（删除最老的3个学生）
+DELETE FROM students 
+ORDER BY age DESC 
+LIMIT 3;
+
+-- 4. 多表删除（MySQL 特有）
+-- 删除没有成绩记录的学生
+DELETE s FROM students s
+LEFT JOIN scores sc ON s.id = sc.student_id
+WHERE sc.id IS NULL;
+
+-- 5. 使用子查询删除
+DELETE FROM students 
+WHERE id IN (SELECT student_id FROM (SELECT student_id FROM scores GROUP BY student_id HAVING AVG(score) < 60) AS t);
+
+-- 6. DELETE vs TRUNCATE 对比
+-- DELETE：可以加 WHERE，逐行删除，速度慢，不重置自增ID，可以回滚
+-- TRUNCATE：不能加 WHERE，清空全表，速度快，重置自增ID，不可回滚
+```
+## DQL
+#### 数据查询
 ```sql
 -- ==================== 查询数据（SELECT） ====================
 
@@ -375,7 +456,7 @@ SELECT
 FROM students;
 ```
 
-## 多表查询
+#### 多表查询
 ```sql
 -- ==================== 多表查询（JOIN） ====================
 
@@ -458,7 +539,7 @@ FROM students s
 JOIN scores sc USING (id);  -- 等价于 ON s.id = sc.id
 ```
 
-## 子查询
+#### 子查询
 ```sql
 -- ==================== 子查询 ====================
 
@@ -528,7 +609,7 @@ JOIN (
 ) t ON sc.subject = t.subject
 WHERE sc.score > t.avg_score;
 ```
-## 联合查询
+#### 联合查询
 ```sql
 -- ==================== 联合查询（UNION） ====================
 
@@ -550,84 +631,8 @@ UNION
 SELECT id, class_name, NULL FROM classes;  -- 用 NULL 补齐列数
 ```
 
-## 数据更新
-```sql
--- ==================== 更新数据（UPDATE） ====================
 
--- ⚠️ 警告：不加 WHERE 会更新整张表！先 SELECT 验证条件再 UPDATE
-
--- 1. 更新单条数据
-UPDATE students SET phone = '13900139001' WHERE name = '张三';
-
--- 2. 更新多条数据
-UPDATE students SET age = age + 1 WHERE age < 20;  -- 所有小于20岁的年龄+1
-
--- 3. 更新多个字段
-UPDATE students 
-SET height = 176.5, phone = '13700137001' 
-WHERE student_no = '20240001';
-
--- 4. 使用表达式更新
-UPDATE students SET age = TIMESTAMPDIFF(YEAR, birthday, CURDATE());  -- 根据生日计算年龄
-
--- 5. 使用子查询更新
--- 给每个学生设置班级名称（假设有班级表）
-UPDATE students s 
-SET class_id = (SELECT id FROM classes WHERE class_name = '计算机1班')
-WHERE s.name = '张三';
-
--- 6. 多表更新（MySQL 特有语法）
-UPDATE students s, classes c
-SET s.class_name = c.class_name
-WHERE s.class_id = c.id;
-
--- 7. 按顺序更新（配合 ORDER BY 和 LIMIT）
-UPDATE students SET score = score + 5 
-ORDER BY score ASC 
-LIMIT 3;  -- 给分数最低的3个学生加5分
-
--- 8. 更新时使用 CASE WHEN
-UPDATE students 
-SET grade = CASE 
-    WHEN score >= 90 THEN 'A'
-    WHEN score >= 80 THEN 'B'
-    WHEN score >= 60 THEN 'C'
-    ELSE 'D'
-END;
-```
-## 数据删除
-
-```sql
--- ==================== 删除数据（DELETE） ====================
-
--- ⚠️ 警告：不加 WHERE 会删除整张表！先 SELECT 确认条件
-
--- 1. 删除指定行
-DELETE FROM students WHERE name = '周七';
-
--- 2. 删除符合条件的所有行
-DELETE FROM students WHERE age > 25;
-
--- 3. 带排序和限制的删除（删除最老的3个学生）
-DELETE FROM students 
-ORDER BY age DESC 
-LIMIT 3;
-
--- 4. 多表删除（MySQL 特有）
--- 删除没有成绩记录的学生
-DELETE s FROM students s
-LEFT JOIN scores sc ON s.id = sc.student_id
-WHERE sc.id IS NULL;
-
--- 5. 使用子查询删除
-DELETE FROM students 
-WHERE id IN (SELECT student_id FROM (SELECT student_id FROM scores GROUP BY student_id HAVING AVG(score) < 60) AS t);
-
--- 6. DELETE vs TRUNCATE 对比
--- DELETE：可以加 WHERE，逐行删除，速度慢，不重置自增ID，可以回滚
--- TRUNCATE：不能加 WHERE，清空全表，速度快，重置自增ID，不可回滚
-```
-## 高级查询
+#### 高级查询
 ```sql
 -- ==================== 窗口函数（MySQL 8.0+） ====================
 

@@ -1,4 +1,4 @@
-## 圣杯布局
+## 1. 圣杯布局
 
 ::: details 点我查看
 ```html
@@ -64,14 +64,24 @@
 :::
 
 
-## 设计模式
+## 2. 设计模式
 
 :::: details 点我查看
 
   ::: code-group
+  ```js [构造器模式]
+  function User(name , age, career) {
+      this.name = name
+      this.age = age
+      this.career = career 
+  }
 
+  const user = new User(name, age, career)
+  // 像 User 这样当新建对象的内存被分配后，用来初始化该对象的特殊函数，就叫做构造器
+  // 在 JavaScript 中，我们使用构造函数去初始化对象，就是应用了构造器模式
+  ```
   ```js [工厂模式]
-  // 工厂模式主要是为创建实例提供了接口，将new操作进行单独封装
+  // 工厂模式其实就是将创建对象的过程单独封装
 
   class jQuery {
     constructor(selector) {
@@ -265,12 +275,11 @@
 ::::
 
 
-## 性能优化
+## 3. 性能优化
 
 
 
-### 启用前端缓存 
-
+- 启用前端缓存 
   -  浏览器缓存
     - localStorage,sessionStorage,cookie
   -  http缓存
@@ -280,71 +289,68 @@
     - 协商缓存
       - 基于last-modified的协商缓存
       - 基础ETag的协商缓存
+- 开启GZIP压缩
+  - 安装compression-webpack-plugin插件
+  - 配置webpack文件，开启gzip压缩功能
+  - Nginx开启gzip功能配置, conf目录下的nginx.conf ,开启gzip并设置gzip_types的类型
 
-### 开启GZIP压缩
+- 使用函数节流和函数防抖
 
-- 安装compression-webpack-plugin插件
-- 配置webpack文件，开启gzip压缩功能
-- Nginx开启gzip功能配置, conf目录下的nginx.conf ,开启gzip并设置gzip_types的类型
+- 异步加载script文件或将script文件放在最后加载
+  - 浏览器在下载和解析script文件的时候会停止html的解析和 CSSOM 的构建
+  - 们通常喜欢把< script >标签放在html的最后面, 或者在script标签中加上defer属性即可。
 
-### 使用函数节流和函数防抖
-
-### 异步加载script文件或将script文件放在最后加载
-- 浏览器在下载和解析script文件的时候会停止html的解析和 CSSOM 的构建
-- 们通常喜欢把< script >标签放在html的最后面, 或者在script标签中加上defer属性即可。
-
-### 减少重排和重绘
+- 减少重排和重绘
 重绘不一定会引起重排。重排一定会导致重绘。
 
-### 使用服务端渲染
+-  使用服务端渲染
 
-### 图片
-- 将png/jpg/gif图片替换为webp格式图片
-- 图片压缩
-- 图片分割
-- sprite(精灵图/雪碧图)
-- 使用iconfont(字体图标)
+- 图片
+  - 将png/jpg/gif图片替换为webp格式图片
+  - 图片压缩
+  - 图片分割
+  - sprite(精灵图/雪碧图)
+  - 使用iconfont(字体图标)
 
-### 合并请求
-- 使用精灵图（合并静态图片资源请求）
-- 合理合并get请求,在适当的情况下，我们可以将一些可以合并的get请求合并为一个
+- 合并请求
+  - 使用精灵图（合并静态图片资源请求）
+  - 合理合并get请求,在适当的情况下，我们可以将一些可以合并的get请求合并为一个
 
-### 启用事件委托（事件代理）
-### 尽量使用CSS完成动画效果
-- 不占用主线程（js是需要占用的）
-- 可以利用硬件加速
-- 在不可见时动画不会持续执行
+- 启用事件委托（事件代理）
+- 尽量使用CSS完成动画效果
+  - 不占用主线程（js是需要占用的）
+  - 可以利用硬件加速
+  - 在不可见时动画不会持续执行
 
-### 使用懒加载
+- 使用懒加载
 
-### 使用骨架屏
+- 使用骨架屏
 
-### moment.js换成day.js
-- day.js的体积比moment.js小
+- moment.js换成day.js
+  - day.js的体积比moment.js小
 
-### tree shaking（摇树）
+- tree shaking（摇树）
 
-webpack构建优化中重要一环。摇树用于清除我们项目中的一些无用代码，它依赖于ES中的模块语法
+  - webpack构建优化中重要一环。摇树用于清除我们项目中的一些无用代码，它依赖于ES中的模块语法
 
-### split chunks（分包）
+- split chunks（分包）
 
-### CDN (内容分发网络)
+- CDN (内容分发网络)
 静态资源度建议放在CDN上，可以加快资源加载的速度。
 
-### 逻辑后移
+- 逻辑后移
   
-### 算法复杂度
+- 算法复杂度
 
-### 组件渲染
+- 组件渲染
 
-### web worker
+- web worker
+  - 为 JavaScript 创造多线程环境，允许主线程创建 Worker 线程，将一些任务分配给后者运行
 
-为 JavaScript 创造多线程环境，允许主线程创建 Worker 线程，将一些任务分配给后者运行
 
+## 4. 移动端响应式
 
-## 移动端响应式
-
-### viewport视口设置
+#### viewport视口设置
 ```html
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
 ```
@@ -356,7 +362,9 @@ initial-scale|设置页面初始缩放值|
 minimum-scale|最小缩放值|
 maximum-scale|最大缩放值|
 user-scalable|是否允许缩放|
-### @media媒体查询
+
+
+#### @media媒体查询
 
 ```css
 @media screen and (max-width: 768px) and (min-width: 320px) {
@@ -390,9 +398,10 @@ user-scalable|是否允许缩放|
 <link rel="stylesheet" media="screen and (max-width: 320px)" href="./css/index.css">
 ```
 
-### 不要写死的尺寸
-
+#### 不要写死的尺寸
+postcss-px-to-viewport，自动转vw
 - 百分比
 - rem
 - vh, vw
+
   

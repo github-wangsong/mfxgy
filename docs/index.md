@@ -38,5 +38,7 @@ features:
     link: /document/dingcan/index
   - title: java
     link: /document/java/java
+  - title: python
+    link: /document/python/base
 ---
 

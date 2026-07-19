@@ -1,6 +1,6 @@
 # reactive
 
-## 初始化项目
+## 1. 初始化项目
 
 - 安装脚手架
 ```sh
@@ -40,9 +40,9 @@ npm run eject
 }
 ```
 
-## 常见的配置修改
+## 2. 常见的配置修改
 
-### 把sass改成less
+### 2-1 把sass改成less
 - 安装依赖
 ```sh
 npm install less-loader@8 less
@@ -95,7 +95,7 @@ const lessModuleRegex = /\.module\.less$/;
           },
 ```
 
-### 配置路径别名
+### 2-2 配置路径别名
 
 - 修改webpack.config.js
 ```js
@@ -105,7 +105,7 @@ resolve: {
   }
 }
 ```
-### 修改域名和端口号
+### 2-3 修改域名和端口号
 
 - 直接修改`scripct/start.js`
 ```js
@@ -126,7 +126,7 @@ npm install cross-env
     "test": "node scripts/test.js"
   },
 ```
-### 修改浏览器兼容
+### 2-4 修改浏览器兼容
 
 修改package.json
 ```json
@@ -157,7 +157,7 @@ npm install cross-env
   ```
 :::
 
-### 处理proxy跨域
+### 2-5 处理proxy跨域
 ```sh
 npm install http-proxy-middleware@2
 ```
@@ -180,13 +180,13 @@ module.exports = function(app) {
 }
 ```
 
-## 移动端适配
+## 3. 移动端适配
 
-### 在index.html中加入meta标签
+### 3-1 在index.html中加入meta标签
 ```html
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
 ```
-### 配置rem响应式, `lib-flexible` `postcss-pxtorem`
+### 3-2 配置rem响应式, `lib-flexible` `postcss-pxtorem`
 ```sh
 npm i postcss-pxtorem lib-flexible
 ```
@@ -264,7 +264,7 @@ import 'lib-flexible'
 ```
 
 
-## 搭建路由界面
+## 4. 搭建路由界面
 
 - 创建view文件夹
   - src/view/Home.jsx
@@ -424,7 +424,7 @@ const App = function App () {
 }
 export default App
 ```
-## ant-mobile安装
+## 5. ant-mobile安装
 ```sh
 npm install --save antd-mobile
 ```
@@ -459,7 +459,7 @@ npm install --save antd-mobile
 
 ```
 
-## 配置redux
+## 6. 配置redux
 
 - 创建store文件夹
   - 创建index.js
