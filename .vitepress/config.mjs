@@ -114,7 +114,14 @@ export default defineConfig({
           text: 'vibeCoding',
           link: '/document/vibeCoding/index.md'
         },
-      ]
+      ],
+      "/document/vue/": [
+        {
+          collapsed: false, // 折叠/展开
+          text: '手写vue3',
+          link: '/document/vue/handwrite.md'
+        },
+      ],
     },
 
     socialLinks: [

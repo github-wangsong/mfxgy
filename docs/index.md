@@ -38,9 +38,9 @@ features:
     link: /document/dingcan/index
   - title: java
     link: /document/java/java
-  - title: python
-    link: /document/python/base
   - title: vibeCoding
     link: /document/vibeCoding/index
+  - title: 手写vue3
+    link: /document/vue/handwrite
 ---
 
