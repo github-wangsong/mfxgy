@@ -42,5 +42,7 @@ features:
     link: /document/vibeCoding/index
   - title: 手写vue3
     link: /document/vue/handwrite
+  - title: 微前端
+    link: /document/weiQianDuan/index
 ---
 

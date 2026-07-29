@@ -115,6 +115,13 @@ export default defineConfig({
           link: '/document/vibeCoding/index.md'
         },
       ],
+      "/document/weiQianDuan/": [
+        {
+          collapsed: false, // 折叠/展开
+          text: '微前端',
+          link: '/document/weiQianDuan/index.md'
+        },
+      ],
       "/document/vue/": [
         {
           collapsed: false, // 折叠/展开
