@@ -25,7 +25,7 @@
 - 循环
   - 使用 `map` 做循环, 必须有 `key`
 - 显示 HTML 代码
-   - `dangerouslySetInnerHTML={{ __html: 'xxx' }}`
+   - <span v-pre>`dangerouslySetInnerHTML={{ __html: 'xxx' }}`</span>
 
 **示例**
 ```tsx
@@ -165,7 +165,7 @@ function UserCard({
 export default UserCard;
 ```
 **父组件**
-```jsx
+```tsx
 import React from 'react';
 import UserCard from './components/UserCard';
 
