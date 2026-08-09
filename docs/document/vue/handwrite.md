@@ -331,10 +331,17 @@ setTimeout(()=>{
 
 ### 2-1. 编写reactive函数
 
-```js
+```ts
 import {isObject} from "@vue/shared"
 
-function createReactiveObject(target:object,isReadonly:boolean){
+/**
+ * 创建响应式对象
+ * @param target 要创建响应式对象的对象
+ * @param isReadonly 是否只创建只读
+ * @returns 响应式对象
+ */
+function createReactiveObject(target: object, isReadonly: boolean){
+  // 非对象类型,直接返回
   if (!isObject(target)){
     return target
   }
@@ -342,9 +349,14 @@ function createReactiveObject(target:object,isReadonly:boolean){
 //常用的就是reactive方法
 ```
 
-```js
-export function reactive(target:object){
-  return createReactiveObject(target,false)
+```ts
+/**
+ * 创建响应式对象
+ * @param target 要创建响应式对象的对象
+ * @returns 响应式对象
+ */
+export function reactive(target: object){
+  return createReactiveObject(target, false)
 }
 //后面的方法,不是重点我们先不进行实现...
 /*
@@ -360,17 +372,25 @@ export function shallowReadonly(target:object){
 */
 ```
 
-```js
-export function isObject(value:unknown):value is Record<any,any>{
+```ts
+/**
+ * 判断是否是对象类型
+ * @param value 要判断的值
+ * @returns value 是否是对象类型
+ */
+export function isObject(value: unknown):value is Record<any,any>{
   return typeof value === 'object' && value !== null
 }
 ```
 
 由此可知这些方法接受的参数必须是一个对象类型。否则没有任何效果
 
-```js
-const reactiveMap = new WeakMap();//缓存列表
-const mutableHandlers:ProxyHandler<object> = {
+```ts
+// 缓存列表,用于存储已经代理过的对象
+const reactiveMap = new WeakMap();
+
+// 可变处理函数,用于处理对象的get和set操作
+const mutableHandlers: ProxyHandler<object> = {
   get(target,key,receiver){
     //等会谁来取值就做依赖收集
     const res = Reflect.get(target,key,receiver);
@@ -383,23 +403,33 @@ const mutableHandlers:ProxyHandler<object> = {
   }
 }
 
-function createReactiveObject(target:object,isReadonly:boolean){
+/**
+ * 创建响应式对象
+ * @param target 要创建响应式对象的对象
+ * @param isReadonly 是否只创建只读
+ * @returns 响应式对象
+ */
+function createReactiveObject(target: object, isReadonly: boolean){
+  // 非对象类型,直接返回
   if (!isObject(target)){
     return target
   }
-  const exisitingProxy = reactiveMap.get(target);//如果已经代理过则返回代理结果
+  // 如果对象已经被代理过,直接返回代理结果
+  const exisitingProxy = reactiveMap.get(target);
   if (exisitingProxy){
     return exisitingProxy;
   }
-  const proxy = new Proxy(target,mutableHandlers);//对对象进行代理
+  // 对对象进行代理
+  const proxy = new Proxy(target,mutableHandlers);
+  // 将对象和代理对象存储到缓存列表中
   reactiveMap.set(target,proxy)
+  // 返回代理对象
   return proxy;
 }
 ```
-
 这里必须要使用Reflect进行操作,保证this指向永远指向代理对象
 
-```js
+```ts
 let school = {
   name:'zf',
   get num(){
@@ -409,22 +439,25 @@ let school = {
 let p = new Proxy(school,{
   get(target,key,receiver){
     console.log(key);
-    //return Reflect.get(target,key,receiver)
-    return target[key]
+    return Reflect.get(target,key,receiver)
+    // return target[key]
   }
 })
 p.num
-```
 
+```
 将对象使用proxy进行代理,如果对象已经被代理过,再次重复代理则返回上次代理结果。那么,如果将一个代理对象传入呢?
 
-```js
+```ts
+// 响应式标识
 const enum ReactiveFlags {
   IS_REACTIVE = '__v_isReactive'
 }
+// 可变处理函数,用于处理对象的get和set操作
 const mutableHandlers:ProxyHandler<object> = {
   get(target,key,receiver){
-    if(key === ReactiveFlags.IS_REACTIVE){//在get中增加标识,当获取此属性时返回true
+    //在get中增加标识,当获取此属性时返回true
+    if(key === ReactiveFlags.IS_REACTIVE){
       return true;
     }
     // ...
@@ -432,8 +465,14 @@ const mutableHandlers:ProxyHandler<object> = {
 }
 ```
 
-```js
-function createReactiveObject(target:object,isReadonly:boolean){
+```ts
+/**
+ * 创建响应式对象
+ * @param target 要创建响应式对象的对象
+ * @param isReadonly 是否只创建只读
+ * @returns 响应式对象
+ */
+function createReactiveObject(target: object, isReadonly: boolean){
   if(target[ReactiveFlags.IS_REACTIVE]){//在创建响应式对象时先进行取值
     return target
   }
@@ -445,30 +484,39 @@ function createReactiveObject(target:object,isReadonly:boolean){
 
 ### 2-2. 编写effect函数
 
-```js
-export let activeEffect = undefined;//当前正在执行的effect
+```ts
+// 当前正在执行的effect
+export let activeEffect = undefined;
 
+/**
+ * 响应式effect
+ * @param fn 要执行的函数
+ */
 class ReactiveEffect {
-  active = true;
+  active = true; // 是否激活
   deps = [];//收集effect中使用到的属性
-  parent = undefined;
+  parent = undefined; // 父effect
   constructor(public fn){}
+  /**
+   * 执行effect
+   */
   run(){
-    if (!this.active){//不是激活状态
+    // 如果不是激活状态,直接返回
+    if (!this.active){
       return this.fn();
     }
     try {
-      this.parent = activeEffect;//当前的effect就是他的父亲
-      activeEffect = this;//设置成正在激活的是当前effect
+      this.parent = activeEffect; //当前的effect就是他的父亲
+      activeEffect = this; //设置成正在激活的是当前effect
       return this.fn();
     } finally {
-      activeEffect = this.parent;//执行完毕后还原activeEffect
+      activeEffect = this.parent; //执行完毕后还原activeEffect
       this.parent = undefined;
     }
   }
 }
 
-export function effect(fn,options?){
+export function effect(fn, options?){
   const _effect = new ReactiveEffect(fn);//创建响应式effect
   _effect.run();//让响应式effect默认执行
 }
@@ -478,56 +526,93 @@ export function effect(fn,options?){
 
 默认执行effect 时会对属性,进行依赖收集
 
-```js
-get(target,key,receiver){
+```ts
+get(target, key, receiver){
+  //在get中增加标识,当获取此属性时返回true
   if (key === ReactiveFlags.IS_REACTIVE){
     return true;
   }
-  const res = Reflect.get(target,key,receiver);
-  Track(target,'get',key);//依赖收集
+  const res = Reflect.get(target, key, receiver);
+  // 依赖收集
+  track(target, 'get', key);
+  // 返回结果
   return res;
 }
 ```
 
-```js
-const targetMap = new WeakMap();//记录依赖关系
-export function track(target,type,key){
+```ts
+//记录依赖关系
+const targetMap = new WeakMap();
+
+/**
+ * 依赖收集
+ * @param target 被依赖的对象
+ * @param type 依赖类型
+ * @param key 被依赖的属性
+ */
+export function track(target, type, key){
+  // 只有存在 activeEffect 时才收集依赖。这确保只在 effect 执行期间进行依赖追踪。
   if (activeEffect){
+    // 从 targetMap 中查找该对象对应的属性映射。第一次访问时为空。
     let depsMap = targetMap.get(target);//{对象:map}
     if (!depsMap){
       targetMap.set(target,(depsMap = new Map()))
     }
+    // 从 depsMap 中查找该属性对应的 effect 集合。第一次访问时为空。
     let dep = depsMap.get(key);
     if (!dep){
       depsMap.set(key,(dep = new Set()))//{对象:{属性:[effect]}}
     }
+    // 检查当前 effect 是否已存在于该属性的依赖集合中，避免重复收集。
     let shouldTrack = !dep.has(activeEffect)
     if (shouldTrack){
+      // 将 activeEffect 添加到该属性的依赖集合中。后续 state.count 变化时，就知道要触发这个 effect。
       dep.add(activeEffect);
-      activeEffect.deps.push(dep);//让effect记住dep,这样后续可以清理
+      // 让 effect 也记住它依赖了哪些 dep 集合。这是清理机制的关键——当 effect 重新执行或停止时，可以从所有 dep 中移除自己。
+      activeEffect.deps.push(dep);
     }
   }
 }
 ```
 
 将属性和对应的effect维护成映射关系,后续属性变化可以触发对应的effect函数重新run
+```js
+
+// 用简单对象展示上述依赖收集的过程
+cost targetMap = {
+  target: {
+    key: [effect1, effect2],
+    key2: [effect1, effect2]
+  }
+}
+
+```
 
 ### 2-4. 触发更新
 
-```js
+```ts
 set(target,key,value,receiver){
-  //等会赋值的时候可以重新触发effect执行
   let oldValue = target[key]
   const result = Reflect.set(target,key,value,receiver);
+  // 判断是否有变化, 如果有变化, 则触发更新
   if (oldValue !== value){
+    // 触发更新
     trigger(target,'set',key,value,oldValue)
   }
   return result;
 }
 ```
 
-```js
-export function trigger(target,type,key?,newValue?,oldValue?){
+```ts
+/**
+ * 触发更新
+ * @param target 要触发的对象
+ * @param type 触发类型
+ * @param key 触发的属性
+ * @param newValue 新值
+ * @param oldValue 旧值
+ */
+export function trigger(target, type, key, newValue, oldValue){
   const depsMap = targetMap.get(target);//获取对应的映射表
   if (!depsMap){
     return
@@ -546,15 +631,16 @@ export function trigger(target,type,key?,newValue?,oldValue?){
 ```js
 const state = reactive({flag:true,name:'jw',age:30})
 effect(()=>{//副作用函数(effect执行渲染了页面)
-  consote. Loo 国限
+  console.log('render');
+  document.body.innerHTML =state.flag ? state.name : state.age;
+
 });
-document.body.innerHTML =state.flag ?
 setTimeout(()=>{
-state.flag =
-setTimeout(()=>{
-  console.log('修改name,原则上不更新')
-  state.name = 'zf'
-},1000);
+  state.flag = false;
+  setTimeout(()=>{
+    console.log('修改name,原则上不更新')
+    state.name = 'zf'
+  },1000);
 },1000)
 ```
 

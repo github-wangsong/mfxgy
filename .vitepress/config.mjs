@@ -92,6 +92,11 @@ export default defineConfig({
       "/document/react/": [
         {
           collapsed: false, // 折叠/展开
+          text: 'react语法查询',
+          link: '/document/react/doc.md'
+        },
+        {
+          collapsed: false, // 折叠/展开
           text: '使用create-react-app初始化react项目',
           link: '/document/react/index.md'
         },
