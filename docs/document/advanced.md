@@ -65,6 +65,8 @@
 
 
 ## 2. 设计模式
+**设计模式的核心思想——封装变化**
+在实际开发中，不发生变化的代码可以说是不存在的。我们能做的只有将这个变化造成的影响最小化 —— 将变与不变分离，确保变化的部分灵活、不变的部分稳定。这个过程，就叫“封装变化”。
 
 :::: details 点我查看
 
@@ -99,36 +101,70 @@
   ```js [单例模式]
   // 系统中被唯一使用的一个类只有一个示例, 如vuex
 
-  class SingleObject {
-    constructor() {
-      this.isLogin = false
-    }
-    login () {
-      this.isLogin = true
-    }
+  //静态方法版
+  // 定义Storage
+  class Storage {
+      static getInstance() {
+          // 判断是否已经new过1个实例
+          if (!Storage.instance) {
+              // 若这个唯一的实例不存在，那么先创建它
+              Storage.instance = new Storage()
+          }
+          // 如果这个唯一的实例已经存在，则直接返回
+          return Storage.instance
+      }
+      getItem (key) {
+          return localStorage.getItem(key)
+      }
+      setItem (key, value) {
+          return localStorage.setItem(key, value)
+      }
+  }
+  const storage1 = Storage.getInstance()
+  const storage2 = Storage.getInstance()
+  storage1.setItem('name', '李雷')
+  // 李雷
+  storage1.getItem('name')
+  // 也是李雷
+  storage2.getItem('name')
+  // 返回true
+  storage1 === storage2
+
+  // 闭包版
+  // 先实现一个基础的StorageBase类，把getItem和setItem方法放在它的原型链上
+  function StorageBase () {}
+  StorageBase.prototype.getItem = function (key){
+      return localStorage.getItem(key)
+  }
+  StorageBase.prototype.setItem = function (key, value) {
+      return localStorage.setItem(key, value)
   }
 
-  SingleObject.getInstance = (function () {
-    let instance
-    // 利用闭包把外部函数的变量保存在内存中
-    return function () {
-      // 如果不存在实例，新建一个实例
-      if (!instance) {
-        instance = new SingleObject()
+  // 以闭包的形式创建一个引用自由变量的构造函数
+  const Storage = (function(){
+      let instance = null
+      return function(){
+          // 判断自由变量是否为null
+          if(!instance) {
+              // 如果为null则new出唯一实例
+              instance = new StorageBase()
+          }
+          return instance
       }
-      // 如果存在，则直接返回
-      return instance
-    }
   })()
 
-  const a = SingleObject.getInstance()
-  const b = SingleObject.getInstance()
-  // a进行登录操作
-  a.login();
-  // 单例模式，无论创建多少个实例，都是一模一样的
-  console.log(a === b) // true
-  // 由于a已登录，b和a一样，b也已登录
-  console.log(b.isLogin) // true
+  // 这里其实不用 new Storage 的形式调用，直接 Storage() 也会有一样的效果 
+  const storage1 = new Storage()
+  const storage2 = new Storage()
+
+  storage1.setItem('name', '李雷')
+  // 李雷
+  storage1.getItem('name')
+  // 也是李雷
+  storage2.getItem('name')
+
+  // 返回true
+  storage1 === storage2
   ```
 
   ```js [适配器模式]
@@ -220,7 +256,7 @@
 
   ```js [观察者模式]
 
-  // 一对多
+  // 发布者直接触及到订阅者的操作，叫观察者模式
 
   // 主题类
   class Subject {
@@ -271,9 +307,65 @@
   s.setState(1234) // "o1 update, state:1234" "o2 update, state:1234"
 
   ```
-  :::
-::::
+  ```js [发布-订阅模式]
+  // 发布者不直接触及到订阅者、而是由统一的第三方来完成实际的通信的操作，叫做发布-订阅模式
+  class EventEmitter {
+    constructor() {
+      // handlers是一个map，用于存储事件与回调之间的对应关系
+      this.handlers = {}
+    }
 
+    // on方法用于安装事件监听器，它接受目标事件名和回调函数作为参数
+    on(eventName, cb) {
+      // 先检查一下目标事件名有没有对应的监听函数队列
+      if (!this.handlers[eventName]) {
+        // 如果没有，那么首先初始化一个监听函数队列
+        this.handlers[eventName] = []
+      }
+
+      // 把回调函数推入目标事件的监听函数队列里去
+      this.handlers[eventName].push(cb)
+    }
+
+    // emit方法用于触发目标事件，它接受事件名和监听函数入参作为参数
+    emit(eventName, ...args) {
+      // 检查目标事件是否有监听函数队列
+      if (this.handlers[eventName]) {
+        // 这里需要对 this.handlers[eventName] 做一次浅拷贝，主要目的是为了避免通过 once 安装的监听器在移除的过程中出现顺序问题
+        const handlers = this.handlers[eventName].slice()
+        // 如果有，则逐个调用队列里的回调函数
+        handlers.forEach((callback) => {
+          callback(...args)
+        })
+      }
+    }
+
+    // 移除某个事件回调队列里的指定回调函数
+    off(eventName, cb) {
+      const callbacks = this.handlers[eventName]
+      const index = callbacks.indexOf(cb)
+      if (index !== -1) {
+        callbacks.splice(index, 1)
+      }
+    }
+
+    // 为事件注册单次监听器
+    once(eventName, cb) {
+      // 对回调函数进行包装，使其执行完毕自动被移除
+      const wrapper = (...args) => {
+        cb(...args)
+        this.off(eventName, wrapper)
+      }
+      this.on(eventName, wrapper)
+    }
+  }
+  
+  ```
+  :::++++++
+::::
+观察者模式和发布-订阅模式之间的区别，在于是否存在第三方、发布者能否直接感知订阅者
+观察者模式仅仅是减少了耦合，并没有完全地解决耦合问题——被观察者必须去维护一套观察者的集合，这些观察者必须实现统一的方法供被观察者调用
+发布-订阅模式实现了完全地解耦, 发布者完全不用感知订阅者，不用关心它怎么实现回调方法，事件的注册和触发都发生在独立于双方的第三方平台（事件总线）上
 
 ## 3. 性能优化
 
