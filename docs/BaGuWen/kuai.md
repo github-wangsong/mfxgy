@@ -1,5 +1,76 @@
 ## 速览
 
+## 现代框架解决的核心问题
+<details> <summary>展开</summary>
+
+  ```markdown
+  - 声明式渲染：开发者只需关注状态，框架自动处理 DOM 更新，彻底解耦状态与视图
+  - 虚拟 DOM：性能与开发体验的平衡
+  - 组件化：高内聚、低耦合
+  - 响应式系统：状态变化后，框架知道哪些组件需要更新，开发者无需手动操作 DOM
+  - 单向数据流：数据流向清晰，便于调试和追踪 Bug
+  ```
+</details>
+
+  ## vue2, vue3, react的理解
+  <details> <summary>展开</summary>
+
+  ```md
+  - 相同的点: 三者都是现代前端框架
+    - 组件化, 声明式渲染, 虚拟 DOM, 单向数据流, 响应式/状态驱动, 生态丰富(路由,状态管理,ssr) 
+  - 区别
+    - 响应式机制: 
+      - Vue 2 基于 Object.defineProperty 实现响应式; 
+        - 原理: 遍历 data 对象，用 Object.defineProperty 把每个属性转为 getter/setter 
+        - 缺点: 
+          - 无法检测对象新增/删除属性（需 Vue.set / Vue.delete）
+          - 无法检测数组通过索引修改或 length 变更
+          - 嵌套对象需要递归劫持，初始化性能开销大
+      - Vue 3 基于 Proxy 实现响应式; 
+        - 原理: 用 Proxy 代理整个对象，拦截 get/set/deleteProperty 等操作
+        - 优势: 
+          - 支持动态新增/删除属性
+          - 支持 Map、Set、WeakMap、WeakSet
+          - 懒递归：只有访问到嵌套属性时才建立响应式（性能更好）
+      - react不可变数据 + 手动 setState
+        - 原理：状态是不可变的，每次 setState 创建新引用，通过 diff 算法 比较前后虚拟 DOM
+        - 特点： 
+          - 没有"自动追踪依赖"，开发者需手动管理状态更新
+    - 开发范式 : 
+      - 模版语法: vue 使用html模版; react 使用JSX 语法
+        - vue引入jsx的原因
+          - 模板语法的局限性(动态组件渲染需要预先定义所有可能的组件, 复杂的条件渲染) 
+          - react开发偏好
+      - 逻辑组织: 
+        - vue2 Options API（选项式） + Mixin(存在命名冲突和来源不透明问题); 
+        - vue3 Composition API（组合式）;
+          - 受 React Hooks 启发，但没有闭包陷阱（因为 Vue 的响应式基于 Proxy，不是闭包）
+          - 逻辑按功能组织，而非按选项类型组织 
+          - 自定义 Hook 叫 Composables，天然支持 Tree-shaking
+        - react Hooks（函数式）
+          - UI = f(state) 的纯函数理念 
+          - Hooks 带来逻辑复用，但有闭包陷阱、依赖数组等心智负担
+          - 严格遵循单向数据流
+          
+      - 样式方案: vue使用单文件组件 `<style>`, React使用CSS-in-JS / CSS Modules
+    - 渲染机制与性能: 
+      - vue2无编译优化,更新策略是全量diff; 
+      - vue3编译优化静态提升 + Patch Flag(给动态节点打标记),更新策略是靶向更新（只 Diff 动态节点）;
+      - react无编译优化,更新策略是全量 Diff（可手动 memo）, Fiber 架构 + 优先级调度
+    - 状态管理: Vuex, Pinia, （Redux / Zustand / Context）
+  ```
+  </details>
+
+
+  ## 双向绑定原理？
+    采用数据劫持结合发布者-订阅者模式的方式，
+    - 1. 数据劫持： Vue 2 用 Object.defineProperty 递归遍历 data 所有属性，为每个属性定义 getter/setter；Vue 3 用 Proxy 代理整个对象，性能更好且能监听属性增删和数组变化
+    - 2. 依赖收集： 每个属性有自己的 Dep 实例。组件渲染时，会创建 Watcher 并读取数据，触发 getter 把当前 Watcher 添加到 Dep 中。
+    - 3. 派发更新： 数据变化时触发 setter，调用 dep.notify()，通知所有 Watcher 执行 update，触发重新渲染。
+    - 4. View → Model 方向： v-model 本质是语法糖，:value + @input 事件监听，视图变化时通过事件回调更新数据
+    - Vue 2 的局限性： 无法监听对象属性增删（需 $set）、数组索引修改（需 $set 或 splice）、需要递归遍历性能较差。
+    - Vue 3 的改进： 使用 Proxy 解决了上述所有问题，支持懒代理按需响应，TypeScript 支持更好，但无法兼容 IE。**
+
 ## 页面导入样式时，link和@import区别？
   <details> <summary>展开</summary>
 
@@ -64,10 +135,6 @@
   ```
   :::
   </details>
-
-## 14、display:none;  visibility: hidden:区别
-  - visibility:hidden将元素隐藏，但是在网页中该占的位置还是占着。
-  - display:none将元素的显示设为无，即在网页中不占任何的位置。
 
 ## JS的类型检测?
   <details> <summary>展开</summary>
