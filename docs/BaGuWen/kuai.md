@@ -63,6 +63,9 @@
 
 
   ## 双向绑定原理？
+  <details> <summary>展开</summary>
+
+  ```markdown
     采用数据劫持结合发布者-订阅者模式的方式，
     - 1. 数据劫持： Vue 2 用 Object.defineProperty 递归遍历 data 所有属性，为每个属性定义 getter/setter；Vue 3 用 Proxy 代理整个对象，性能更好且能监听属性增删和数组变化
     - 2. 依赖收集： 每个属性有自己的 Dep 实例。组件渲染时，会创建 Watcher 并读取数据，触发 getter 把当前 Watcher 添加到 Dep 中。
@@ -70,6 +73,8 @@
     - 4. View → Model 方向： v-model 本质是语法糖，:value + @input 事件监听，视图变化时通过事件回调更新数据
     - Vue 2 的局限性： 无法监听对象属性增删（需 $set）、数组索引修改（需 $set 或 splice）、需要递归遍历性能较差。
     - Vue 3 的改进： 使用 Proxy 解决了上述所有问题，支持懒代理按需响应，TypeScript 支持更好，但无法兼容 IE。**
+    ```
+  </details>
 
 ## 页面导入样式时，link和@import区别？
   <details> <summary>展开</summary>

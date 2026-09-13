@@ -40,7 +40,6 @@ export default {
     // 画直线
     drawLine (startX, startY, endX, endY, w, lineCap, lineJoin, setLineDash) {
         this.ctx.beginPath()
-
         this.ctx.lineWidth = w || 1 // 线条粗细
         this.ctx.lineCap = lineCap || 'butt' // 线条开始和结束处的样式butt/round/square
         this.ctx.lineJoin = lineJoin || 'miter' // 线条连接处的样式 miter/bevel/round
