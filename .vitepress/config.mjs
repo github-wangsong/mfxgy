@@ -202,6 +202,19 @@ export default defineConfig({
             { text: '07 验收：跨后端契约一致', link: '/tutorial/03-画布/07-验收' },
           ]
         },
+        {
+          collapsed: false,
+          text: '阶段 4 · 执行引擎',
+          items: [
+            { text: '01 运行契约与 SSE 事件协议', link: '/tutorial/04-执行引擎/01-运行契约与SSE事件协议' },
+            { text: '02 LangGraph 编译图（TS）', link: '/tutorial/04-执行引擎/02-LangGraph编译图-TS' },
+            { text: '03 节点运行时与变量池', link: '/tutorial/04-执行引擎/03-节点运行时与变量池' },
+            { text: '04 LangGraph 与引擎（Python）', link: '/tutorial/04-执行引擎/04-LangGraph与引擎-Python' },
+            { text: '05 SSE 流式响应实现', link: '/tutorial/04-执行引擎/05-SSE流式响应实现' },
+            { text: '06 前端 SSE 客户端与运行面板', link: '/tutorial/04-执行引擎/06-前端SSE客户端与运行面板' },
+            { text: '07 验收', link: '/tutorial/04-执行引擎/07-验收' },
+          ]
+        },
       ],
     },
 
@@ -235,6 +248,14 @@ export default defineConfig({
       md.use(demoblockPlugin)
       md.use(containerPreview)
       md.use(componentPreview)
+
+      // 行内代码里的 `{{ }}`（如 JSX 的 style={{ ... }}）会被 Vue 当成插值表达式解析，
+      // 导致构建报错。这里给所有行内代码加上 v-pre，让 Vue 跳过编译、原样输出。
+      const codeInline = md.renderer.rules.code_inline
+      md.renderer.rules.code_inline = (tokens, idx, options, env, self) => {
+        tokens[idx].attrSet('v-pre', '')
+        return codeInline(tokens, idx, options, env, self)
+      }
     },
     image: {
       // 开启图片懒加载
@@ -248,4 +269,10 @@ export default defineConfig({
     include: ['pdf'],
     exclude: [],
   },
+  // 教程笔记中会引用本地开发服务器地址（localhost:3000 / localhost:8000）
+  // 以及仓库根 docs/ 下的说明性链接，这些都不是站内页面，跳过死链检查。
+  ignoreDeadLinks: [
+    /^https?:\/\/localhost/,
+    /^\.\/docs\//,
+  ],
 })
