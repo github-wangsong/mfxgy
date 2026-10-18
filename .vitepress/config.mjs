@@ -18,6 +18,15 @@ export default defineConfig({
           { text: '指南', link: '/demo/guild/installation.md' },
           { text: '组件', link: '/demo/examples/button' },
         ] 
+      },
+      { text: '教程笔记', items: [
+          { text: '索引与写作规范', link: '/tutorial/INDEX' },
+          { text: '阶段 0 · 项目初始化', link: '/tutorial/00-项目初始化/01-环境准备' },
+          { text: '阶段 1 · 账号与认证', link: '/tutorial/01-账号与认证/01-契约扩展' },
+          { text: '阶段 2 · 应用管理', link: '/tutorial/02-应用管理/01-契约扩展' },
+          { text: '阶段 3 · 画布', link: '/tutorial/03-画布/01-图JSON契约与校验' },
+          { text: '04-执行引擎', link: '/tutorial/04-执行引擎/01-执行引擎' },
+        ]
       }
     ],
 
@@ -132,6 +141,66 @@ export default defineConfig({
           collapsed: false, // 折叠/展开
           text: '手写vue3',
           link: '/document/vue/handwrite.md'
+        },
+      ],
+      "/tutorial/": [
+        {
+          collapsed: false,
+          text: '索引与写作规范',
+          link: '/tutorial/INDEX'
+        },
+        {
+          collapsed: false,
+          text: '阶段 0 · 项目初始化',
+          items: [
+            { text: '01 环境准备：Node / pnpm / uv / Python', link: '/tutorial/00-项目初始化/01-环境准备' },
+            { text: '02 本地中间件：Docker 只跑 PostgreSQL+pgvector', link: '/tutorial/00-项目初始化/02-本地中间件Docker' },
+            { text: '03 monorepo 与 pnpm workspace', link: '/tutorial/00-项目初始化/03-monorepo与pnpm-workspace' },
+            { text: '04 契约包与 TypeScript 类型', link: '/tutorial/00-项目初始化/04-契约包与TypeScript类型' },
+            { text: '05 NestJS 起步（装饰器 / DI）', link: '/tutorial/00-项目初始化/05-NestJS起步' },
+            { text: '06 FastAPI 起步（Pydantic）', link: '/tutorial/00-项目初始化/06-FastAPI起步' },
+            { text: '07 Next.js 起步（React 组件）', link: '/tutorial/00-项目初始化/07-NextJS起步' },
+            { text: '08 验收：两套后端 /health + 前端切换', link: '/tutorial/00-项目初始化/08-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 1 · 账号与认证',
+          items: [
+            { text: '01 契约扩展：注册 / 登录 / 当前用户 + 错误信封', link: '/tutorial/01-账号与认证/01-契约扩展' },
+            { text: '02 Prisma：schema / migrate / Client', link: '/tutorial/01-账号与认证/02-Prisma' },
+            { text: '03 NestJS 认证：Guard / 装饰器 / ValidationPipe', link: '/tutorial/01-账号与认证/03-NestJS认证' },
+            { text: '04 SQLAlchemy 2.0：模型映射 / Session', link: '/tutorial/01-账号与认证/04-SQLAlchemy2.0' },
+            { text: '05 FastAPI 认证：Depends / HTTPBearer', link: '/tutorial/01-账号与认证/05-FastAPI认证' },
+            { text: '06 JWT 与密码哈希', link: '/tutorial/01-账号与认证/06-JWT与密码哈希' },
+            { text: '07 验收：跨后端令牌互认 + 错误信封一致', link: '/tutorial/01-账号与认证/07-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 2 · 应用管理',
+          items: [
+            { text: '01 契约扩展：应用 CRUD', link: '/tutorial/02-应用管理/01-契约扩展' },
+            { text: '02 Prisma 关系建模', link: '/tutorial/02-应用管理/02-Prisma关系建模' },
+            { text: '03 NestJS 应用模块', link: '/tutorial/02-应用管理/03-NestJS应用模块' },
+            { text: '04 SQLAlchemy 关系建模', link: '/tutorial/02-应用管理/04-SQLAlchemy关系建模' },
+            { text: '05 FastAPI 应用模块', link: '/tutorial/02-应用管理/05-FastAPI应用模块' },
+            { text: '06 前端应用列表页', link: '/tutorial/02-应用管理/06-前端应用列表页' },
+            { text: '07 验收：归属隔离 / 跨后端同表一致性', link: '/tutorial/02-应用管理/07-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 3 · 画布',
+          items: [
+            { text: '01 图 JSON 契约与校验', link: '/tutorial/03-画布/01-图JSON契约与校验' },
+            { text: '02 Prisma JSONB 与两态', link: '/tutorial/03-画布/02-Prisma-JSONB与两态' },
+            { text: '03 NestJS 图模块', link: '/tutorial/03-画布/03-NestJS图模块' },
+            { text: '04 SQLAlchemy JSONB 映射', link: '/tutorial/03-画布/04-SQLAlchemy-JSONB映射' },
+            { text: '05 FastAPI 图模块', link: '/tutorial/03-画布/05-FastAPI图模块' },
+            { text: '06 ReactFlow 画布', link: '/tutorial/03-画布/06-ReactFlow画布' },
+            { text: '07 验收：跨后端契约一致', link: '/tutorial/03-画布/07-验收' },
+          ]
         },
       ],
     },

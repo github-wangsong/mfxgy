@@ -18,6 +18,14 @@
   ```md
   - 相同的点: 三者都是现代前端框架
     - 组件化, 声明式渲染, 虚拟 DOM, 单向数据流, 响应式/状态驱动, 生态丰富(路由,状态管理,ssr) 
+      - 虚拟dom
+        - 优势: 
+          - 减少直接操作dom的次数，提高性能
+          - 实际上是操作js对象,简化开发
+          - 跨平台
+        - 一定好吗
+          - 额外的内存和计算
+          - 静态页面 / 极少更新可以不使用
   - 区别
     - 响应式机制: 
       - Vue 2 基于 Object.defineProperty 实现响应式; 
@@ -60,6 +68,21 @@
     - 状态管理: Vuex, Pinia, （Redux / Zustand / Context）
   ```
   </details>
+
+## react函数式编程的好处
+## render props
+## suspanse
+## react19新特性
+- action表单交互
+  - useActionState 
+  - useFormStatus
+- use hook
+
+## react Compiler 自动记忆化
+## filber架构
+## 并发渲染
+## hook原理
+## 为什么必须在顶层调用
 
 
   ## 双向绑定原理？
