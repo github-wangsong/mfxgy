@@ -96,42 +96,44 @@ ADD COLUMN     "published_graph_json" JSONB;
 Python 只做**映射与读写**、不产生 DDL，以免两套迁移系统互相冲突。
 """
 
-from datetime import datetime
-from typing import Any
+from datetime import datetime                                               # 标准库：日期时间类型
+from typing import Any                                                       # 标准库 typing：任意类型（给 dict[str, Any] 用）
 
-from sqlalchemy import DateTime, ForeignKey, String, func
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, ForeignKey, String, func                    # 通用列类型 + ForeignKey + SQL 函数工厂
+from sqlalchemy.dialects.postgresql import JSONB                             # ★ 从 PostgreSQL 方言导入 JSONB（见 §6.1）
+from sqlalchemy.orm import Mapped, mapped_column, relationship               # ORM：注解 / 列声明 / 关系
 
-from app.models.base import Base
+from app.models.base import Base                                             # 共同基类 Base
 
 
-class App(Base):
-    __tablename__ = "apps"
+class App(Base):                                                             # 继承 Base → apps 表映射
+    __tablename__ = "apps"                                                   # 绑定真实表名 apps
 
     # id 由应用侧生成（Prisma 的 uuid() 是客户端默认值，数据库没有默认）
-    id: Mapped[str] = mapped_column(String, primary_key=True)
-    owner_id: Mapped[str] = mapped_column(
+    id: Mapped[str] = mapped_column(String, primary_key=True)                # 主键
+    owner_id: Mapped[str] = mapped_column(                                   # 外键列（阶段 2 已有）
         String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    name: Mapped[str] = mapped_column(String, nullable=False)
-    description: Mapped[str | None] = mapped_column(String, nullable=True)
-    mode: Mapped[str] = mapped_column(String, nullable=False, server_default="chatflow")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    name: Mapped[str] = mapped_column(String, nullable=False)                # 应用名
+    description: Mapped[str | None] = mapped_column(String, nullable=True)   # 可空描述
+    mode: Mapped[str] = mapped_column(String, nullable=False, server_default="chatflow")  # DB 默认
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())  # DB 默认
     # updated_at 现已由数据库层保证：迁移 `add_updated_at_default_and_trigger`
     # 加了 DEFAULT now() 与 BEFORE UPDATE 触发器（手工 SQL 也会刷新）。
     # 这里保留 SQLAlchemy 的 default/onupdate 作为应用层「双保险」：
     # 二者都取 now()，DB 触发器为权威、ORM 值作为兜底，不会冲突。
-    updated_at: Mapped[datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(                            # 应用端(ORM)默认值
         DateTime, nullable=False, default=func.now(), onupdate=func.now()
     )
     # 画布（阶段 3）。DDL 由 TS 侧 Prisma 拥有（迁移 add_app_graph），此处只映射。
     # 列在 PG 上为 jsonb；graph_json 为 NULL 表示「尚未编辑」，读取时返回合法空图。
-    graph_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    published_graph_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    graph_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)            # 草稿图：可空 jsonb
+    published_graph_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)  # 发布快照：可空 jsonb
+    # 物理列是 `timestamp(3)`（无时区，由 Prisma `DateTime?` 生成），故用 naive `DateTime()`
+    # 与之对齐；写入时按 UTC 取值（见 `app/timefmt.py` 的 `iso_z()`，它按 UTC 处理 naive 值）。
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(), nullable=True)           # 发布时刻：可空（naive）
 
-    owner: Mapped["User"] = relationship("User", back_populates="apps")
+    owner: Mapped["User"] = relationship("User", back_populates="apps")      # 关系（阶段 2 已有）
 ```
 
 **与前两阶段的差异**：只多了一段 import 与三行列声明（`graph_json` / `published_graph_json` / `published_at`）。其余列**一字未改**——这正体现「映射 Prisma 的新列」不碰已有列。
@@ -144,9 +146,20 @@ class App(Base):
 | `from sqlalchemy.dialects.postgresql import JSONB` | **从 PostgreSQL 方言**导入 JSONB 列类型（见 §6.1） |
 | `graph_json: Mapped[dict[str, Any] \| None] = mapped_column(JSONB, nullable=True)` | 草稿图：列可空（`nullable=True`），Python 侧用 `dict[str, Any] \| None` 表示「可能是 dict、也可能是 `None`」 |
 | `published_graph_json: ... JSONB, nullable=True` | 发布快照：同为可空 jsonb（见 §6.3 的「从未发布 = NULL」） |
-| `published_at: ... DateTime(timezone=True), nullable=True` | 发布时刻：可空时间列。**注意**实际物理列是 `timestamp(3)` **无时区**（Prisma 的 `DateTime?`）；`timezone=True` 只是映射侧的声明，本篇不产生 DDL，写入策略见下一篇 §6.3 |
+| `published_at: ... DateTime(), nullable=True` | 发布时刻：可空时间列。**物理列是 `timestamp(3)` 无时区**（由 Prisma 的 `DateTime?` 生成），故映射为 **naive `DateTime()`** 与之对齐；写入按 UTC 取值，出参由 `app/timefmt.py` 的 `iso_z()` 归一为 `...Z`（见 §6.4 对照表、§8 最后两条坑） |
 
 > ⚠️ **`nullable=True` 是可空列的写法**（对照 `nullable=False` 的非空列）。`Mapped[... | None]` 是类型层面的「可为 None」，`nullable=True` 是**列层面**的「可为 NULL」——两者要一起写，缺一易踩坑（见 §6.3、§8）。
+
+**这段在干什么**（按执行顺序）：
+
+1. 模块导入时先执行 import；本篇**只多了一条** `from sqlalchemy.dialects.postgresql import JSONB`——从 **PostgreSQL 方言子包**里取 JSONB 列类型（为什么必须从方言导入，见 §6.1）。
+2. 执行 `class App(Base):`——元类在类定义完成时收集：原有的 7 条列 + 本阶段新增的 3 条（`graph_json` / `published_graph_json` / `published_at`），以及关系 `owner`。机制同阶段 1 · 04 §6.7。
+3. 三条新列被登记：
+   - `graph_json` / `published_graph_json`：`mapped_column(JSONB, nullable=True)`——**类型是方言的 `JSONB`**，**列可空**（`nullable=True`），Python 侧类型是 `dict[str, Any] | None`。
+   - `published_at`：`mapped_column(DateTime(), nullable=True)`——**naive 时间列**，与物理列 `timestamp(3)`（无时区）对齐（物理列见上表说明）。
+4. 依旧**没有任何 SQL 发出、也不产生任何 DDL**；`JSONB`/`nullable` 都只是**描述**。真正读写要等用 Session（见 §6.2、§6.3）。
+
+> 关键：**`JSONB` 是「方言类型」**——它只对 PostgreSQL 有意义；换成 MySQL/SQLite 就不认它。这正是「本项目依赖 PG」的一处显式声明（§6.1）。
 
 ## 6. 【技术教学 · 首次】
 
@@ -270,8 +283,8 @@ graph_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 | 定义文件 | `apps/api-ts/prisma/schema.prisma` 的 `model App` | `apps/api-py/app/models/app.py` 的 `class App` |
 | 草稿列声明 | `graphJson Json? @map("graph_json")` | `graph_json: Mapped[dict[str, Any] \| None] = mapped_column(JSONB, nullable=True)` |
 | 发布图列声明 | `publishedGraphJson Json? @map("published_graph_json")` | `published_graph_json: Mapped[dict[str, Any] \| None] = mapped_column(JSONB, nullable=True)` |
-| 发布时刻列声明 | `publishedAt DateTime? @map("published_at")` | `published_at: Mapped[datetime \| None] = mapped_column(DateTime(timezone=True), nullable=True)` |
-| PG 物理类型 | `Json` → **`jsonb`**；`DateTime?` → `timestamp(3)` | `JSONB` → **`jsonb`**（描述同一列）；`DateTime` → `timestamp` |
+| 发布时刻列声明 | `publishedAt DateTime? @map("published_at")` | `published_at: Mapped[datetime \| None] = mapped_column(DateTime(), nullable=True)` |
+| PG 物理类型 | `Json` → **`jsonb`**；`DateTime?` → `timestamp(3)` | `JSONB` → **`jsonb`**（描述同一列）；naive `DateTime()` → **`timestamp(3)` 无时区** |
 | 可空表达 | 字段后加 `?`（`Json?`） | `Mapped[... \| None]` + `nullable=True` |
 | Python/TS 运行时类型 | `Prisma.JsonValue \| null`（object/array/原始值/`null`） | `dict[str, Any] \| None`（本项目图顶层恒为对象） |
 | 谁建列 | **Prisma 迁移** `20261018124928_add_app_graph`（DDL 拥有者） | **不建列**，只映射 |
@@ -281,6 +294,48 @@ graph_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 - **Prisma 的 `Json`** 是一种「TypeScript 视角的 JSON」——用 `?` 表达可空、用 `@map` 桥接列名，TypeScript 里它就是 `Prisma.JsonValue`。
 - **SQLAlchemy 的 `JSONB`** 是「PostgreSQL 视角的二进制 JSON」——需要从方言导入、用 `nullable=True` 表达可空、用 `Mapped[dict \| None]` 表达 Python 类型。
 - 两者**指向同一个物理列** `jsonb`，也因此必须共享同一套**键名约定**（§6.2）。
+
+### 6.5 【运行期机制】「方言（dialect）」到底是什么，以及 JSONB 为什么必须从方言导入
+
+§6.1 讲了「通用类型 vs 方言类型」的分层；这里讲**运行期「方言」在做什么**，把「为什么要 `from sqlalchemy.dialects.postgresql import`」正面对齐。
+
+**「方言（dialect）」是什么**：SQLAlchemy 要同时支持 PostgreSQL / MySQL / SQLite…，于是把「与**具体某个数据库**打交道的那套适配逻辑」单独抽象成**方言**：它负责
+①把通用 SQL 编译成**该数据库的方言 SQL**、②把通用列类型映射到**该库的专有类型**、③调用**具体的 DBAPI 驱动**（这里是 psycopg3）来收发数据。
+
+**运行期它是怎么接上的**：`create_engine("postgresql+psycopg://…")` 里的 `postgresql+psycopg` 就是「**方言 `postgresql` + 驱动 `psycopg`**」。engine 一旦建立，就绑定了这套方言；之后 ORM 发出的每条 SQL、每个参数，**都由方言负责翻译与绑定**。比如 `graph_json` 这一列：读的时候由 psycopg 的 **jsonb 适配器**把列值转成 Python `dict`，写的时候再把 `dict` 转回 jsonb。
+
+**为什么 `JSONB` 要从方言导入**：因为 **jsonb 是 PostgreSQL 专有类型**。SQLAlchemy 顶层那个通用的 `JSON` 在 PG 上落成的是 **`json`（文本 JSON）**，不是 `jsonb`。要**精确对齐** Prisma 建的 `jsonb` 列，就必须用**方言里那个 `JSONB`**（§6.1 已给出「`json` vs `jsonb`」的差别表）。
+
+**TS 里对应什么**：Prisma 的 `datasource { provider = "postgresql" }` 也相当于「选方言」，但 Prisma 把方言**藏起来**、不让你 import 具体类型——你写 `Json`，它替你落成 `jsonb`。SQLAlchemy 则把方言**暴露成可 import 的路径**（`sqlalchemy.dialects.postgresql.*`），好处是你能**精确选到库专有类型**（`JSONB` / `UUID` / `ARRAY`…），代价是「通用类型」`JSON` 与「方言类型」`JSONB` 容易混（见 §8 坑）。
+
+> 记忆：**`sqlalchemy.JSON` = 通用「JSON 字符串」（PG 上落 `json`）；`sqlalchemy.dialects.postgresql.JSONB` = PG 专有「二进制 JSON」（落 `jsonb`）。对齐 Prisma 的 `Json?` 用后者。**
+
+### 6.6 【运行期机制】`Mapped[...]` / `mapped_column(JSONB)` 在运行期怎么变成列（本项目的具体形）
+
+阶段 1 · 04 §6.7 已把「注解 + 元类 + 描述符」讲透；这里**不只用「见某篇」带过**，而是把它**套到本篇这一行**上再走一遍：
+
+```python
+graph_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+```
+
+- **`Mapped[dict[str, Any] | None]` 是声明**：告诉声明式框架「这个属性映射成一列；Python 侧值是 `dict[str, Any]` 或 `None`」。**注意 `T` 是联合类型**——读回来可能是 `dict`、也可能是 `None`（列可空），所以这里写 `dict[str, Any] | None` 而不是 `dict[str, Any]`。
+- **`mapped_column(JSONB, nullable=True)` 是列描述**：声明「列类型是 PG 的 `JSONB`、可为 NULL」。它**不产生 DDL**（DDL 归 Prisma）。
+- **元类在类定义完成时收集**：把这一行转成一个 `Column` 对象，放进 `App.__table__`。类属性 `App.graph_json` 之后变成 `InstrumentedAttribute` 描述符——实例级 `app.graph_json` 取列值、类级 `App.graph_json` 能当查询表达式（阶段 1 · 04 §6.7）。
+- **运行期往返**：`select(App)` 取回一行时，psycopg 的适配器已把该列的 jsonb 解析成 Python `dict`（**不需要 `json.loads`**）；反之你把一个 `dict` 赋给 `app.graph_json` 并 `commit`，它会被序列化回 jsonb（§6.2）。
+
+**TS 里对应什么**：TS 的类型 `Prisma.JsonValue | null` 只在编译期；Python 这里**注解保留到运行期**，SQLAlchemy 读它建映射。这也是为什么「同一份类声明既是类型、又是映射」。
+
+### 6.7 本篇首次出现的 Python 语法 / 机制（是什么 → TS 里对应什么 → 这里为什么这么写）
+
+| Python 写法 | 是什么 | TS 里对应什么 | 这里为什么这么写 |
+| --- | --- | --- | --- |
+| `from sqlalchemy.dialects.postgresql import JSONB` | **深层点号导入**：从 `sqlalchemy` 包 → `dialects` 子包 → `postgresql` 子模块 里取 `JSONB` | `import { JSONB } from 'sqlalchemy/dialects/postgresql'`（TS 用路径字符串，Python 用点号） | 方言类型只能这样精确取；**当场提醒**：导入能否成功依赖「从哪个目录启动」（阶段 0 · 00 §5.3、§8 坑） |
+| `dict[str, Any] \| None` | **泛型 + 联合类型**：`dict[str, Any]` 是「键 str、值任意」的字典；`\| None` 表示「或 None」 | `Record<string, any> \| null` | 表达「图是字典、且该列可空」——`T` 要如实反映「可能为 None」（§6.3） |
+| `Mapped[dict[str, Any] \| None]` | 泛型注解（`Mapped` 包了一层） | 无直接对应（Prisma 用 `Prisma.JsonValue \| null` 类型） | 声明「这是映射到列的属性，值为 dict 或 None」（§6.6） |
+| `mapped_column(JSONB, nullable=True)` | **关键字参数**调用；`nullable=True` 是关键字参数 | `{ nullable: true }` 对象参数 | 列可空与否要显式写，靠关键字参数表达（§6.3） |
+| `from typing import Any` | `typing` 是标准库里放「类型工具」的模块，`Any` 表示「任意类型」 | `any` | 图内容是自由结构，元素类型不做约束（阶段 0 · 00 §4.3） |
+| `type(a.graph_json).__name__`（§7.3 用到） | **内省**：取对象的类名（运行时才知道类型） | `typeof x` / `x.constructor.name` | 用来在验收脚本里确认「读回来真的是 `dict`」 |
+| `app.graph_json is None`（§6.3 的 `_draft_of` 用到） | **身份比较** `is None` 判「没有值」 | `x === null` | 可空列判空用 `is None`，不是 `== None`（阶段 0 · 00 §4.2） |
 
 ---
 
@@ -357,7 +412,9 @@ dict {'version': '1', 'nodes': [...], 'edges': [...]}
 | 把 Python `None` 显式写进 jsonb，以为会得到 SQL `NULL` | 该列里存的是 JSON `null` 值而非 SQL NULL | SQLAlchemy 默认 `none_as_null=False`：`None` → JSON `"null"`。本项目**从不显式赋 None**（新建时省略该列 → SQL NULL），不受影响；要强制 SQL NULL 用 `none_as_null=True` 或 `null()`（见 §6.3） |
 | 以为 `NULL` 与「存了一张空图」是一回事 | 语义混淆 | `NULL` = **从未编辑**；空图 = **确实存了一个对象** `{"version":"1","nodes":[],"edges":[]}`。`_draft_of` 把二者在 API 层区分（见 §6.3） |
 | 改列类型想「让 SQLAlchemy 帮你迁移」 | 两套迁移系统打架 | **DDL 归 Prisma**（迁移所有权）；Python 只映射，绝不 `ALTER TABLE`（见 `01-账号与认证/04-SQLAlchemy2.0.md`） |
-| 在仓库根跑读取脚本 | `ModuleNotFoundError: No module named 'app'` | 进 `apps/api-py`，或用 `uv run --directory apps/api-py …`（见阶段 0 · 06 §9） |
+| **忘记 `session.commit()`**（写回画布时，下一篇会用） | 保存草稿后重查为空、重启后丢失 | （**写错会怎样**之一）把 `dict` 赋给 `app.graph_json` **只改了内存中的对象**；必须 `session.commit()` 才写回数据库。忘了就会「看起来保存了、其实没落库」（阶段 1 · 04 §8）。用 `with SessionLocal() as session:` 的 `with` **不会**替你自动 commit |
+| `published_at` 写入 tz-aware 与物理列不匹配 | 存入/读出的时间「差 8 小时」或类型告警 | `published_at` 物理列是 **`timestamp(3)` 无时区**。若用带时区的 `datetime` 直写，会出现 tz-aware 与 naive 的错配；本项目按 **UTC** 取值处理（见 `app/timefmt.py` 的 `iso_z()`，并注意本篇 §5.1 该列的映射侧声明） |
+| 在仓库根跑读取脚本 | `ModuleNotFoundError: No module named 'app'` | （**写错会怎样**之二）Python 在**启动时的当前工作目录**里找包；`app` 包在 `apps/api-py/` 下，所以要么 `cd apps/api-py`，要么用 `uv run --directory apps/api-py …`（**当场解释**：`--directory` 换工作目录，`--project` **不换**工作目录）。见阶段 0 · 00 §5.3、阶段 0 · 06 §9 |
 | `uv` 不被识别 | `The term 'uv' is not recognized` | `uv` 已在用户 PATH；只有安装前已打开的 shell 继承旧 PATH，重启终端 / IDE 即可（见阶段 0 · 01） |
 
 ---
@@ -377,6 +434,30 @@ dict {'version': '1', 'nodes': [...], 'edges': [...]}
 
 两套实现操作的是**同一张 `apps` 表的同三列**，也因此必须共享**同一套键名与空值语义**，图才等价。
 
+### 9.1 与 Prisma 的对照（JSONB 列的差异与取舍）
+
+| 维度 | Prisma（schema-first） | SQLAlchemy（code-first） | 取舍 |
+| --- | --- | --- | --- |
+| **类型怎么选** | schema 里写 **`Json`**，Prisma **替你**落成 `jsonb`（你**看不见**底层类型） | 必须**显式**写 `postgresql.JSONB`（精确，但要知道「`JSON` ≠ `JSONB`」） | Prisma 省心、少犯错；SQLAlchemy **透明可控**，代价是概念更多（§6.5） |
+| **可空怎么表达** | 字段后缀 **`?`**（`Json?`） | **两处一起写**：`Mapped[... \| None]`（类型）+ `nullable=True`（列） | Prisma 一个 `?` 搞定；SQLAlchemy 要**同时**表达「类型可空」与「列可空」，漏一个易踩坑（§6.3） |
+| **序列化谁做** | Prisma Client 处理 object ↔ jsonb | psycopg 适配器处理 `dict` ↔ jsonb（**无需 `json.loads`**） | 两边都「拿到就是原生结构」，机制不同（§6.2、§6.6） |
+| **键名** | 落库前 `JSON.parse(JSON.stringify(body))` 原样保留 camelCase | `model_dump()` 原样产出 camelCase（字段名即 camelCase） | **JSONB 没有 DDL 兜底**：两端必须**约定同一套键名**，否则图不等价（§6.2） |
+| **「空」的语义** | `null` = 尚未编辑 / 从未发布 | `None` = 尚未编辑 / 从未发布；API 层转空图 | **存储只记「有没有」，语义由应用层定**（§6.3） |
+| **谁建列** | **Prisma 迁移** `add_app_graph`（DDL 拥有者） | **不建列**，只映射 | 结构唯一主人（迁移所有权）照旧 |
+
+> **一句话取舍**：**Prisma 用 `Json` 把「方言类型」藏起来、帮你兜底；SQLAlchemy 要求你把 `JSONB` 从方言里显式取出来、把「可空」写全。** 换来的是「类型透明、可控」，代价是「概念与坑更多」。
+
+### 9.2 与 NestJS/TS 的对照（与 Python 语言相关的部分）
+
+| 维度 | NestJS / TS | api-py / Python | 为什么 |
+| --- | --- | --- | --- |
+| **类型能否运行期可见** | TS 类型被擦除，Prisma 靠 `dmmf`/生成代码 | Python 注解**保留到运行期**，SQLAlchemy 直接读 | 「同一份类声明既是类型、又是映射」的根因（§6.6） |
+| **联合类型写法** | `Prisma.JsonValue \| null` | `dict[str, Any] \| None`（`\|` 联合；需 Python 3.10+） | Python 3.10 起原生支持 `\|`；本项目 3.12（阶段 0 · 00 §4.3） |
+| **判空** | `x === null` | `x is None`（身份比较） | Python 判「是不是 None」用 `is`（阶段 0 · 00 §4.2、§6.7） |
+| **运行时探类型** | `typeof x` | `type(x).__name__` | 验收脚本用它确认读回的是 `dict`（§7.3、§6.7） |
+| **序列化由谁做** | Prisma Client（引擎内部） | **psycopg 适配器** | SQLAlchemy 把「JSON ↔ dict」交给方言驱动，ORM 层不管（§6.5） |
+| **模型声明位置** | NestJS 里是 `schema.prisma`（不在 TS 代码里） | Python 里就是 `class App`（**代码即模型**） | schema-first vs code-first 的直接体现（阶段 1 · 04 §6.1） |
+
 ---
 
 ## 10. 本篇技术点登记（同步到 `docs/tutorial/INDEX.md`）
@@ -388,3 +469,5 @@ dict {'version': '1', 'nodes': [...], 'edges': [...]}
 | JSONB 往返的 `dict`（Python）↔ object（TS）；key 命名必须一致（camelCase） | **首次教学于本篇** |
 | 可空 JSON 列与 `None`；SQL `NULL` vs JSON `null`（`none_as_null`） | **首次教学于本篇** |
 | 同一列在 Prisma（`Json?`）与 SQLAlchemy（`JSONB`）的声明并列对照 | **首次教学于本篇** |
+| 「**方言（dialect）**」的运行期含义与「为什么 JSONB 必须从方言导入」 | **首次教学于本篇（§6.5）** |
+| `Mapped[...]` / `mapped_column(JSONB)` 运行期如何变成列（本项目的具体形，含 jsonb ↔ dict 往返） | **首次教学于本篇（§6.6）** |

@@ -25,7 +25,9 @@ export default defineConfig({
           { text: '阶段 1 · 账号与认证', link: '/tutorial/01-账号与认证/01-契约扩展' },
           { text: '阶段 2 · 应用管理', link: '/tutorial/02-应用管理/01-契约扩展' },
           { text: '阶段 3 · 画布', link: '/tutorial/03-画布/01-图JSON契约与校验' },
-          { text: '04-执行引擎', link: '/tutorial/04-执行引擎/01-执行引擎' },
+          { text: '阶段 4 · 执行引擎', link: '/tutorial/04-执行引擎/01-运行契约与SSE事件协议' },
+          { text: '阶段 5 · LLM 节点', link: '/tutorial/05-LLM节点/01-LLM节点契约与模型配置' },
+          { text: '阶段 6 · 工具调用', link: '/tutorial/06-工具调用/01-工具契约与内置工具' },
         ]
       }
     ],
@@ -153,6 +155,7 @@ export default defineConfig({
           collapsed: false,
           text: '阶段 0 · 项目初始化',
           items: [
+            { text: '00 Python 与 FastAPI 基础', link: '/tutorial/00-项目初始化/00-Python与FastAPI基础' },
             { text: '01 环境准备：Node / pnpm / uv / Python', link: '/tutorial/00-项目初始化/01-环境准备' },
             { text: '02 本地中间件：Docker 只跑 PostgreSQL+pgvector', link: '/tutorial/00-项目初始化/02-本地中间件Docker' },
             { text: '03 monorepo 与 pnpm workspace', link: '/tutorial/00-项目初始化/03-monorepo与pnpm-workspace' },
@@ -213,6 +216,28 @@ export default defineConfig({
             { text: '05 SSE 流式响应实现', link: '/tutorial/04-执行引擎/05-SSE流式响应实现' },
             { text: '06 前端 SSE 客户端与运行面板', link: '/tutorial/04-执行引擎/06-前端SSE客户端与运行面板' },
             { text: '07 验收', link: '/tutorial/04-执行引擎/07-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 5 · LLM 节点',
+          items: [
+            { text: '01 LLM 节点契约与模型配置', link: '/tutorial/05-LLM节点/01-LLM节点契约与模型配置' },
+            { text: '02 真实模型调用与流式', link: '/tutorial/05-LLM节点/02-真实模型调用与流式' },
+            { text: '03 LLM 错误映射', link: '/tutorial/05-LLM节点/03-LLM错误映射' },
+            { text: '04 mock LLM 与无密钥自测', link: '/tutorial/05-LLM节点/04-mock-LLM与无密钥自测' },
+            { text: '05 验收', link: '/tutorial/05-LLM节点/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 6 · 工具调用',
+          items: [
+            { text: '01 工具契约与内置工具', link: '/tutorial/06-工具调用/01-工具契约与内置工具' },
+            { text: '02 NestJS：ReAct 循环与条件边', link: '/tutorial/06-工具调用/02-NestJS-ReAct循环与条件边' },
+            { text: '03 Python 工具与 ReAct 对齐', link: '/tutorial/06-工具调用/03-Python工具与ReAct对齐' },
+            { text: '04 前端工具选择面板', link: '/tutorial/06-工具调用/04-前端工具选择面板' },
+            { text: '05 验收', link: '/tutorial/06-工具调用/05-验收' },
           ]
         },
       ],

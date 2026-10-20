@@ -103,36 +103,46 @@ users 表                      apps 表
 Python 只做**映射与读写**、不产生 DDL，以免两套迁移系统互相冲突。
 """
 
-from datetime import datetime
+from datetime import datetime                                             # 标准库：日期时间类型
 
-from sqlalchemy import DateTime, ForeignKey, String, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, ForeignKey, String, func                 # 列类型 + ForeignKey + SQL 函数工厂
+from sqlalchemy.orm import Mapped, mapped_column, relationship            # ORM：注解包装 / 列声明 / 关系声明
 
-from app.models.base import Base
+from app.models.base import Base                                          # 共同基类 Base
 
 
-class App(Base):
-    __tablename__ = "apps"
+class App(Base):                                                          # 继承 Base → 登记为 apps 表的映射
+    __tablename__ = "apps"                                                # 绑定真实表名 apps（Prisma @@map("apps")）
 
     # id 由应用侧生成（Prisma 的 uuid() 是客户端默认值，数据库没有默认）
-    id: Mapped[str] = mapped_column(String, primary_key=True)
-    owner_id: Mapped[str] = mapped_column(
+    id: Mapped[str] = mapped_column(String, primary_key=True)             # 主键；Python 侧 str
+    owner_id: Mapped[str] = mapped_column(                                # 外键列：属性名＝列名 owner_id
         String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    name: Mapped[str] = mapped_column(String, nullable=False)
-    description: Mapped[str | None] = mapped_column(String, nullable=True)
-    mode: Mapped[str] = mapped_column(String, nullable=False, server_default="chatflow")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    )                                                                     # ↑ 指向 users.id；非空；描述「有索引」
+    name: Mapped[str] = mapped_column(String, nullable=False)             # 应用名，非空
+    description: Mapped[str | None] = mapped_column(String, nullable=True)  # 可空列：类型也可为 None
+    mode: Mapped[str] = mapped_column(String, nullable=False, server_default="chatflow")  # DB 默认 'chatflow'
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())  # DB 默认 now()
     # updated_at 现已由数据库层保证：迁移 `add_updated_at_default_and_trigger`
     # 加了 DEFAULT now() 与 BEFORE UPDATE 触发器（手工 SQL 也会刷新）。
     # 这里保留 SQLAlchemy 的 default/onupdate 作为应用层「双保险」：
     # 二者都取 now()，DB 触发器为权威、ORM 值作为兜底，不会冲突。
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now(), onupdate=func.now()
+    updated_at: Mapped[datetime] = mapped_column(                           # 应用端(ORM)默认值：INSERT 填 now()
+        DateTime, nullable=False, default=func.now(), onupdate=func.now()   # ↑ UPDATE 时也把该列改成 now()
     )
 
-    owner: Mapped["User"] = relationship("User", back_populates="apps")
+    owner: Mapped["User"] = relationship("User", back_populates="apps")     # 关系属性："多"端 → "一"端（对象导航）
 ```
+
+**这段在干什么**（按执行顺序）：
+
+1. 模块导入时，先执行四条 `import`；`ForeignKey`、`relationship` 是本篇**新增**的两个名字——前者是**列级外键**（写在 `mapped_column` 里），后者是**类级关系**（单独一行）。
+2. 执行 `class App(Base):`——`App` 继承 `Base`，元类在**类定义完成那一刻**收集：`__tablename__`、七条列声明（`id`/`owner_id`/`name`/`description`/`mode`/`created_at`/`updated_at`）、以及一行关系声明（`owner`）。机制同阶段 1 · 04 §6.7。
+3. 列声明被逐个登记。`owner_id` 里的 `ForeignKey("users.id", ondelete="CASCADE")` 就是「**声明**这一列是外键、指向 `users.id`」（约束真正由数据库执行，见 §6.8）。`updated_at` 用的是**应用端** `default`/`onupdate`（不是 `server_default`）——与 `created_at` 不同，原因见 §6.6。
+4. 最后一行 `owner = relationship("User", back_populates="apps")` 登记的是**对象层导航**，**不产生任何列**；它与 `User.apps` 互为反向（双向绑定，见 §6.1、§6.7）。
+5. 依旧**没有任何 SQL 发出**；真正的查询/写入等用 Session 时才会发生。
+
+> 注意 `owner_id` 拆成多行只为排版，含义与单行写法完全一样：`mapped_column(String, ForeignKey(...), nullable=False, index=True)`。
 
 **逐行解释**
 
@@ -162,25 +172,25 @@ class App(Base):
 Python 只做**映射与读写**、不产生 DDL，以免两套迁移系统互相冲突。
 """
 
-from datetime import datetime
+from datetime import datetime                                  # 标准库：日期时间类型
 
-from sqlalchemy import DateTime, String, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, String, func                  # 列类型 + SQL 函数工厂
+from sqlalchemy.orm import Mapped, mapped_column, relationship # ORM：注解 / 列声明 / 关系（本篇新增 relationship）
 
-from app.models.base import Base
+from app.models.base import Base                               # 共同基类 Base
 
 
-class User(Base):
-    __tablename__ = "users"
+class User(Base):                                              # 继承 Base → users 表的映射
+    __tablename__ = "users"                                    # 绑定真实表名 users
 
     # id 由应用侧生成（Prisma 的 uuid() 是客户端默认值，数据库没有默认）
-    id: Mapped[str] = mapped_column(String, primary_key=True)
-    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
-    password_hash: Mapped[str] = mapped_column(String, nullable=False)
-    role: Mapped[str] = mapped_column(String, nullable=False, server_default="member")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    id: Mapped[str] = mapped_column(String, primary_key=True)               # 主键
+    email: Mapped[str] = mapped_column(String, unique=True, nullable=False) # 唯一 + 非空
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)      # 非空
+    role: Mapped[str] = mapped_column(String, nullable=False, server_default="member")  # DB 默认 'member'
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())  # DB 默认 now()
 
-    apps: Mapped[list["App"]] = relationship("App", back_populates="owner")
+    apps: Mapped[list["App"]] = relationship("App", back_populates="owner")  # 关系属性："一"端 → 多个 App
 ```
 
 **与阶段 1 · 04 的差异**只有两处：
@@ -190,21 +200,30 @@ class User(Base):
 
 `User` 的列定义**一字未改**——这正体现了「关系建模」只加**对象层的连接**，不碰**表结构**。
 
+**这段在干什么**（按执行顺序）：与阶段 1 · 04 完全一致（元类收集列 → 登记映射），只多了**最后一行**——`apps = relationship("App", back_populates="owner")` 被元类登记为「`User` 这一侧的**关系属性**」。它**不产生列**，只是让 `user.apps` 能导航到该用户的 App 列表；真正的连接靠 `App.owner` 那一侧的 `back_populates="apps"` 配对（双向绑定，见 §6.1、§6.7）。
+
 ### 5.4 `apps/api-py/app/models/__init__.py`（新增导出 `App`）
 
 **完整文件路径：`apps/api-py/app/models/__init__.py`**
 
 ```python
-"""数据模型包。"""
+"""数据模型包。"""                    # 包 docstring
 
-from app.models.app import App
-from app.models.base import Base
-from app.models.user import User
+from app.models.app import App        # 导入 App（会执行 app.py → 登记 App 映射）
+from app.models.base import Base      # 导入 Base
+from app.models.user import User      # 导入 User（会执行 user.py → 登记 User 映射）
 
-__all__ = ["App", "Base", "User"]
+__all__ = ["App", "Base", "User"]     # 星号导入的范围
 ```
 
 **解释**：把 `App` 加进包级导出，别的模块可 `from app.models import App`（或如 `apps.py` 那样 `from app.models.app import App`）。导入顺序上 `app.py` 里用到了字符串形式的 `"User"`（前向引用），所以此处「先导入 `App`、再导入 `User`」不会造成循环导入问题——`relationship` 的字符串目标是在**映射配置（mapper configure）时**才解析的。
+
+**这段在干什么**（按执行顺序）：
+
+1. 首次 `import app.models` → 依次执行三条 `from ... import ...`：**导入 `app` 子模块会执行 `app.py`**（把 `App` 登记成 `apps` 表映射），同样地 `user.py` 把 `User` 登记成 `users` 表映射。
+2. 为什么「先导入 `App` 再导入 `User`」不炸：因为 `app.py` 里 `relationship("User", ...)` 用的是一个**字符串 `"User"`**，不是直接引用 `User` 类——**字符串在类定义时不会去解析**，SQLAlchemy 会把它**搁置到「所有模型都导入完、映射配置阶段」再统一解析**（见下方说明）。
+3. `__all__` 只是名字清单，控制 `from app.models import *` 的范围。
+
 
 > **为什么写字符串 `"App"` / `"User"` 而不是直接写类？** 因为 `User` 与 `App` **互相引用**：`App.owner` 要引用 `User`，`User.apps` 要引用 `App`。若直接写类名会形成循环导入。SQLAlchemy 允许用**字符串**延迟解析——等所有类都定义完，再统一把字符串换成真实类。这是处理双向关系的标准写法。
 
@@ -394,6 +413,81 @@ updated_at: Mapped[datetime] = mapped_column(
 
 > 一句话：**DDL 归 Prisma**；`updated_at` 的默认值现由 DB（`DEFAULT now()` + `BEFORE UPDATE` 触发器）保证，SQLAlchemy 的 `default`/`onupdate` 保留为**双保险**（两者取同一 `now()`，不会冲突）。实测：手工 `INSERT`/`UPDATE` 与两端 `PATCH /apps/{id}` 均正常刷新 `updated_at`。
 
+### 6.7 【运行期机制】`relationship()` / `back_populates` 的双向绑定在运行期怎么工作（惰性加载 + 为什么 N+1 是坑）
+
+§6.1 讲了「两侧都要写、互为反向」；这里讲**运行期到底怎么把它跑起来**，以及为什么「以为写了关系就自动 JOIN」是错的。
+
+**第一步：类定义时，关系被登记为「一条连接两端的关系对象」**
+
+执行 `class App(Base): ...` 与 `class User(Base): ...` 时，元类分别把 `owner` 与 `apps` 登记为两个**关系属性**。因为用的是**字符串目标**（`"User"` / `"App"`），SQLAlchemy 会等到**所有类都定义完**（所谓 mapper configure 阶段）再解析字符串、把两侧**配对**：
+
+```
+App.owner  ──back_populates="apps"──►  User.apps
+User.apps  ──back_populates="owner"──► App.owner
+```
+
+`back_populates` 就是「**点名对方的属性名**」。两侧名字互为对方属性名，配成一对；**缺一侧、或名字写反**，配置阶段就会报错（见 §8 坑）。
+
+**第二步：它靠哪一列连起来？——靠 `ForeignKey` 描述的那一列**
+
+关系对象要知道「用哪一列连」。`App.owner` 与 `User.apps` 都指向 `App.owner_id`（由 `mapped_column(String, ForeignKey("users.id"))` 描述）。所以「数据库里靠 `owner_id` 连，对象里靠 `owner`/`apps` 连」——**同一根连接的两端**。
+
+**第三步：访问时才发查询——惰性加载（lazy loading）**
+
+这是**最容易误解**的地方：**写了 `relationship` ≠ 自动 JOIN**。默认是**惰性（lazy）**：
+
+```python
+app = session.scalars(select(App)).first()   # 第 1 条 SQL：只查 apps 表（不含属主）
+print(app.owner.email)                        # 此刻才发第 2 条 SQL：按 owner_id 去查该 User
+```
+
+也就是说：**`app.owner` 在「第一次访问」时才真正去数据库拉 `User`**。在此之前 `app.owner` 只是一个「还没兑现的导航」。这一特性对「单次、范围小」的操作**完全够用**。
+
+**为什么 N+1 是坑**：如果你**循环访问**每个 app 的 owner，就会变成「1 条查 apps + N 条查 user」：
+
+```python
+apps = session.scalars(select(App)).all()   # 1 条 SQL
+for a in apps:                               # N 次循环
+    print(a.owner.email)                     # 每个 a 都各发 1 条 SELECT → 共 N 条！
+```
+
+共 **N+1 条 SQL**（1 条列表 + N 条逐行取属主），数据量大时会很慢。解决：**显式预加载**，一次 JOIN 全带回来：
+
+```python
+from sqlalchemy.orm import joinedload
+apps = session.scalars(select(App).options(joinedload(App.owner))).all()  # 1 条（JOIN）搞定
+```
+
+**TS 里对应什么**：Prisma 的关系默认**不自动带出**（要写 `include: { owner: true }`）；SQLAlchemy 的惰性加载「访问才查」在效果上类似，但**更隐蔽**——Prisma 你不写 `include` 就**根本拿不到** `app.owner`（类型上就没有），而 SQLAlchemy 里 `app.owner` **永远可用**，只是背后偷偷又查了一次，于是容易踩 N+1。**口诀：能一次带出就用 `joinedload`，别在循环里摸关系属性。**
+
+**本项目为什么没事**：本阶段的查询脚本只在**单次取一两个对象**时用 `a.owner.email`，没有循环摸属主，所以惰性加载足够；若将来做列表页要一次带出属主，再上 `joinedload`。
+
+### 6.8 【运行期机制】`ForeignKey()` 只是「声明」——约束由数据库执行
+
+**关键区分**：`ForeignKey("users.id", ondelete="CASCADE")` 写在 `mapped_column` 里，它**不是**「在这里创建外键约束」，而是**「告诉 ORM：这一列是外键、指向 `users.id`」**。真正的**约束**（`FOREIGN KEY ... REFERENCES ...`）是**数据库里的对象**，由 **Prisma 迁移**创建（本项目 `apps_owner_id_fkey`）。
+
+**为什么必须区分**：本项目 **DDL 归 Prisma**（阶段 1 · 04 §6.6）。Python 侧**不建表、不建约束**；`ForeignKey(...)` 与 `index=True`/`nullable=False` 一样，都只是**描述**（元数据），用来让 ORM 知道「这一列怎么用」。**约束的执行者是 PostgreSQL**：
+
+- 你插入一个不存在的 `owner_id` → **数据库**因为外键约束而拒收（不是 SQLAlchemy 拦的）。
+- 你删一个 `users` 行 → **数据库**按 `ON DELETE CASCADE` 连带删子行。
+
+**`ondelete="CASCADE"` 在这里的作用**：它同样是**描述**——告诉 SQLAlchemy「这张表的外键在数据库里的删除行为是 CASCADE」。写清楚后，ORM 对「删父行会连删子行」有正确预期（配合 §6.4 的两层 cascade 理解）。
+
+**TS 里对应什么**：Prisma 的 `@relation(fields: [ownerId], references: [id], onDelete: Cascade)` 也是**声明**，真正的 `FOREIGN KEY ... ON DELETE CASCADE` 由 Prisma 生成的迁移 SQL 建出（`02-应用管理/02-Prisma关系建模.md` §5.2）。所以两端都遵循同一句话：**「关系用代码声明，约束由数据库执行」。**
+
+> 一句话：**`ForeignKey` 是给 ORM 看的「这一列是外键」的声明；数据库里的约束是另一份、由 Prisma 迁移拥有。** 二者**指向同一列**，但**不是一个东西**。
+
+### 6.9 本篇首次出现的 Python 语法 / 机制（是什么 → TS 里对应什么 → 这里为什么这么写）
+
+| Python 写法 | 是什么 | TS 里对应什么 | 这里为什么这么写 |
+| --- | --- | --- | --- |
+| `relationship("App", back_populates="owner")` | 一个**普通函数调用**（不是装饰器），返回关系对象，赋给类属性 | Prisma 的 `apps App[]` / `owner User @relation(...)`（但那是 DSL 字段） | 它只在**对象层**导航，不产生列（§6.7） |
+| 字符串目标 `"User"` / `"App"` | **前向引用**：用字符串代替类名，**延迟到映射配置阶段才解析** | TS 里类型/值可直接互相引用（无「未定义就报」的运行期障碍） | 两个类**互相引用**，直接写类名会**循环导入**；字符串绕开（§5.4、§6.7） |
+| `Mapped[list["App"]]` | 泛型里嵌**字符串**（`list["App"]`）——注解里的前向引用 | ≈ `App[]`，但 TS 的类型是静态的 | 说明「这一端是**多个**」→ SQLAlchemy 据此判断一对多（§6.1） |
+| `ForeignKey("users.id", ondelete="CASCADE")` | **关键字参数**传入一个**字符串**（`表名.列名`） | Prisma 的 `references: [id]` + `fields: [ownerId]` | 用字符串是**延迟解析**、避免按类导入顺序出问题（§6.8） |
+| `app.owner` / `user.apps` | 访问类上登记过的**关系属性**，触发**惰性加载**（可能补发 SQL） | Prisma 需显式 `include: { owner: true }` 才有 | 惰性加载的「访问才查」是 SQLAlchemy 的默认行为（§6.7） |
+| `with SessionLocal() as session:` | **上下文管理器**（离开缩进块自动 close） | ≈ `try { } finally { session.close() }` | 见阶段 0 · 00 §4.13（当场解释：进入拿对象、离开自动释放） |
+
 ---
 
 ## 7. 验收自测
@@ -462,11 +556,11 @@ user.apps: 0
 | 坑 | 现象 | 原因 / 解决 |
 | --- | --- | --- |
 | **`updated_at` 插入报非空违例**（已收口） | 旧版 `NotNullViolation: null value in column "updated_at" … violates not-null constraint` | 旧表里 `updated_at` **NOT NULL 且无 DEFAULT**（Prisma 的 `@updatedAt` 是客户端行为）。**已收口**：迁移 `20261018120000_…` 给该列加 `SET DEFAULT now()` + `BEFORE UPDATE` 触发器（DB 触发器为权威），ORM 侧保留 `default=func.now(), onupdate=func.now()` 作为**兜底**（见 §6.6） |
-| `back_populates` 只写了一侧 / 写错名字 | 映射配置报错：`relationship 'App.owner' … back_populates 'X' does not reference a relationship` | `back_populates` 必须**两侧都写、名字互为对方属性名**。`User.apps` → `"owner"`，`App.owner` → `"apps"`（见 §6.1） |
+| `back_populates` 只写了一侧 / 写错名字 | 映射配置报错：`relationship 'App.owner' … back_populates 'X' does not reference a relationship` | （**写错会怎样**之一）`back_populates` 必须**两侧都写、名字互为对方属性名**。`User.apps` → `"owner"`，`App.owner` → `"apps"`。**当场解释**：SQLAlchemy 在「映射配置（mapper configure）阶段」检查每一对 `back_populates` 是否**互相指认**——只写一侧，另一侧就是「孤零零的关系」，它会报「找不到对方」，映射建不起来，一访问就炸（见 §6.1、§6.7） |
 | 外键属性名写成 `ownerId` | 运行期 `column apps.ownerId does not exist` | ORM 属性名默认当列名用；DB 列是 `owner_id`，属性就必须叫 `owner_id`（见 §6.3） |
 | `ForeignKey` 目标写错 | 映射配置报错：`Could not determine join condition` / `no such table` | 目标要写成 `"users.id"`（表名.列名），与 Prisma 的 `references: [id]` 一致 |
 | 混淆两层 cascade | 想删用户却报「无法把 `owner_id` 置空」 | 数据库层 `ondelete="CASCADE"` 与 ORM 层 `cascade` 是两回事；本项目只靠前者。若要在 ORM 里 `session.delete(user)`，需加 `passive_deletes=True` 或 `cascade="all, delete-orphan"`（见 §6.4） |
-| 以为写了 `relationship` 就会 JOIN | 列表查询仍发多条 `SELECT` | 关系默认**惰性加载**，访问时才查；需要一次带出属主用 `joinedload()` |
+| 以为写了 `relationship` 就会 JOIN | 列表查询仍发多条 `SELECT`；循环里摸 `a.owner` 会发 **N+1** 条查询 | 关系默认**惰性加载**，访问时才查。**当场解释**：`app.owner` 是「第一次读它时才去查」——单个对象无所谓，但**在循环里逐个摸**就变成「1 条列表 + N 条取属主」的 N+1。解决：一次带出用 `joinedload()`（见 §6.7） |
 | 循环导入 | `ImportError: cannot import name 'App' …` | 两模型互相引用，`relationship`/`ForeignKey` 用**字符串**延迟解析；`__init__.py` 先导入 `App` 再导入 `User`（见 §5.4） |
 | 改了模型不生效 | 访问报 `AttributeError` / 列不存在 | 模型是代码，**改完要重启进程**；真要改表结构，那属于 Prisma 的事 |
 | 在仓库根跑查询脚本 | `ModuleNotFoundError: No module named 'app'` | 要进 `apps/api-py`，或用 `uv run --directory apps/api-py …`（见阶段 0 · 06 §9） |
@@ -491,6 +585,31 @@ user.apps: 0
 
 两套实现操作的是**同一张 `apps` 表**，对外结构由契约（`02-应用管理/01-契约扩展.md`）统一。
 
+### 9.1 与 Prisma 的对照（关系建模的差异与取舍）
+
+**同一根关系，两种表达 + 各自的取舍**：
+
+| 维度 | Prisma（schema-first） | SQLAlchemy（code-first） | 取舍 |
+| --- | --- | --- | --- |
+| **关系写在哪** | `schema.prisma` 里一行 `@relation(...)`（DSL） | 两处：`mapped_column(..., ForeignKey(...))`（列）+ 两行 `relationship(...)`（对象） | Prisma 一处写全、生成外键与类型；SQLAlchemy 把「物理连接」与「对象导航」**拆成两层**表达，概念多但更贴近实现 |
+| **外键列** | 由一个**标量字段** `ownerId @map("owner_id")` 承载 | 由 `owner_id: Mapped[str] = mapped_column(..., ForeignKey(...))` 承载 | 两者都落到**同一列** `owner_id`；差别只在「列名怎么来」——Prisma 用 `@map` 桥接驼峰，SQLAlchemy 直接让属性名＝列名 |
+| **双向** | `User.apps App[]` + `App.owner User @relation(...)`，靠**名字配对** | `User.apps` + `App.owner`，靠 **`back_populates` 显式互指** | Prisma 靠「模型字段名」隐式配；SQLAlchemy 要**显式写出对方属性名**，更啰嗦但更明确、IDE 可见 |
+| **级联删除** | `onDelete: Cascade` → 迁移生成 `ON DELETE CASCADE` | `ondelete="CASCADE"`（**描述** DB 行为；约束仍由 Prisma 迁移建） | 都最终落到 DB 的 `ON DELETE CASCADE`；SQLAlchemy 这一句只是「让 ORM 知道 DB 会级联」 |
+| **取关联对象** | 必须显式 `include: { owner: true }` 才带出 | `a.owner` **永远可用**，但背后**惰性加载**（可能 N+1） | Prisma 「不写就没有」，逼你显式；SQLAlchemy 「随时可用」，方便却**易踩 N+1**（§6.7） |
+| **默认值的层** | `@default("chatflow")` 是 **DB 端**默认；`@updatedAt` 是 **客户端**默认 | `server_default`（DB 端） vs `default`/`onupdate`（应用端） | 概念一一对应（§6.6）；所有权边界（DDL 归 Prisma）照旧 |
+
+> **一句话**：**Prisma 把关系写成「一份 DSL」，SQLAlchemy 把关系拆成「列级 `ForeignKey` + 类级 `relationship`」两层。** 二者都表达「`apps.owner_id → users.id`」，最终由**同一个数据库约束**执行。
+
+### 9.2 与 NestJS/TS 的对照（与 Python 语言相关的部分）
+
+| 维度 | NestJS / TS | api-py / Python | 为什么 |
+| --- | --- | --- | --- |
+| **两模型互相引用** | TS 里 `import` 两个类可互相引用，编译期解析 | Python 里**直接互相 `import` 会循环导入**，必须用**字符串前向引用** `"User"` | Python 的 `import` 是**运行期执行**的，循环导入会真炸；SQLAlchemy 用字符串把解析**延后**（§5.4、§6.7） |
+| **反向关系怎么写** | Prisma `User.apps App[]`（靠模型名配对） | `relationship("App", back_populates="apps")`（**显式互指**） | Python 没有 Prisma 的 `validate` 编译器，靠运行期配置检查，所以要写清楚（§6.1） |
+| **关系属性怎么访问** | `include` 后 `app.owner` 才有 | `app.owner` 随时可点，**惰性**可能补查 | 描述符属性让「关系」像普通属性一样被访问（§6.7） |
+| **外键「声明 vs 约束」** | Prisma `@relation` 是声明，迁移建约束 | `ForeignKey(...)` 是声明，约束由 Prisma 建 | 同一句话：**关系用代码声明，约束由数据库执行**（§6.8） |
+| **级联的两层** | Prisma 只谈 `onDelete: Cascade`（DB 层） | Python 还多一层 ORM `cascade`（走 `session.delete` 才生效） | ORM 层是 SQLAlchemy 特有的第二层，Prisma 用户平时不感知（§6.4） |
+
 ---
 
 ## 10. 本篇技术点登记（同步到 `docs/tutorial/INDEX.md`）
@@ -505,3 +624,5 @@ user.apps: 0
 | cascade 的两层含义（数据库层 `ON DELETE CASCADE` vs ORM 层 `cascade`；`passive_deletes=True`） | **首次教学于本篇** |
 | 写入默认值的所有权边界（`default` / `onupdate` vs `server_default`；`updated_at` 由 DB 默认值 + 触发器保证、ORM 兜底） | **首次教学于本篇** |
 | 同一张表的 Prisma（schema-first）与 SQLAlchemy（code-first）声明并列对照 | **首次教学于本篇** |
+| `relationship` / `back_populates` 的**运行期机制**（映射配置阶段配对、惰性加载、**N+1** 与 `joinedload`） | **首次教学于本篇（§6.7）** |
+| `ForeignKey` 只是「声明」、**约束由数据库执行**（对比 Prisma `@relation`） | **首次教学于本篇（§6.8）** |

@@ -102,41 +102,41 @@ TS 侧对照
 - 归属校验：查不到、或不属于当前用户，一律 404（不用 403，避免泄露资源是否存在）。
 """
 
-import uuid
-from datetime import datetime
-from typing import Literal
+import uuid                                        # 生成 id
+from datetime import datetime                      # 时间字段类型
+from typing import Literal                         # 字面量类型（枚举）
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
-from sqlalchemy import select
+from sqlalchemy import select                      # 构造查询
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
-from app.models.app import App
-from app.models.user import User
-from app.timefmt import iso_z
+from app.api.deps import get_current_user, get_db  # 认证依赖 + 会话依赖（见 01-账号与认证/05）
+from app.models.app import App                     # apps 表的 ORM 模型
+from app.models.user import User                   # users 表的 ORM 模型
+from app.timefmt import iso_z                      # datetime → "…Z"
 
-router = APIRouter(prefix="/apps", tags=["apps"])
+router = APIRouter(prefix="/apps", tags=["apps"])  # 路由组，公共前缀 /apps
 
-AppMode = Literal["chatflow", "workflow"]
+AppMode = Literal["chatflow", "workflow"]          # 可复用的枚举类型别名（≈ 契约 enum）
 
 
 class AppResponse(BaseModel):
     """对应契约 `AppResponse`（只暴露契约字段）。"""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")     # 锁死字段集合
 
     id: str
     name: str
-    description: str | None
+    description: str | None                        # 必填字段，值可为 str 或 None（→ JSON 字符串或 null）
     mode: str
-    ownerId: str
+    ownerId: str                                   # 契约名（camelCase）；ORM 里叫 owner_id
     createdAt: datetime
     updatedAt: datetime
 
-    @field_serializer("createdAt", "updatedAt")
+    @field_serializer("createdAt", "updatedAt")    # 两个时间字段共用同一个序列化器
     def _serialize_timestamps(self, value: datetime) -> str:
-        return iso_z(value)
+        return iso_z(value)                        # UTC 毫秒 + "Z"
 
 
 class CreateAppRequest(BaseModel):
@@ -144,9 +144,9 @@ class CreateAppRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: str = Field(min_length=1, max_length=64)
-    description: str | None = Field(default=None, max_length=256)
-    mode: AppMode | None = None
+    name: str = Field(min_length=1, max_length=64)             # 必填，长度 1..64
+    description: str | None = Field(default=None, max_length=256)  # 可选（写了 default=None）
+    mode: AppMode | None = None                                # 可选；缺省由服务层补 "chatflow"
 
 
 class UpdateAppRequest(BaseModel):
@@ -154,7 +154,7 @@ class UpdateAppRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    name: str | None = Field(default=None, min_length=1, max_length=64)
+    name: str | None = Field(default=None, min_length=1, max_length=64)   # 全部「可选 + 可为 None」
     description: str | None = Field(default=None, max_length=256)
     mode: AppMode | None = None
 
@@ -164,23 +164,25 @@ class AppListResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    items: list[AppResponse]
+    items: list[AppResponse]                       # 数组元素是 AppResponse（嵌套模型）
 
 
 def _to_app_response(app: App) -> AppResponse:
+    # ORM 对象 → 契约响应：改名（ownerId←owner_id）+ 时间戳交给 field_serializer 归一
     # 库里是 naive timestamp；iso_z 会按 UTC 解释并输出毫秒 + Z 形式
     return AppResponse(
         id=app.id,
         name=app.name,
-        description=app.description,
+        description=app.description,               # DB 里为 NULL 时即 Python None
         mode=app.mode,
-        ownerId=app.owner_id,
+        ownerId=app.owner_id,                      # ← 改名
         createdAt=app.created_at,
         updatedAt=app.updated_at,
     )
 
 
 def _find_owned(db: Session, owner_id: str, app_id: str) -> App:
+    # 归属校验公共前置：查不到 或 不属于当前用户，一律 404（两种结果不可区分）
     app = db.get(App, app_id)
     if app is None or app.owner_id != owner_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
@@ -189,42 +191,42 @@ def _find_owned(db: Session, owner_id: str, app_id: str) -> App:
 
 @router.get("", response_model=AppListResponse, operation_id="listApps")
 def list_apps(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),   # 注入当前用户（先解析依赖链）
+    db: Session = Depends(get_db),                    # 注入会话（同请求内与上面的依赖缓存共用）
 ) -> AppListResponse:
     apps = db.scalars(
         select(App).where(App.owner_id == current_user.id).order_by(App.created_at.desc())
-    ).all()
-    return AppListResponse(items=[_to_app_response(app) for app in apps])
+    ).all()                                           # 只查本人 + 按 created_at 倒序
+    return AppListResponse(items=[_to_app_response(app) for app in apps])   # 列表推导式逐个映射
 
 
 @router.post(
     "",
     response_model=AppResponse,
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_201_CREATED,              # 创建 → 201
     operation_id="createApp",
 )
 def create_app(
-    body: CreateAppRequest,
+    body: CreateAppRequest,                           # 请求体（Pydantic 校验）
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> AppResponse:
-    app = App(
+    app = App(                                        # 组装 ORM 对象
         id=str(uuid.uuid4()),
-        owner_id=current_user.id,
+        owner_id=current_user.id,                     # ← 归属来自令牌，不来自请求体
         name=body.name,
         description=body.description,
-        mode=body.mode or "chatflow",
+        mode=body.mode or "chatflow",                 # 缺省补 "chatflow"（对齐 TS 的 dto.mode ?? 'chatflow'）
     )
     db.add(app)
     db.commit()
-    db.refresh(app)
+    db.refresh(app)                                   # 回读以获得数据库生成的 updated_at 等
     return _to_app_response(app)
 
 
 @router.get("/{id}", response_model=AppResponse, operation_id="getApp")
 def get_app(
-    id: str,
+    id: str,                                          # 路径参数 {id} → 函数参数（无 Depends）
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> AppResponse:
@@ -240,9 +242,9 @@ def update_app(
 ) -> AppResponse:
     app = _find_owned(db, current_user.id, id)
     # 只更新请求中显式传入的字段
-    for field, value in body.model_dump(exclude_unset=True).items():
-        setattr(app, field, value)
-    db.commit()
+    for field, value in body.model_dump(exclude_unset=True).items():   # 未传的字段不在字典里
+        setattr(app, field, value)                    # 把「传进来的字段」写回 ORM 对象
+    db.commit()                                       # 触发 UPDATE；onupdate 自动刷新 updated_at
     db.refresh(app)
     return _to_app_response(app)
 
@@ -252,11 +254,18 @@ def delete_app(
     id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> None:
+) -> None:                                             # 返回 None → 空体（204）
     app = _find_owned(db, current_user.id, id)
     db.delete(app)
     db.commit()
 ```
+
+**这段在干什么（按执行顺序）**：
+
+1. 模块导入时：`AppMode` 别名、四个模型、`router` 被定义——**不触发校验**。
+2. 请求命中某条路由：FastAPI **按签名解析参数**——`id`（路径）、`body`（请求体，触发 Pydantic 校验）、`current_user` 与 `db`（依赖，现解析；因**依赖缓存**，同请求内 `get_db` 只开一个会话）。全部就绪后才调用函数体。
+3. 函数体：`list_apps` 只查本人 + 倒序；`create_app` 组装→`commit`→`refresh`；`get_app`/`update_app`/`delete_app` 都先 `_find_owned` 做 404 归属校验，再动资源。
+4. `return` 时：若是 `AppResponse`/`AppListResponse` 实例，则由 `response_model` 校验并序列化，`field_serializer` 把时间戳转成 `"…Z"`；`delete_app` 返回 `None`，配合 `status_code=204` 输出空体。
 
 **逐块解释**
 
@@ -298,13 +307,13 @@ def delete_app(
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.apps import router as apps_router
+from app.api.apps import router as apps_router      # 应用路由（本篇新增）
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.config import settings
 from app.errors import register_error_handlers
 
-app = FastAPI(title="mini-dify api-py", version=settings.version)
+app = FastAPI(title="mini-dify api-py", version=settings.version)   # 创建应用对象
 
 # 前端（localhost:3000）与后端（localhost:8000）跨域，阶段 0 直接放开。
 app.add_middleware(
@@ -315,12 +324,14 @@ app.add_middleware(
 )
 
 # 把 FastAPI 默认的 {detail} 归一化成契约要求的 {statusCode, message, error}
-register_error_handlers(app)
+register_error_handlers(app)                        # 登记异常处理器（须在 app 之后）
 
 app.include_router(health_router)
 app.include_router(auth_router)
-app.include_router(apps_router)
+app.include_router(apps_router)                     # 挂载应用路由（新增这一行）
 ```
+
+**这段在干什么（按执行顺序）**：导入 → 创建 `app` → 加 CORS → 登记异常处理器 → 逐个 `include_router`。新增的只有「导入 `apps_router`」与「挂载 `apps_router`」两处；`register_error_handlers(app)` 依旧在 `app` 之后调用（否则错误体退回 `{detail}`）。
 
 **与阶段 1 · 05 的差异**只有两处：
 
@@ -334,6 +345,24 @@ app.include_router(apps_router)
 ## 6. 【技术教学 · 首次】
 
 > 规则：以下技术均为本项目**首次出现**，本节讲透；后续笔记只写「见阶段 2 · 05」并直接使用。
+
+### 6.0 本篇首次出现的 Python / FastAPI 机制（是什么 → NestJS 里对应什么 → 这里为什么这么写）
+
+| # | 机制（本节） | 是什么（一句话） | NestJS 里对应什么 | 这里为什么这么写 |
+| --- | --- | --- | --- | --- |
+| 6.1 | **响应模型 + 显式映射**（ORM → 契约 JSON） | 用 Pydantic 模型声明出参形状，必要时手写映射函数 | `toAppResponse()` 手写视图映射 | 契约字段要**改名**、时间戳要**归一**，`from_attributes` 不够用 |
+| 6.2 | **`None` 的序列化** | `str \| None` 的值可为字符串或 `None`（→ JSON `null`） | `description ?? null` | 契约要「字段总在、值可为 null」 |
+| 6.3 | **404 归属校验** | 「不存在」与「非本人」合并成同一个 404 | `findOwned()` 抛 `NotFoundException` | 不泄露资源是否存在 |
+| 6.4 | **`model_dump(exclude_unset=True)`** | 只导出「构造时显式传入过」的字段 | Prisma 忽略 `undefined` 字段 | 复刻 PATCH「只改传入字段」语义 |
+| 6.5 | **`response_model` vs 显式映射的取舍** | 自动校验/序列化 vs 手写映射函数 | `toAppResponse()` | 见 6.1、6.5 |
+
+> **复用的公共机制（首次教学在 `01-账号与认证/05-FastAPI认证.md`，这里先各用一句话说清，再指路）**：
+> - **`Depends`**：写在处理函数**参数**上的依赖声明。FastAPI **处理每个请求时**读函数签名来解析依赖树（对照 NestJS 在**容器启动时**按类构造参数建图）——本篇每个路由的 `current_user`/`db` 都这样注入（详见 01-05 §6.1）。
+> - **`get_db` 的 `yield` 依赖**：`yield` 之前「请求开始开会话」、之后「请求结束关会话」。`with` 负责在退出时 `close()`；两者叠加保证请求级会话、不泄漏（详见 01-05 §6.2）。
+> - **依赖的依赖 + 依赖缓存**：`get_current_user` 自己又依赖 `bearer_scheme` 与 `get_db`；同请求内同一依赖**默认只算一次**（详见 01-05 §6.4）。
+> - **`HTTPBearer` 安全依赖**：解析 `Authorization: Bearer`；本项目 `auto_error=False`，把缺 token 统一成 **401**（详见 01-05 §6.3）。
+> - **`@app.exception_handler`**：在**响应生成之前**拦截异常、改写响应，把默认 `{detail}` 归一成 `{statusCode,message,error}`（详见 01-05 §6.5）。
+> - **Pydantic v2 运行期校验**：`model_config`/`Field`/`field_serializer` 的触发时机，以及与 class-validator 文案的归一（详见 01-05 §6.6）。
 
 ### 6.1 Pydantic 响应模型与 `from_attributes` —— ORM 对象 → API 响应
 
@@ -380,6 +409,16 @@ resp = AppResponse.model_validate(app)     # 等价于 AppResponse(id=app.id, na
 
 > 一句话：**`from_attributes` 是"字段名一一对应时"的省事法；字段名不一致或需要加工时，写个显式转换函数更清楚。** 本项目属于后者。
 
+**NestJS 里对应什么**：NestJS 侧同样是**手写视图映射**——`apps.service.ts` 的私有方法 `toAppResponse(app)`，把 Prisma 实体逐字段映射成契约 `AppResponse`（`description ?? null`、`Date → toISOString()`）。两端的**目标完全一致**：在 service 边界上「白名单式」地只暴露契约字段。区别只是「机制」：Nest 里映射函数与 DTO 类型是**两样东西**（`toAppResponse` 返回一个 TS 对象），而 FastAPI 里映射函数返回的是**一个会自我校验的 Pydantic 实例**（`AppResponse`），再由 `response_model` 做二次把关。
+
+**这里为什么这么写**：三件事逼着我们必须手写映射，而不是 `return app`：
+
+1. **改名**：`ownerId`（契约）↔ `owner_id`（ORM）、`createdAt` ↔ `created_at`。
+2. **值归一**：时间戳要经 `iso_z()` 变成 UTC 毫秒 `Z`（与 TS `toISOString()` 逐字节一致）。
+3. **安全**：绝不把 ORM 对象直接当响应——将来 `App` 多出内部字段（如草稿图/密钥）也不会漏出去；`extra="forbid"` 又让「多给字段」直接报错。
+
+> **`response_model` 在这里的作用**：路由上的 `response_model=AppResponse` 会对「映射出来的实例」再做**出参校验 + 序列化 + 生成文档**——它和显式映射是**叠加**关系，不是二选一（详见 §6.5）。
+
 ### 6.2 `None` 的序列化 —— `str | None` 怎么变成 JSON `null`
 
 **问题**：契约里 `description` 的类型是 `type: ["string", "null"]`，即「**字段必须出现，但值可以是字符串或 `null`**」。这在 Python / Pydantic 里怎么表达？
@@ -425,6 +464,14 @@ description: str | None = Field(default=None, max_length=256)   # 可选字段�
 
 > 这也是为什么删掉「字段缺失」与「值为 null」要分开想：**PATCH 里"没传某字段"与"传了 `null`"是不同语义**——见 §6.4。
 
+**NestJS 里对应什么**：TS 侧的 `description: string | null` 在**类型层**就能表达「字符串或 null」，映射时写 `app.description ?? null` 保证空值归 `null`（`toAppResponse`）。区别在于：TS 的联合类型**编译期擦除**、出参形状靠手写映射保证；Python 的 `str | None` 是 Pydantic 的**运行期**依据——它会**校验**「这个字段确实存在、且值要么是字符串要么是 `None`」。
+
+**这里为什么这么写**：契约里 `description` 写的是 `type: ["string","null"]` 且**不在 `required` 里**——意思是「**字段总会出现，值可能是字符串或 `null`**」。所以：
+
+- 响应模型写 `description: str | None`（**不带默认值**）→ 它是**必填**（映射时必须显式传），但**值可以是 `None`**；序列化时 `None` → JSON `null`。
+- 请求模型写 `description: str | None = Field(default=None, …)`（**带默认值**）→ 它是**可选**（不传就用默认 `None`）。
+- 两个维度**正交**：`| None` 管「值可否为 null」，`= None` 管「字段可否缺失」——别混。
+
 ### 6.3 404 归属校验 —— 为什么不用 403
 
 **是什么**：`_find_owned` 是所有「单条资源」接口的公共前置：
@@ -455,6 +502,14 @@ NestJS 侧同样是 `NotFoundException('App not found')`（`apps.service.ts` 的
 （`HTTPException` 与异常处理器的首次教学见 `01-账号与认证/05-FastAPI认证.md` §6.5——本篇只**选用** 404 这个状态码，不重讲机制。）
 
 **注意 `detail` 是字符串**：契约要求 `message` 为字符串，所以这里 `detail="App not found"` 直接给字符串即可。
+
+**NestJS 里对应什么**：TS 侧的 `findOwned(ownerId, id)` 逻辑**逐字相同**——`app === null || app.ownerId !== ownerId` 就 `throw new NotFoundException('App not found')`。两端的「归属来源」也一致：`ownerId` 来自**令牌**（`payload.sub` / `current_user.id`），**不是**请求体字段——所以无法伪造归属。
+
+**这里为什么这么写**：
+
+- **为什么 404 不 403**：把「不存在」与「不属于你」压成同一种结果，攻击者**无法靠状态码探测**某个 id 是否存在（403 会泄露「存在但不是你的」）。这与阶段 1「登录：邮箱不存在 / 密码错误都回同一个 401」是**同一类安全思路**。
+- **为什么抽成 `_find_owned`**：`get/update/delete` 三条路径都要同一套归属校验，抽成一个公共前置函数，改一处即全改；而 `list` 不走它（它 `where(owner_id == current_user.id)` 天然只查本人）。
+- **`raise HTTPException(404, …)` 之后**：由 `errors.py` 的异常处理器归一成 `{"statusCode":404,"message":"App not found","error":"Not Found"}`（机制见 01-05 §6.5，此处只选用状态码）。
 
 ### 6.4 `model_dump(exclude_unset=True)` —— PATCH「只更新传入字段」
 
@@ -491,6 +546,33 @@ db.refresh(app)
 `setattr` 把字典里的键（`name`/`description`/`mode`）设到 ORM 对象上；没传的字段根本不在这个字典里，所以**原值不动**。随后 `db.commit()` 触发 SQLAlchemy 的变更跟踪发出 `UPDATE`，`onupdate=func.now()` 自动刷新 `updated_at`（见本阶段 · 04 §6.6）。
 
 > **与 NestJS 对照**：Prisma 的 `update` 天然忽略 `undefined` 字段（`data: { name: dto.name, description: dto.description, mode: dto.mode }` 里未传的为 `undefined`，就不更新）。FastAPI 侧没有这种"undefined"，于是用 `exclude_unset` **手工复刻**同一个语义。**两端行为一致：都只改传进来的字段。**
+
+**这里为什么这么写**：
+
+- **为什么不用 `exclude_none`**：`exclude_none` 会把「**显式传了 `null`**」也一并去掉，于是**区分不了**「没传」和「传了 null」——而 PATCH 恰恰需要区分（没传=不改，传 null=置空）。
+- **为什么用 `exclude_unset`**：它只保留「**构造时显式传入过**」的字段（即"请求里真的出现过"），于是「没传的字段」根本不进循环、原值不动——正是 PATCH 想要的「部分更新」。
+- **与 `response_model` 无关**：这里用的是**请求**模型（`UpdateAppRequest`）的 `model_dump`，是「入参 → dict」；`response_model` 管的是「出参 → JSON」。两个方向别混（见 §6.5）。
+
+### 6.5 `response_model` 与显式映射函数的取舍
+
+**是什么**：
+
+- `response_model=AppResponse`（写在**路由装饰器**上）：告诉 FastAPI「这条路由的返回值必须符合该模型」，它会**按模型校验 + 序列化**返回值，并据此生成 OpenAPI 文档。若返回值字段缺失/类型不符，会在**响应阶段**抛错（典型 **500**）。
+- **显式映射函数**（`_to_app_response`）：把 ORM 对象 `App` 逐字段转成 `AppResponse` 实例再返回。
+
+两者**叠加使用**，各自职责不重叠：映射函数负责「**改名 + 值归一 + 白名单**」，`response_model` 负责「**出参校验 + 序列化 + 文档**」。为什么不用 `from_attributes` 省掉映射函数——因为本项目字段要改名、时间戳要归一（见 §6.1）。
+
+**NestJS 里对应什么**：TS 侧没有等价的「出参校验模型」这一层——它靠**手写 `toAppResponse`** 直接把字段拼成契约形状（类型只在编译期约束、**运行期不校验**）。FastAPI 多了一层 `response_model` 做**运行期**把关：既校验又序列化，还能自动喂给 `/docs`。取舍：
+
+| 维度 | NestJS | FastAPI（本项目） |
+| --- | --- | --- |
+| 出参形状由谁保证 | 手写映射（编译期类型，运行期不校验） | 手写映射 + `response_model`（**运行期**再校验一次） |
+| 类型与校验 | 两样东西 | 一个模型同时是类型与校验器 |
+| 好处 | 灵活、无额外开销 | 违约在运行期立即暴露，文档不脱节 |
+| 代价 | 运行期漏字段无从发现 | 出参多一层校验；失败时表现为 500 |
+
+**这里为什么这么写**：既保留**显式映射**（改名/归一/白名单清清楚楚），又用 `response_model` 做**运行期兜底**与文档——两全其美；代价是映射漏字段时会以 500 暴露（见 §8）。
+
 
 ---
 
@@ -572,6 +654,10 @@ db.refresh(app)
 | `mode` 缺省没补 | 创建出的 `mode` 为 null/空 | `CreateAppRequest` 的 `mode` 可选，服务里用 `body.mode or "chatflow"` 补默认（对齐 TS 的 `dto.mode ?? 'chatflow'`） |
 | 列表顺序不对 | 与 TS 侧不一致 | 列表按 `created_at` **倒序**：`order_by(App.created_at.desc())`（对齐 `orderBy: { createdAt: 'desc' }`） |
 | 参数少了 `= Depends(...)` | 明明想注入 `db` 却报 422/400 缺字段 | FastAPI 把未被占用的普通参数当请求参数解析；必须写 `db: Session = Depends(get_db)`（见 `01-账号与认证/05` §6.1、§8） |
+| **映射漏传 `response_model` 的字段** | 出参校验失败 → **500** | `_to_app_response` 必须把 `AppResponse` 声明的每个字段都显式传上（如漏 `updatedAt`）。出参违约在**响应阶段**抛错，表现为 500（服务端 bug，不是客户端输入错）；见 §6.5 |
+| **`get_db` 忘了 `with`/`yield`** | 连接**泄漏**（连接池耗尽、并发卡/超时） | `yield` 只负责交卷、`close` 靠外层 `with`；必须 `with SessionLocal() as session: yield session`（机制见 `01-账号与认证/05` §6.2） |
+| **在 `def` 依赖/路由里写 `await`** | `SyntaxError` | Python 异步是全链路的：要 `await` 必须 `async def`。`apps.py` 的路由都是 `def`（内部是同步 SQLAlchemy 调用，由线程池兜住）——别乱加 `async`（机制见 `01-账号与认证/05` §6.2、阶段 0 · 06 §6.7） |
+| **异常处理器未注册/注册时机错** | 错误体退回 `{"detail": …}`、校验失败退回 422 | `register_error_handlers(app)` 必须在 `app = FastAPI(...)` 之后、对外服务之前调用，且注册到**同一个** `app`（机制见 `01-账号与认证/05` §6.5） |
 | 在仓库根启动失败 | `ModuleNotFoundError: No module named 'app'` | 进 `apps/api-py`，或 `uv run --directory apps/api-py …`（见阶段 0 · 06 §9） |
 | `uv` 不被识别 | `The term 'uv' is not recognized` | `uv` 已在用户 PATH；只有安装前已打开的 shell 继承旧 PATH，重启终端 / IDE 即可（见阶段 0 · 01） |
 
@@ -596,6 +682,21 @@ db.refresh(app)
 | 错误体归一化 | `HttpErrorFilter` | `errors.py` 的 `@app.exception_handler`（见 `01-账号与认证/05`） |
 
 两套实现同一份契约（`02-应用管理/01-契约扩展.md`），**状态码、响应体形状与值规范（`message` 文本、时间戳格式）均已逐字节一致**（收口见 §7.4）。
+
+### 9.1 逐条讲差异与取舍
+
+对照表给「什么对什么」，这里补「**为什么不同、各自取舍**」——读 TS 侧 `03-NestJS应用模块.md` 时对着看：
+
+| 主题 | NestJS 怎么做 | FastAPI 怎么做 | 差异的根源 / 取舍 |
+| --- | --- | --- | --- |
+| **鉴权粒度** | 类级 `@UseGuards(JwtAuthGuard)`，整个控制器一次生效 | **每个函数**各自写 `current_user: User = Depends(get_current_user)` | Nest 是「声明式、贴在类上」；FastAPI 是「函数级、逐个显式」。FastAPI 更细粒度（同一控制器里某条路由可以不带鉴权），代价是重复写（详见 01-05 §6.1） |
+| **归属来源** | `@CurrentUser() payload.sub` | `current_user.id` | 两端都把归属绑定到**令牌**而非请求体——同一个安全原则（§6.3） |
+| **部分更新** | Prisma 忽略 `undefined` | `model_dump(exclude_unset=True)` 手工复刻 | 「未传=不改」的语义两端一致，实现机制不同（§6.4） |
+| **出参映射** | 手写 `toAppResponse`（运行期不校验） | 手写 `_to_app_response` + `response_model`（运行期再校验） | FastAPI 多一层出参把关，违约早暴露（§6.1、§6.5） |
+| **删除空体** | `@HttpCode(204)` | `status_code=204` + 返回 `None` | 契约要 204 空体；两端都要**显式覆盖默认值**（Nest `@Post/@Delete` 默认 201；FastAPI 默认 200） |
+| **错误体归一** | `HttpErrorFilter` 全局过滤器 | `@app.exception_handler`（`errors.py`） | 表达机制不同、目标相同（见 01-05 §6.5） |
+
+> **共通点**：两端都遵循「**归属由令牌决定、越权一律 404、出参只暴露契约字段、PATCH 只改传入字段**」——差异在表达机制，不在行为。
 
 ---
 

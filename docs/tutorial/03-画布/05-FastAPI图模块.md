@@ -127,12 +127,12 @@ TS 侧对照
 不走本校验；只有 `PUT` / `publish` 才调用本函数（空图会因规则 3/4 不通过）。
 """
 
-from typing import Any
+from typing import Any                          # Any=任意类型（dict 的值类型）
 
 
 def validate_graph(graph: dict[str, Any]) -> list[str]:
-    errors: list[str] = []
-    nodes: list[dict[str, Any]] = graph.get("nodes") or []
+    errors: list[str] = []                          # 累积错误文案（可能返回空列表）
+    nodes: list[dict[str, Any]] = graph.get("nodes") or []   # 缺键/为 None 都兜底成空数组，不抛异常
     edges: list[dict[str, Any]] = graph.get("edges") or []
 
     # 规则 1：version 必须为 "1"
@@ -140,17 +140,17 @@ def validate_graph(graph: dict[str, Any]) -> list[str]:
         errors.append("graph version must be 1")
 
     # 规则 2：节点 id 必须唯一（按数组顺序，每个重复 id 只报一次）
-    seen_node_ids: set[str] = set()
-    reported_node_ids: set[str] = set()
+    seen_node_ids: set[str] = set()                 # 见过的 id
+    reported_node_ids: set[str] = set()             # 已报过重复的 id（保证只报一次）
     for node in nodes:
         node_id = node.get("id")
         if node_id in seen_node_ids and node_id not in reported_node_ids:
-            errors.append(f"node id must be unique: {node_id}")
+            errors.append(f"node id must be unique: {node_id}")   # f-string：把 id 填进文案
             reported_node_ids.add(node_id)
         seen_node_ids.add(node_id)
 
     # 规则 3：恰好一个 start 节点（0 个或 ≥2 个都报此条）
-    if sum(1 for node in nodes if node.get("type") == "start") != 1:
+    if sum(1 for node in nodes if node.get("type") == "start") != 1:   # 生成器表达式计数
         errors.append("graph must contain exactly one start node")
 
     # 规则 4：至少一个 end 节点
@@ -168,7 +168,7 @@ def validate_graph(graph: dict[str, Any]) -> list[str]:
         seen_edge_ids.add(edge_id)
 
     # 规则 6：边的 source/target 必须指向存在的节点（先 source 后 target）
-    node_ids = {node.get("id") for node in nodes}
+    node_ids = {node.get("id") for node in nodes}   # 集合推导式：所有节点 id
     for edge in edges:
         if edge.get("source") not in node_ids:
             errors.append(f"edge {edge.get('id')} references unknown node: {edge.get('source')}")
@@ -180,8 +180,10 @@ def validate_graph(graph: dict[str, Any]) -> list[str]:
         if edge.get("source") == edge.get("target"):
             errors.append(f"edge {edge.get('id')} must not connect a node to itself")
 
-    return errors
+    return errors                                   # 只返回列表、绝不 raise（纯函数）
 ```
+
+**这段在干什么（按执行顺序）**：函数从入参里取 `nodes`/`edges`（缺就给空数组）→ 依次执行**规则 1→7**（每条规则扫完再扫下一条）→ 把命中的文案按顺序 `append` 进 `errors` → 返回列表。规则 2/5 用 `seen`+`reported` 两个集合保证「同一重复 id 只报一次」；规则 6 对每条边**先查 `source` 再查 `target`**。**全程不碰数据库、不抛异常**——它是「判定」，不是「动作」；把「判定」与「如何呈现成 400」分开（见 §6.1、§6.2）。
 
 **逐块解释**
 
@@ -210,20 +212,20 @@ def validate_graph(graph: dict[str, Any]) -> list[str]:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any, Literal              # Any=自由结构；Literal=枚举类型
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
-from app.api.apps import _find_owned
+from app.api.apps import _find_owned         # 复用应用模块的 404 归属校验（见 02-应用管理/05）
 from app.api.deps import get_current_user, get_db
 from app.graph.validator import validate_graph
 from app.models.app import App
 from app.models.user import User
 from app.timefmt import iso_z
 
-router = APIRouter(prefix="/apps", tags=["apps"])
+router = APIRouter(prefix="/apps", tags=["apps"])   # 与 apps.py 共用前缀 /apps（完整路径不冲突）
 
 # 草稿为 NULL（从未编辑）时对外返回的合法空图
 _EMPTY_GRAPH: dict[str, Any] = {"version": "1", "nodes": [], "edges": []}
@@ -232,7 +234,7 @@ _EMPTY_GRAPH: dict[str, Any] = {"version": "1", "nodes": [], "edges": []}
 class NodePosition(BaseModel):
     """对应契约 `NodePosition`。"""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")   # 锁死字段集合
 
     # JSON number：int 与 float 都接受，且保持原样（避免 1 → 1.0 的漂移）
     x: int | float
@@ -245,9 +247,9 @@ class GraphNode(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str
-    type: Literal["start", "end", "llm"]
-    position: NodePosition
-    data: dict[str, Any]
+    type: Literal["start", "end", "llm"]        # 枚举：只能是这三者之一（★ 3 个取值→见 §6.4）
+    position: NodePosition                       # 嵌套模型
+    data: dict[str, Any]                         # 自由结构：不约束内部键
 
 
 class GraphEdge(BaseModel):
@@ -258,7 +260,7 @@ class GraphEdge(BaseModel):
     id: str
     source: str
     target: str
-    sourceHandle: str | None = None
+    sourceHandle: str | None = None              # 写了 = None → 可选；值可为 None
     targetHandle: str | None = None
 
 
@@ -268,7 +270,7 @@ class Graph(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     version: str
-    nodes: list[GraphNode]
+    nodes: list[GraphNode]                       # 元素是 GraphNode（嵌套模型，逐个校验）
     edges: list[GraphEdge]
 
 
@@ -278,6 +280,7 @@ def _draft_of(app: App) -> dict[str, Any]:
 
 
 def _assert_valid(graph: dict[str, Any]) -> None:
+    # 调纯函数校验；有错误则抛 400，多条用 "; " 连接成单一 message
     errors = validate_graph(graph)
     if errors:
         raise HTTPException(
@@ -287,28 +290,29 @@ def _assert_valid(graph: dict[str, Any]) -> None:
 
 @router.get("/{id}/graph", operation_id="getGraph")
 def get_graph(
-    id: str,
+    id: str,                                     # 路径参数
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
+    # 读取：只取归属 → 返回草稿（或空图），**不校验**
     return _draft_of(_find_owned(db, current_user.id, id))
 
 
 @router.put("/{id}/graph", operation_id="saveGraph")
 def save_graph(
     id: str,
-    body: Graph,
+    body: Graph,                                 # 请求体：先过 Pydantic 结构校验
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     app = _find_owned(db, current_user.id, id)
     # 先落成普通 dict（camelCase 键名原样保留），再校验、再落库
-    graph = body.model_dump(exclude_unset=True)
-    _assert_valid(graph)
-    app.graph_json = graph
+    graph = body.model_dump(exclude_unset=True)  # 未传的可选句柄不出现 → 存下的形状=请求的形状
+    _assert_valid(graph)                         # 语义校验（不通过 → 400）
+    app.graph_json = graph                       # 直接把 dict 赋给 JSONB 列
     db.commit()
     db.refresh(app)
-    return _draft_of(app)
+    return _draft_of(app)                         # 返回保存后的草稿
 
 
 @router.post("/{id}/graph/publish", operation_id="publishGraph")
@@ -318,11 +322,11 @@ def publish_graph(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     app = _find_owned(db, current_user.id, id)
-    draft = _draft_of(app)
+    draft = _draft_of(app)                        # 校验对象是「当前草稿」（不是请求体：本路由无 body）
     _assert_valid(draft)
-    app.published_graph_json = draft
+    app.published_graph_json = draft              # 快照
     # 列在 PG 上为 timestamp（无时区）；写 naive-UTC，读取时 iso_z 按 UTC 解释
-    app.published_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    app.published_at = datetime.now(timezone.utc).replace(tzinfo=None)   # 去掉 tzinfo → naive-UTC
     db.commit()
     db.refresh(app)
     return {"publishedAt": iso_z(app.published_at), "graph": app.published_graph_json}
@@ -335,10 +339,19 @@ def get_published_graph(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     app = _find_owned(db, current_user.id, id)
-    if app.published_graph_json is None:
+    if app.published_graph_json is None:          # 从未发布
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Graph not published")
     return app.published_graph_json
 ```
+
+**这段在干什么（按执行顺序）**：四条路由结构一致——先**解析参数**（`id` 路径、`body` 请求体经 Pydantic 结构校验、`current_user`/`db` 依赖）→ `_find_owned` 做 **404 归属校验** → 再分叉：
+
+- `GET /graph`：**读取不校验**，直接 `_draft_of(app)`（NULL→空图，否则原样 dict）。
+- `PUT /graph`：`body.model_dump(exclude_unset=True)` 落成 dict → `_assert_valid` **语义校验**（失败 400）→ 存进 `graph_json` → 返回草稿。
+- `POST /publish`：取**当前草稿** → 校验 → 快照到 `published_graph_json` + 写 `published_at`（naive-UTC）→ 返回 `{"publishedAt": iso_z(...), "graph": …}`。
+- `GET /published`：NULL → 404 `Graph not published`；否则返回快照。
+
+> 注意：图路由**没有** `response_model`，直接返回普通 `dict`——为什么这样设计见 §6.5。
 
 **逐块解释**
 
@@ -377,7 +390,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.apps import router as apps_router
 from app.api.auth import router as auth_router
-from app.api.graph import router as graph_router
+from app.api.graph import router as graph_router      # 图路由（本篇新增）
 from app.api.health import router as health_router
 from app.config import settings
 from app.errors import register_error_handlers
@@ -393,13 +406,15 @@ app.add_middleware(
 )
 
 # 把 FastAPI 默认的 {detail} 归一化成契约要求的 {statusCode, message, error}
-register_error_handlers(app)
+register_error_handlers(app)                          # 登记异常处理器（须在 app 之后）
 
 app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(apps_router)
-app.include_router(graph_router)
+app.include_router(graph_router)                      # 挂载图路由（新增这一行）
 ```
+
+**这段在干什么（按执行顺序）**：导入 → 创建 `app` → 加 CORS → 登记异常处理器 → 逐个 `include_router`。本篇新增的只有「导入 `graph_router`」与「挂载 `graph_router`」两处；`graph_router` 与 `apps_router` 的 `prefix` 都是 `/apps`，但各自完整路径不同（`/{id}` vs `/{id}/graph`），**不冲突**。
 
 **与阶段 2 · 05 的差异**只有两处：
 
@@ -418,16 +433,16 @@ NestJS 默认返回 `{statusCode, message, error}`；FastAPI 默认返回 `{deta
 `message` 的文案规则见唯一真源 `packages/contract/error-messages.md`。
 """
 
-from typing import Any
+from typing import Any                            # Any=错误 dict 的值类型
 
-import re
+import re                                          # 正则（用于 _enum_values 抽取枚举值）
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-_REASON_PHRASES: dict[int, str] = {
+_REASON_PHRASES: dict[int, str] = {                # 状态码 → 原因短语
     400: "Bad Request",
     401: "Unauthorized",
     403: "Forbidden",
@@ -441,6 +456,7 @@ _RULE_ORDER: list[str] = ["required", "email", "minLength", "maxLength", "enum",
 
 
 def _envelope(status_code: int, message: str) -> JSONResponse:
+    # 把「状态码 + 文案」包成契约三段式；error 由状态码查表
     return JSONResponse(
         status_code=status_code,
         content={
@@ -458,18 +474,18 @@ def _enum_values(expected: str) -> str:
     ≥3 个为 `"'start', 'end' or 'llm'"`。这里统一按引号抽取各枚举值，
     避免按 `" or "` 切分在 3 个以上取值时把中间项切错。
     """
-    values = re.findall(r"'([^']*)'", expected)
-    return ", ".join(values) if values else expected
+    values = re.findall(r"'([^']*)'", expected)     # 抽出所有被单引号包住的值
+    return ", ".join(values) if values else expected   # 一个都没抽到就兜底返回原文
 
 
 def _describe(err: dict[str, Any]) -> tuple[str, str]:
     """把单条 Pydantic 校验错误映射成 (规则名, 文案)。"""
-    loc = err.get("loc", ())
-    field = str(loc[-1]) if loc else ""
-    err_type = err.get("type", "")
-    ctx: dict[str, Any] = err.get("ctx") or {}
+    loc = err.get("loc", ())                        # 字段路径，如 ("body","type")
+    field = str(loc[-1]) if loc else ""             # 取最末一段=真正出错的字段名
+    err_type = err.get("type", "")                  # Pydantic 的错误类型标识
+    ctx: dict[str, Any] = err.get("ctx") or {}      # 上下文（含 min_length/max_length/expected 等）
 
-    if err_type == "missing":
+    if err_type == "missing":                       # 必填缺失
         return "required", f"{field} is required"
     if err_type == "value_error":  # EmailStr 校验失败
         return "email", f"{field} must be a valid email"
@@ -477,13 +493,13 @@ def _describe(err: dict[str, Any]) -> tuple[str, str]:
         return "minLength", f"{field} must be at least {ctx.get('min_length')} characters"
     if err_type in ("string_too_long", "too_long"):
         return "maxLength", f"{field} must be at most {ctx.get('max_length')} characters"
-    if err_type in ("literal_error", "enum"):
+    if err_type in ("literal_error", "enum"):       # 枚举不匹配（GraphNode.type 走这里）
         return "enum", f"{field} must be one of: {_enum_values(str(ctx.get('expected', '')))}"
-    if err_type == "extra_forbidden":
+    if err_type == "extra_forbidden":               # 多余字段
         return "unknown", f"{field} should not exist"
     if err_type == "string_type":
         return "string", f"{field} must be a string"
-    return "unknown", f"{field} is invalid"
+    return "unknown", f"{field} is invalid"         # 兜底（契约已覆盖全部规则）
 
 
 def _build_message(errors: list[dict[str, Any]]) -> str:
@@ -492,8 +508,8 @@ def _build_message(errors: list[dict[str, Any]]) -> str:
     Pydantic 的 `errors()` 已按字段定义顺序产出，这里保留该顺序，
     仅对同一字段内的多条错误按规则顺序稳定排序，最后用 "; " 连接。
     """
-    field_order: dict[str, int] = {}
-    items: list[tuple[int, int, str]] = []
+    field_order: dict[str, int] = {}                # 字段 → 首次出现的次序
+    items: list[tuple[int, int, str]] = []          # (字段次序, 规则次序, 文案)
     for err in errors:
         loc = err.get("loc", ())
         field = str(loc[-1]) if loc else ""
@@ -501,22 +517,25 @@ def _build_message(errors: list[dict[str, Any]]) -> str:
         rule, message = _describe(err)
         rule_rank = _RULE_ORDER.index(rule) if rule in _RULE_ORDER else len(_RULE_ORDER)
         items.append((field_order[field], rule_rank, message))
-    items.sort(key=lambda item: (item[0], item[1]))
-    return "; ".join(item[2] for item in items)
+    items.sort(key=lambda item: (item[0], item[1]))  # 先按字段、再按规则稳定排序
+    return "; ".join(item[2] for item in items)      # 多条用 "; " 连接成一个字符串
 
 
 def register_error_handlers(app: FastAPI) -> None:
     """注册异常处理器（须在创建 app 之后、提供服务之前调用）。"""
 
-    @app.exception_handler(StarletteHTTPException)
+    @app.exception_handler(StarletteHTTPException)   # 路径 A：自己 raise 的 HTTPException
     async def _http_exception_handler(_request: Request, exc: StarletteHTTPException) -> JSONResponse:
         message = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
-        return _envelope(exc.status_code, message)
+        return _envelope(exc.status_code, message)   # 用异常自带的状态码
 
-    @app.exception_handler(RequestValidationError)
+    @app.exception_handler(RequestValidationError)   # 路径 B：Pydantic 校验失败
     async def _validation_exception_handler(_request: Request, exc: RequestValidationError) -> JSONResponse:
         return _envelope(status.HTTP_400_BAD_REQUEST, _build_message(exc.errors()))
+        # ↑ 把默认 422 改成 400；并把整个错误数组按契约拼成单一 message
 ```
+
+**这段在干什么（按执行顺序）**：模块导入时建好 `_REASON_PHRASES` 与 `_RULE_ORDER`；`register_error_handlers(app)` 把两个处理函数**登记**到 `app`。请求触发异常时：路径 A（`HTTPException`）取 `exc.detail` 当 message、用状态码包信封；路径 B（`RequestValidationError`）走 `_build_message`——先 `_describe` 把每条 Pydantic 错误翻成契约文案，再按「字段次序 + 规则次序」排序、`"; "` 连接，最后统一成 **400**。
 
 **本篇唯一改动**：`_enum_values` 函数体（其余一行未动）。修改前后见 §6.4——**这是一个真实修复，不是重构**。
 
@@ -525,6 +544,24 @@ def register_error_handlers(app: FastAPI) -> None:
 ## 6. 【技术教学 · 首次】
 
 > 规则：以下技术均为本项目**首次出现**，本节讲透；后续笔记只写「见阶段 3 · 05」并直接使用。
+
+### 6.0 本篇首次出现的 Python / FastAPI 机制（是什么 → NestJS 里对应什么 → 这里为什么这么写）
+
+| # | 机制（本节） | 是什么（一句话） | NestJS 里对应什么 | 这里为什么这么写 |
+| --- | --- | --- | --- | --- |
+| 6.1 | **业务规则用纯函数** | `validate_graph(dict) -> list[str]`，无 IO、无副作用 | `validateGraph(graph): string[]`（纯函数） | 语义规则写成纯函数，才能两端**逐条对齐**、且能被阶段 4 引擎复用 |
+| 6.2 | **文案逐字节一致** | 校验 `message` 是**契约的一部分**，两端必须一字不差 | `errors.join('; ')` | 契约测试逐字节比对响应体，差一字即失败 |
+| 6.3 | **存储时区 vs 展示时区分离** | 写 naive-UTC、出参用 `iso_z()` 归一成 `…Z` | `new Date()` 写入 + `toISOString()` 出参 | PG 列无时区，写 aware 会随会话时区漂移 |
+| 6.4 | **不依赖框架错误文本的格式** | `_enum_values` 由「按 `' or '` 切分」改为「引号正则抽取」 | `enumValues()` 从 isIn 默认文案里截取 | Pydantic 的 `expected` 文本随取值个数变形，切分法会切错 |
+| 6.5 | **`response_model` vs 返回普通 dict** | 图路由直接返回 `dict`，未用 `response_model` | service 返回契约 `Graph` | 「图 = 数据」，原样存取；出参不加二次校验以免形状被改 |
+
+> **复用的公共机制（首次教学在 `01-账号与认证/05-FastAPI认证.md`，先各用一句说清，再指路）**：
+> - **`Depends`**：参数上的依赖声明；FastAPI **每请求**读签名解析依赖树（对照 Nest 启动期建图）（详见 01-05 §6.1）。
+> - **`get_db` 的 `yield` 依赖**：请求开始开会话、请求结束关会话；`with` 负责 `close`（详见 01-05 §6.2）。
+> - **依赖的依赖 + 依赖缓存**：`get_current_user` 又依赖 `bearer_scheme`/`get_db`；同请求内同一依赖只算一次（详见 01-05 §6.4）。
+> - **`HTTPBearer`**：解析 `Authorization: Bearer`；本项目缺 token 统一成 **401**（详见 01-05 §6.3）。
+> - **`@app.exception_handler`**：在**响应生成前**拦截异常、把默认 `{detail}` 归一成 `{statusCode,message,error}`；`HTTPException` 与 `RequestValidationError` 是**两条不同路径**（详见 01-05 §6.5）。
+> - **Pydantic v2 运行期校验**：`model_config`/`Literal`/嵌套模型的校验时机与文案归一（详见 01-05 §6.6）。
 
 ### 6.1 「业务规则用纯函数」在 Python 侧的实现 —— 与 TS 的 `validateGraph` 逐条对齐
 
@@ -551,6 +588,10 @@ def register_error_handlers(app: FastAPI) -> None:
 
 > **一句话**：**框架可以不同，规则必须相同。** 把规则收进纯函数，是把「行为一致」从口号变成可验证事实的手段。
 
+**NestJS 里对应什么**：TS 侧是 `graph.validator.ts` 的 `validateGraph(graph: Graph): string[]`——**同样是一个纯函数**，同样不碰 DB、不抛异常、只返回错误数组。两边唯一的差别在**入参类型**：TS 传的是 `Graph`（编译期类型，已保证形状）；Python 传的是**普通 `dict`**（所以要用 `.get("nodes") or []` 兜底）。
+
+**这里为什么这么写**：把「图的语义规则」做成纯函数，是本篇最关键的设计决策——它同时满足三个目标：**可测试**（一张图=一个断言）、**可复用**（阶段 4 执行引擎编译前复用同一套安全检查）、**可对齐**（框架无关，两端能逐行对照）。这也是为什么 TS 侧**没有**把它写成 class-validator 的「类级自定义校验装饰器」：装饰器只在 `@Body()` 经 Pipe 时对**请求体**生效，而 `publish` 校验的是**从库里读出的草稿**（无 body），纯函数才是唯一可行解（TS 侧详细取舍见 `03-画布/03-NestJS图模块.md` §7.4，结论与本篇一致）。
+
 ### 6.2 两端校验文案必须逐字节相同 —— 意义与方法
 
 **意义**：契约测试会用**同一份非法请求**分别打两套后端，逐字节比对响应体。若文案差一个字（这里是最典型的：枚举值列表切错），测试即失败，「两套后端效果一致（§5.5 契约优先）」就名存实亡。所以**文案不是「随便写写」的字符串，而是契约的一部分**。
@@ -574,6 +615,15 @@ def register_error_handlers(app: FastAPI) -> None:
 3. **多条错误用 `"; "`（分号 + 空格）连接成一个 `message`**：Python 侧由 `_assert_valid` 的 `"; ".join(errors)` 完成，TS 侧由 `errors.join('; ')` 完成。
 
 **方法**：改规则时，**同时**改三处——契约文档 `error-messages.md`、TS 的 `validateGraph`、Python 的 `validate_graph`；然后跑「7 组非法请求」逐一比对（见 §7.3）。本篇 §6.4 的 bug 正是「以为文案已经对齐、其实没有」的真实教训。
+
+**NestJS 里对应什么**：TS 侧的**语义校验文案**由 `validateGraph` **直接返回字符串数组**，再由 `GraphService.assertValid` 用 `errors.join('; ')` 拼成 `BadRequestException` 的 message——**没有任何「归一」层**（因为文案是手写的、天生可控）。这跟 Python 侧不同：Python 的**语义**文案同样手写，但**结构校验**（Pydantic 的 `Literal`/长度/多余字段）文案是**库默认产出的**，必须经 `errors.py` 的 `_describe`/`_build_message` **翻译**成契约文案。
+
+| 校验层 | TS 文案来源 | Python 文案来源 |
+| --- | --- | --- |
+| 结构校验（字段类型/必填/枚举/多余） | class-validator 默认文案 → `validationExceptionFactory` 翻译 | Pydantic 默认 `msg`/`type` → `errors.py` 翻译 |
+| 语义校验（图规则 1~7） | `validateGraph` **手写返回** | `validate_graph` **手写返回** |
+
+**这里为什么这么写**：**语义文案两端都手写**，所以天然能逐字节一致；**结构文案两端都是「翻译库的默认产出」**，所以各自需要一层翻译器。两条路径最终汇聚成同一个 `message` 字符串（多条 `"; "` 连接）——这就是「**框架可以不同，文案必须相同**」的落地方式（真源 `packages/contract/error-messages.md`）。
 
 ### 6.3 `published_at`：naive-UTC 写入 + `iso_z()` 出参归一（存储时区 vs 展示时区分离）
 
@@ -611,6 +661,22 @@ return {"publishedAt": iso_z(app.published_at), "graph": app.published_graph_jso
 | API 出参 | `"…Z"` 字符串（毫秒） | `iso_z()`（Python）/ `toISOString()`（TS） |
 
 > **注意**：本阶段 · 04 的模型把 `published_at` 声明为 `DateTime(timezone=True)`，而实际物理列是**无时区**的 `timestamp(3)`——两者不一致。**这不影响本项目**：`timezone=True` 只在「SQLAlchemy 生成 DDL」时才有意义（本项目不生成 DDL），读取无时区列时 psycopg 仍返回 naive datetime，`iso_z()` 照常按 UTC 处理。之所以要**写 naive**，正是为了绕开「aware 值 + 无时区列」会触发的会话时区转换（见上）。
+
+**NestJS 里对应什么**：TS 侧**没有「naive/aware」这对概念**——它就用 `new Date()` 写入、`toISOString()` 出参：
+
+| 环节 | NestJS | FastAPI |
+| --- | --- | --- |
+| 写入 | `publishedAt: new Date()`（Prisma 按 UTC 归一写进 `timestamp(3)`） | `datetime.now(timezone.utc).replace(tzinfo=None)`（**naive-UTC**） |
+| 出参 | `updated.publishedAt.toISOString()` | `iso_z(app.published_at)` |
+| 结果 | `2026-10-18T…Z`（毫秒、24 字符） | 同左，逐字节一致 |
+
+**这里为什么这么写**：Python 的 `datetime` **分 naive / aware 两种**（TS 的 `Date` 只有一个「绝对时刻」概念），所以必须显式选择：
+
+- **写入写 naive-UTC**：因为物理列**无时区**；若写 aware，PostgreSQL 会按**会话时区**把它转成本地墙钟再存——结果依赖数据库 `TimeZone` 设置，换台机器就变。
+- **出参用 `iso_z()`**：无论库里是 naive 还是 aware，都**按 UTC 解释**并输出 `…Z`——与 TS `toISOString()` 逐字节相同。
+
+> 一句话：**TS 用「一个绝对时刻」简化了这件事；Python 把「时区」显式暴露出来，所以我们要在「存储」与「展示」两侧分别做对**——这正是本节的由来。
+
 
 ### 6.4 【真实 bug 修复】`_enum_values`：按 `" or "` 切分 → 用引号正则抽取
 
@@ -666,6 +732,35 @@ start, end, llm
 ```
 
 **一句话教训**：**不要依赖「框架错误的展示文本」的格式**——它可能随版本、随取值个数变化。要对它做**结构化抽取（正则/解析）**，而不是**字符串切分**。
+
+**NestJS 里对应什么**：TS 侧同样要「把库默认文案里的枚举值抠出来」——`validation-exception-factory.ts` 的 `enumValues()` 是从 `isIn` 的默认文案（`"...following values: chatflow, workflow"`）里按 `following values:` 标记**截取**。同样是「**结构化抽取**」而非「猜测分隔符」。这也说明：**两端都在跟「框架默认文案的格式」打交道**，只是格式不同。
+
+**这里为什么这么写**：这不是「优化」，而是**修复真实 bug**（阶段 2 潜伏、阶段 3 因 3 取值枚举触发）。教训的核心是：**框架错误的展示文本是「实现细节」，不是契约**——它能随库版本、随取值个数变化。可靠的做法是**对它做结构化抽取**（本项目用引号正则），并在兜底时退回原文。
+
+> 顺带对照：这个 bug 的**触发条件是数据**（`Literal` 有 3 个取值），而阶段 2 只有 2 个取值恰好掩盖了它——所以「**看似能用的代码其实脆弱**」。修完必须用 §7.3 的 7 组用例**逐一比对两端**才算收口。
+
+### 6.5 为什么图路由**不用** `response_model`、直接返回普通 `dict`
+
+**是什么**：本项目其它模块（如 `auth.py`/`apps.py`）的路由都带 `response_model=...`，但**图路由（`graph.py`）全部只写 `operation_id`、直接 `-> dict[str, Any]`**，`return` 的是**普通字典**（草稿/快照本身，或 `{"publishedAt":…, "graph":…}`）——**没有** `response_model`。
+
+**NestJS 里对应什么**：TS 侧本就没有「出参校验模型」这层——`GraphService` 把图当**纯数据**（`Graph` 类型）返回，直接交给 Prisma `Json` 列或原样吐出。图接口在 TS 侧也**不做出参二次校验**。所以两端在这里的选择是**一致的**：出参就是「那份 JSON 本身」。
+
+**这里为什么这么写**（「图 = 数据」的直接结果）：
+
+| 维度 | auth/apps（用 `response_model`） | graph（不用 `response_model`） |
+| --- | --- | --- |
+| 出参性质 | 由 ORM 实体**映射**出的契约对象 | **就是**存进去的那份图 JSON（原样存取） |
+| 要不要改名/归一 | 要（`ownerId`←`owner_id`、时间戳→`"…Z"`） | **不要**（存进去什么形状、读出来就是什么形状） |
+| 出参二次校验 | 有（`response_model` 校验并序列化） | **无**（避免模型对「自由结构」的 `data`/多余键做**形状改写**） |
+| 契约来源 | `AppResponse` 等 | `Graph`（含自由结构 `data`） |
+
+- **关键理由**：`GraphNode.data` 是**自由结构**（`dict[str, Any]`），且图的**键名要保持 camelCase 原样**。若硬套一个 `response_model` 去校验并序列化出参，反而可能**改动形状**（这正是契约明令禁止的：`PUT`/`GET` 往返必须**逐字段一致**，实测比对 `True`）。
+- **那 Pydantic 在哪用**：**只在入参**——`PUT` 的 `body: Graph` 用 Pydantic 做**结构校验**（`Literal`/嵌套模型/`extra="forbid"`），校验完 `model_dump(exclude_unset=True)` 落成普通 dict，之后就走「存取 + 纯函数语义校验」，不再有出参模型。
+- **发布响应的 `publishedAt`**：它是**手拼**的 `{"publishedAt": iso_z(...), "graph": ...}`——因为这里只需保证 `"…Z"` 格式（与 TS `toISOString()` 一致），不需要为它专门定义一个出参模型。
+
+> 一句话：**「有改名/归一需求」的出参用 `response_model` + 显式映射；「原样存取的纯数据」出参直接返回 dict**——取舍的判据是「出参到底是不是『数据本身』」。这与 §6.1「图 = 数据」是同一套思路。
+
+> **写错会怎样（8）**：若给 `GET /graph` 加一个 `response_model` 去「校验」草稿，可能因「空图不满足 `Graph` 规则（如恰好一个 start）」或对自由结构 `data` 做**形状改写**而**拒绝返回**——导致**读取**（本应豁免校验）反而失败。**读取不校验、写入才校验**是刻意的分工（见 `error-messages.md` §3 脚注与 §5.3 注释）。
 
 ---
 
@@ -752,6 +847,11 @@ start, end, llm
 | 规则顺序 / 去重方式与 TS 不同 | 多条错误的 `message` 顺序不同 → 逐字节不一致 | 逐条对照 `packages/contract/error-messages.md` §3：规则顺序、数组遍历顺序、`"; "` 连接、重复 id 只报一次（见 §6.2） |
 | 两个 `APIRouter` 共用 `prefix="/apps"` 以为会冲突 | 担心路径重复 | 不同完整路径（`/{id}` vs `/{id}/graph`）不冲突；各自 `include_router` 即可（见 §5.3） |
 | 越权用 403 | 与 api-ts 不一致 | 归属校验复用 `_find_owned` 的 **404**（本阶段 · 04 / `02-应用管理/05`） |
+| **给图路由加 `response_model` 去「校验出参」** | 读取草稿可能被**拒绝返回**，或图的形状被模型**改写** | 图是「原样存取的数据」：出参直接返回 `dict`，不套 `response_model`；否则「空图不满足 `Graph` 规则」或自由结构 `data` 被形状改写，**PUT/GET 往返一致性**被破坏（见 §6.5） |
+| **断言/映射缺字段 → 出参校验失败** | 响应阶段抛错 → **500** | 用 `response_model` 的接口（如 auth/apps）若映射漏字段会 500；图接口不使用出参模型，故不受此影响——两类接口的取舍见 §6.5 |
+| **`get_db` 忘了 `with`/`yield`** | 连接**泄漏**（连接池耗尽、并发卡/超时） | `yield` 只负责交卷、`close` 靠外层 `with`；必须 `with SessionLocal() as session: yield session`（机制见 `01-账号与认证/05` §6.2） |
+| **在 `def` 依赖/路由里写 `await`** | `SyntaxError` | 异步全链路：要 `await` 必须 `async def`。`graph.py` 四条路由都是 `def`（内部是同步 SQLAlchemy），别乱改 `async`（机制见 01-05 §6.2、阶段 0 · 06 §6.7） |
+| **异常处理器未注册/时机错** | 错误体退回 `{"detail": …}`、校验失败退回 422 | `register_error_handlers(app)` 必须在 `app = FastAPI(...)` 之后、对外服务之前调用（机制见 01-05 §6.5） |
 | 在仓库根启动失败 | `ModuleNotFoundError: No module named 'app'` | 进 `apps/api-py`，或 `uv run --directory apps/api-py …`（见阶段 0 · 06 §9） |
 | `uv` 不被识别 | `The term 'uv' is not recognized` | `uv` 已在用户 PATH；只有安装前已打开的 shell 继承旧 PATH，重启终端 / IDE 即可（见阶段 0 · 01） |
 
@@ -777,6 +877,24 @@ start, end, llm
 | 错误体归一化 | `HttpErrorFilter` | `errors.py` 的 `@app.exception_handler` |
 
 两套实现同一份契约（`03-画布/01-图JSON契约与校验.md`），**状态码、响应体形状与值规范（校验文案、时间戳格式）均逐字节一致**——校验 7 组与发布/归属分支均已实测。
+
+### 9.1 逐条讲差异与取舍
+
+对照表给「什么对什么」，这里补「**为什么不同、各自取舍**」——读 TS 侧 `03-NestJS图模块.md` 时对着看：
+
+| 主题 | NestJS 怎么做 | FastAPI 怎么做 | 差异的根源 / 取舍 |
+| --- | --- | --- | --- |
+| **结构校验** | 嵌套 DTO + `@ValidateNested` + `@Type`（class-transformer 实例化）+ `ValidationPipe` | 嵌套 Pydantic 模型（`GraphNode`/`NodePosition`），构造时递归校验 | 关键差异在「实现成本」：TS 必须**成对**写 `@ValidateNested({each:true})` + `@Type(() => …)` 才生效（漏 `@Type` 会**静默失效**）；Python 的嵌套模型**自动**递归校验、无需额外装饰器——这是 Pydantic「模型即校验器」带来的便利 |
+| **语义校验** | 纯函数 `validateGraph`，由 service 显式调用 | 纯函数 `validate_graph`，由 `_assert_valid` 显式调用 | 两端**同构**：规则顺序、遍历顺序、文案模板逐条对齐（真源 `error-messages.md` §3） |
+| **结构错误文案** | class-validator 默认文案 → `validationExceptionFactory` 递归下钻 `children` | Pydantic `errors()`（`loc` 路径）→ `_describe`/`_build_message` 翻译 | 都面对「嵌套错误藏在树上」的问题：TS 沿 `children` 下钻、Python 取 `loc[-1]`——**同一意图的两种实现** |
+| **多值枚举文案** | `enumValues()` 从 `isIn` 文案截取 | `_enum_values()` 用引号正则抽取 | 都要**结构化抽取**框架默认文本；本项目 Python 侧正是这里出过 bug（§6.4） |
+| **保存形状** | `toPlainGraph(JSON.parse(JSON.stringify(body)))`（丢 `undefined` 键） | `body.model_dump(exclude_unset=True)`（不含未传字段） | 两端都要「**存下的形状 = 请求的形状**」：缺省就缺省、显式 `null` 才落 `null` |
+| **空草稿 → 空图** | `graphJson === null ? EMPTY_GRAPH : …` | `graph_json is None → _EMPTY_GRAPH` | 两端 `null` 语义一致；**读取不校验**的豁免也一致 |
+| **发布时区** | `new Date()` + `toISOString()` | `naive-UTC` 写入 + `iso_z()` 出参 | TS 用「一个绝对时刻」简化；Python 显式处理 naive/aware（§6.3） |
+| **状态码** | `@Put` 默认 200、`@Post` 默认 201（publish 需 `@HttpCode(200)`） | FastAPI 默认 200（PUT/POST 都是），故 publish **无需**额外覆盖 | 默认值不同 → 谁需要覆盖谁的默认，结果都是契约要求的 **200** |
+| **出参形状** | service 返回契约 `Graph`（运行期不校验） | 直接返回 `dict`（**不用** `response_model`） | 两端都「原样存取」；FastAPI 刻意**不**加出参模型以免改动形状（§6.5） |
+
+> **共通点**：两端都遵循「**结构校验 + 语义校验分层、规则与文案逐字节一致、图=数据原样存取、归属失败一律 404**」——差异在「表达机制与库的能力边界」，不在行为。
 
 ---
 

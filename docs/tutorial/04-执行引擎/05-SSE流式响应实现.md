@@ -158,51 +158,60 @@ export class RunController {
 - 预检全部通过后才用 `StreamingResponse(media_type="text/event-stream")` 手写 SSE 帧。
 """
 
-from typing import Any
+from typing import Any                                          # Any：任意类型（用于 inputs 的值类型）
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status   # 路由组、依赖注入、HTTP 异常、状态码常量
+from fastapi.responses import StreamingResponse                 # ★ 本篇主角：把（异步）生成器包成「流式响应」
+from pydantic import BaseModel, ConfigDict                      # 请求体模型 + 模型配置
+from sqlalchemy.orm import Session                              # 同步数据库会话类型（类型标注用）
 
-from app.api.apps import _find_owned
-from app.api.deps import get_current_user, get_db
-from app.engine.engine import run_stream, validate_node_data
-from app.graph.validator import validate_graph
-from app.models.user import User
+from app.api.apps import _find_owned                            # 归属校验（查不到 / 非本人 → 404）
+from app.api.deps import get_current_user, get_db               # 鉴权依赖 + 会话依赖
+from app.engine.engine import run_stream, validate_node_data    # ★ 引擎：SSE 异步生成器 + 节点数据形状校验
+from app.graph.validator import validate_graph                  # 图结构校验
+from app.models.user import User                                # 用户模型（类型标注用）
 
-router = APIRouter(prefix="/apps", tags=["apps"])
+router = APIRouter(prefix="/apps", tags=["apps"])               # 路由组：公共前缀 /apps
 
 
 class RunRequest(BaseModel):
     """对应契约 `RunRequest`。"""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")                   # 禁止请求体出现契约之外的字段（多字段即 400）
 
-    inputs: dict[str, Any]
+    inputs: dict[str, Any]                                      # 运行输入：一个「键 → 任意值」的字典
 
 
-@router.post("/{id}/run", operation_id="runApp")
-async def run_app(
-    id: str,
-    body: RunRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> StreamingResponse:
-    app = _find_owned(db, current_user.id, id)
-    if app.graph_json is None:
+@router.post("/{id}/run", operation_id="runApp")                 # POST /apps/{id}/run；operationId 对齐契约
+async def run_app(                                              # ★ async def：本路由要「等」异步生成器，故为异步路由
+    id: str,                                                    # 路径参数 {id}
+    body: RunRequest,                                           # 请求体（Pydantic 校验后交进来）
+    current_user: User = Depends(get_current_user),             # 鉴权依赖：无 / 坏 Bearer → 401（依赖内抛）
+    db: Session = Depends(get_db),                              # 会话依赖
+) -> StreamingResponse:                                         # 声明返回一个流式响应对象
+    app = _find_owned(db, current_user.id, id)                  # 归属校验：查不到 / 非本人 → 404
+    if app.graph_json is None:                                  # 草稿为空 → 立刻短路
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Graph is empty")
-    graph = app.graph_json
-    errors = [*validate_graph(graph), *validate_node_data(graph)]
-    if errors:
+    graph = app.graph_json                                      # 取出草稿图（普通 dict）
+    errors = [*validate_graph(graph), *validate_node_data(graph)]  # 两段校验结果合并（* 把两个列表「摊平」进一个）
+    if errors:                                                  # 有错 → 400 普通 JSON（在【开流之前】）
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="; ".join(errors))
-    return StreamingResponse(
-        run_stream(app.id, graph, body.inputs),
-        media_type="text/event-stream",
+    return StreamingResponse(                                   # ★ 全部通过后，才「构造」流式响应
+        run_stream(app.id, graph, body.inputs),                 # ★ 传入的是「异步生成器」——此刻还没开始执行
+        media_type="text/event-stream",                         # 声明这是 SSE 流
         # 显式给出 content-type，避免 Starlette 追加 `; charset=utf-8`，与 api-ts 的响应头对齐
         headers={"Content-Type": "text/event-stream", "Cache-Control": "no-cache"},
     )
 ```
+
+**这段在干什么（按执行顺序）**：
+
+1. **import 段**：从 `fastapi` / `pydantic` / `sqlalchemy`（第三方）与 `app.*`（本项目）导入所需名字。注意 `from app.*` 是**点号包路径**（≈ TS 的相对导入，但写法不同，见 `00-项目初始化/00-Python与FastAPI基础.md` §5.2）。
+2. `router = APIRouter(prefix="/apps", ...)`：建路由组；下面 `@router.post("/{id}/run")` 挂上去，最终是 `POST /apps/{id}/run`。
+3. `class RunRequest(BaseModel)`：定义请求体模型。`model_config = ConfigDict(extra="forbid")` 表示**多字段就拒绝**（对齐契约 `additionalProperties:false`）；`inputs: dict[str, Any]` 是唯一的字段。**Pydantic 在运行期真正校验**（见 §5.9）。
+4. `async def run_app(...)`：**异步路由**（`async def`）——因为要返回 `StreamingResponse(run_stream(...))`，全程在事件循环上以协程方式跑（见 §5.10）。
+5. `app = _find_owned(...)` → `if app.graph_json is None: raise` → `graph = ...` → 两段校验 → `if errors: raise`：**这整段都在「开流之前」**，任何一条不过都以**普通 JSON 错误**返回（状态码可改）。这就是 §5.6「先校验、后开流」的代码形态。
+6. `return StreamingResponse(run_stream(...), media_type=..., headers=...)`：把异步生成器包成响应。**注意：此刻只是「构造」了响应对象**——生成器函数体**尚未执行第一行**（Python 生成器是懒惰的，见 §5.8）；真正「开始迭代、往外写」发生在框架发送响应时。
 
 **逐项解释**
 
@@ -405,6 +414,131 @@ f"event: {name}\ndata: {json.dumps(data, ensure_ascii=False, separators=(',', ':
 
 > 注意 Py 侧 `json.dumps(..., ensure_ascii=False, separators=(",", ":"))`：`ensure_ascii=False` 保证中文不被转义成 `\uXXXX`，紧凑分隔符保证与 JS `JSON.stringify` 的**单行紧凑**输出对齐（本阶段 03 已讲）。`JSON.stringify` 天然**不含裸换行**，因此 `data:` 永远只占一行（`sse-events.md` §1）。
 
+### 5.8 【加厚 · 本篇首次出现的 Python 机制】`StreamingResponse` 消费异步生成器的分步过程
+
+> 本节写给「只写过 TS/NestJS」的你。**先立术语**：**生成器** = 「能产出多个值、且能暂停/恢复的函数」（`def` 里有 `yield`）；**异步生成器** = 「既能 `yield` 又能 `await` 的生成器」（`async def` 里有 `yield`）；**迭代** = 「反复向生成器要下一个值，直到它耗尽」。
+
+**Python 里 `run_stream` 的骨架**（`apps\api-py\app\engine\engine.py`；`# ←` 为讲解注释）：
+
+```python
+async def run_stream(app_id, graph, inputs) -> AsyncGenerator[str, None]:
+    queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()   # ← 事件队列
+    run_id = str(uuid.uuid4())
+    await queue.put(run_started(run_id, app_id))                    # ← 先塞第一帧
+    task = asyncio.create_task(_run_graph(graph, inputs, queue, run_id))  # ← 后台跑图（不 await，否则非流式）
+    while True:
+        event = await queue.get()                                  # ← 取事件（空则挂起让出控制权）
+        if event is None:                                          # ← 哨兵：生产者放完会放 None
+            break
+        yield format_sse_frame(event)                              # ← 产出一帧 SSE 字符串并【暂停】
+    await task                                                     # ← 收尾
+```
+
+**「生成器产出 → Starlette 迭代 → 写 chunk」的七步**（对照 TS 手写 `res.write`）：
+
+| 步 | Python（`StreamingResponse`） | TS（`RunController` 手写） |
+| --- | --- | --- |
+| ① 建响应对象 | `return StreamingResponse(run_stream(...), ...)`——生成器**刚创建、函数体未执行** | `const events = await engineService.run(...)`——同理未开始产 |
+| ② 发响应头 | Starlette 在发 body **之前** 送状态码 + 头（200 + `text/event-stream`） | `setHeader(...)` + **`flushHeaders()`** |
+| ③ 迭代生成器 | Starlette 对 body 做 **`async for`**：每轮让生成器**从上次 `yield` 处恢复** | `for await (const event of events)` |
+| ④ 生成器产出 | 恢复后 `await queue.get()` → `yield format_sse_frame(event)` 交出一帧字符串 | 循环体 `formatSseFrame(event)` |
+| ⑤ 写 chunk | Starlette 把该字符串经 ASGI `http.response.body` **作为一块 chunk 写出** | `response.write(...)` |
+| ⑥ 循环 | 重复 ③~⑤，**边产边写** = 流式 | 同 |
+| ⑦ 收尾 | 生成器耗尽（`StopAsyncIteration`）→ Starlette 发最后一块空 body → 结束 | `response.end()` |
+
+**这段在干什么（按执行顺序）**：
+
+1. **「构造响应」≠「开始产出」**：`return StreamingResponse(run_stream(...))` 时，`run_stream` 只是被**创建**（生成器是懒惰的：不迭代就不跑）。真正的执行推迟到框架发送响应时。
+2. Starlette 先把头（2）发出去，再开始迭代 body（3）。
+3. 每轮迭代让生成器恢复：`await queue.get()` 等事件 → `yield` 出一帧字符串 → **再次暂停**。
+4. Starlette 拿到字符串就 `write`（5）；如此往复。
+5. 生成器 `break` 跳出循环、`await task` 后函数体结束 → 抛 `StopAsyncIteration` → Starlette 收尾结束响应（7）。
+
+**TS 里对应什么**：这条链路在 TS 侧是**手写**的——`for await (const event of events) response.write(...)`、最后 `response.end()`。FastAPI 只是把它封装进了 `StreamingResponse`：**你不必自己碰 ASGI 的 `send`**。
+
+> **生成器的暂停/恢复**是本节的「语言底座」：`yield` 把值交出、函数停在那里，下次迭代再**从 `yield` 下一行恢复**（局部变量被冻结保留）。完整的最小可运行示例（`counter` 逐次 `next`）见 `04-执行引擎/04-LangGraph与引擎-Python.md` §5.5。**本项目流式能成立的根因就是它**：`run_stream` 每产一帧就停住，框架下一轮再让它恢复。若生成器**永不结束**（忘了 `break` / 忘了放哨兵 `None`），框架会一直等下一帧、响应**永不收束**——见 §5.11。
+
+### 5.9 【加厚 · 本篇首次出现的 Python 机制】Pydantic v2：`model_config` / `model_dump(exclude_unset=True)` / `field_serializer`
+
+这条链路的两端都要「请求进去、响应出来」，Python 侧全靠 Pydantic v2。本节把**本项目里真实用到**的三个机制讲透。
+
+**① `model_config = ConfigDict(...)`——模型级配置（Pydantic v1 的 `class Config:` 在 v2 里换了写法）**
+
+**是什么**：在模型类里声明「这个模型整体的行为」。首见处 `apps\api-py\app\api\run.py` 第 30 行：
+
+```python
+class RunRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")   # 只允许契约声明的字段；多一个字段 → 校验失败（本项目归一为 400）
+```
+
+- `extra="forbid"`：**禁止**请求体出现模型未声明的字段（≈ 契约 `additionalProperties:false`）。
+- **TS 里对应什么**：NestJS 的全局 `ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })`——`forbidNonWhitelisted` 就是「多余字段直接 400」。
+- **为什么这么写**：契约要求「多余字段即非法」，靠这一行**声明式**地在运行期拦住（见 `00-项目初始化/00-Python与FastAPI基础.md` §6.5）。
+> **注意 v1→v2 的差异**：Pydantic **v1** 写成内部类 `class Config: extra = "forbid"`；**v2** 统一为类属性 `model_config = ConfigDict(...)`。本项目是 v2，见到 `class Config:` 的老写法要认出来是 v1。
+
+**② `body.model_dump(exclude_unset=True)`——只取「客户端显式传了的」字段**
+
+**是什么**：把**模型实例**转回**普通 `dict`**。`exclude_unset=True` 表示「**跳过客户端没传的**字段，只保留显式传入的」。首见处 `apps\api-py\app\api\apps.py` 第 145 行：
+
+```python
+# 只更新请求中显式传入的字段
+for field, value in body.model_dump(exclude_unset=True).items():
+    setattr(app, field, value)     # 把显式传入的字段逐个写回数据库对象
+```
+
+- **TS 里对应什么**：`class-transformer` 的 `instanceToPlain(obj)`，或手动「只取 `req.body` 里出现过的键」。TS 侧一个常见等价写法是遍历 `Object.keys(body)` 更新——语义同。
+- **为什么这么写（讲透）**：这是 **PATCH / 局部更新**的语义——「没传的字段 = 不改，不要用默认值覆盖」。若写成 `model_dump()`（不带 `exclude_unset`），那些**没传且有默认值**的字段（如 `description=None`）会被当作「要改成 `None`」一起写回，**误把用户没动的字段清空**。`exclude_unset` 就是「区分『没传』和『传了 `None`』」的关键。
+
+**③ `@field_serializer("字段名")`——自定义某字段「怎么被序列化」**
+
+**是什么**：贴在一个方法上，声明「这个字段在**序列化成 JSON** 时，用我这个方法转换」。首见处 `apps\api-py\app\api\health.py` 第 25 行：
+
+```python
+class HealthResponse(BaseModel):
+    ...
+    time: datetime
+
+    @field_serializer("time")                       # 声明：序列化 time 字段时用下面这个方法
+    def _serialize_time(self, value: datetime) -> str:
+        return iso_z(value)                         # datetime → ISO-8601（带 Z）字符串，对齐契约
+```
+
+- **TS 里对应什么**：`class-transformer` 的 `@Transform(({ value }) => ...)`，或自定义 `toJSON()`——作用都是「把内部表示（`datetime` 对象）转成对外表示（字符串）」。
+- **为什么这么写**：契约要求的 `time` 是**固定格式的字符串**（ISO-Z），而模型内部存的是 `datetime` 对象。若不自定义，Pydantic 会按默认规则输出（格式可能不一致）；用 `field_serializer` **把格式钉死**，才能两端逐字节一致。
+
+> **三者一句话**：`model_config` 管「模型级规则」（禁多余字段）；`model_dump` 管「模型 → dict」（并区分『没传』）；`field_serializer` 管「单字段 → 对外字符串」。它们都靠 **Pydantic 在运行期按注解/装饰器真正执行**——这正是 Python 侧「注解会被真用上」的价值（对比 TS 的类型擦除）。
+
+### 5.10 【加厚 · 与 TS 侧的对照】语言机制：Python 异步 vs TS 的 async / 流
+
+上一节是 Pydantic，这一节是**语言机制**——「TS 学习者看 Python 流式代码卡住」的真正来源。
+
+| 语言机制 | TypeScript | Python（本项目） | 关键差异 |
+| --- | --- | --- | --- |
+| 异步函数 | `async function f()` | `async def f():` | Python 里 `def` 与 `async def` 是**两种函数种类**；`await` 只能出现在 `async def` 里 |
+| 等待异步结果 | `await promise`（Promise **急切**：一创建就在跑） | `await coro`（协程**懒惰**：不 `await` 就不跑） | ⭐ 漏 `await` 在 TS 副作用已发生，在 Python **什么都没发生** |
+| 产出多值 | `function*` | `def f(): yield ...` | 语义同：`yield` 暂停、下次迭代恢复 |
+| 异步产出多值 | `AsyncGenerator`（`async function*`） | `async def f(): ... yield ...` | 本项目 `run_stream` 即它 |
+| 消费异步流 | `for await (const x of it)` | `async for x in it:` | 写法差一截：Python 是 `async for` |
+| 「不 await 但让它后台跑」 | 直接调用、丢弃返回值 | `asyncio.create_task(coro)` | Python 需要显式调度，否则协程永不执行 |
+| 结束一个流 | `controller.close()` → `reader.read()` 得 `{done:true}` | `asyncio.Queue` **无 close**，靠 `put(None)` **哨兵** | ⭐ 见 §5.8 与 `04-LangGraph与引擎-Python.md` §7.4 |
+| 写响应块 | 手写 `res.write(...)` / `res.end()` | `StreamingResponse` 自动迭代生成器写块 | 见 §5.8 |
+
+**为什么这条对照对本篇最关键**：`run_app` 是 **`async def`**、`run_stream` 是**异步生成器**——这两件事在 TS 里你**从没写过**（NestJS 的 handler 多是同步签名，`@Sse()` 又把 Observable 藏在框架里）。读懂了「`async def` 要在事件循环上跑、异步生成器要被 `async for` 消费、队列用哨兵收束」，这段代码就没有黑盒了。
+
+**FastAPI 两条路由路径**（决定 `run_app` 为什么必须 `async def`）：FastAPI 把**同步 `def`** 路由丢进**线程池**跑（适合同步阻塞的 DB），把**`async def`** 路由**直接在事件循环上**当协程跑（适合异步 I/O）。`run_app` 要返回「靠异步生成器产出的流」，全程是异步 I/O，所以用 **`async def`**。**推论**：在 `async def` 里写同步阻塞（如 `time.sleep`）会**卡死整个事件循环**——包括正在吐字的 SSE（见 §5.11）。完整讲法见 `00-项目初始化/00-Python与FastAPI基础.md` §6.7 与 `04-执行引擎/04-LangGraph与引擎-Python.md` §5.4.1。
+
+### 5.11 【加厚】写错会怎样（Python / 流式相关）
+
+| 错误 | 症状 | 原因 / 正解 |
+| --- | --- | --- |
+| **在 `async def` 里写同步阻塞**（`time.sleep` / 同步重活） | **SSE 长时间不吐字**，且期间**所有**请求一起卡 | 阻塞霸占了事件循环线程。改用 `await asyncio.sleep(...)` / 异步库；或把阻塞逻辑挪进**同步 `def`** 路由（FastAPI 丢线程池）。 |
+| **忘记 `await`**（如漏写 `await queue.put(...)`） | 帧**不产出**、流卡住；日志 `RuntimeWarning: coroutine '…' was never awaited` | Python 协程**懒惰**：不 `await` 就不执行。补上 `await`。 |
+| **生成器不结束**（忘 `break` / 忘放哨兵 `None`） | 响应**永不收束**（`curl` 不返回；前端等不到 `run_finished`） | `while True: await queue.get()` 会一直等。收束靠「生产者 `finally: put(None)` → 消费者见 `None` → `break` → 生成器跑完」。 |
+| **在同步 `def` 里 `await`** | 程序**编译不过**：`SyntaxError: 'await' outside async function` | `await` 只能出现在 `async def`；要 `await` 就把 `def` 改 `async def`。 |
+| **「先开流、后校验」**（把校验搬进生成器内部） | 客户端先收 200 头，再收到半截流 + 报错，状态码却永远是 200 | 状态码只在发头时**发一次**；校验必须在**返回 `StreamingResponse` 之前**（§5.6）。 |
+
+> 记住一句话：**「流」是「生成器暂停/恢复 + 异步等待」的语言能力，不是框架魔法**。这几类错误的根都能回到「协程要 `await` 才跑」「阻塞会卡循环」「生成器要有终点」三条上。
+
 ---
 
 ## 6. 验收自测
@@ -520,3 +654,7 @@ data: {"runId":"…","outputs":{"result":"Hello mini-dify"},"elapsedMs":3}
 | SSE 响应头 `Cache-Control: no-cache`（及 TS 侧 `Connection: keep-alive`） | **首次教学于本篇** |
 | 错误分流：「先校验、后开流」（请求级错误 → 开流前 JSON；运行期错误 → `run_failed` 帧） | **首次教学于本篇** |
 | `@HttpCode(200)` 覆盖 `@Post` 默认 201；`@Res()` 手动接管响应 | **首次教学于本篇** |
+| **`StreamingResponse` 消费异步生成器的分步过程（Python 视角）** | 生成器产出 → Starlette `async for` 迭代 → ASGI `http.response.body` 写 chunk → `StopAsyncIteration` 收尾；对照 TS 手写 `res.write`/`res.end`（§5.8） | **首次教学于本篇（加厚）** |
+| **Pydantic v2：`model_config` / `model_dump(exclude_unset=True)` / `field_serializer`** | 模型级配置（禁多余字段）、模型→dict（区分「没传」）、单字段序列化（`datetime`→ISO-Z）；对照 TS `class-transformer`（§5.9） | **首次教学于本篇（加厚）** |
+| **Python 异步语言机制 vs TS 的 async / 流** | `async def` vs `async function`、协程「懒惰」vs Promise「急切」、`async for` vs `for await`、哨兵 `None` vs `close()`；FastAPI 两条路由路径（§5.10） | **首次教学于本篇（加厚）** |
+| **写错会怎样（Python/流式）** | 阻塞事件循环卡住吐字、忘 `await` 不产帧、生成器不结束流不收束、同步里 `await` 语法错、先开流后校验（§5.11） | **首次教学于本篇（加厚）** |
