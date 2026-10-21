@@ -29,6 +29,16 @@ export default defineConfig({
           { text: '阶段 5 · LLM 节点', link: '/tutorial/05-LLM节点/01-LLM节点契约与模型配置' },
           { text: '阶段 6 · 工具调用', link: '/tutorial/06-工具调用/01-工具契约与内置工具' },
         ]
+      },
+      { text: 'PostgreSQL', items: [
+          { text: '系列首页', link: '/pgsql/index' },
+          { text: '总大纲与技术点索引', link: '/pgsql/INDEX' },
+          { text: '学习总结', link: '/pgsql/学习总结' },
+          { text: '阶段 0 · 认识 PG 与环境上手', link: '/pgsql/00-认识PostgreSQL与环境上手/01-PostgreSQL是什么' },
+          { text: '阶段 3 · JSONB 与半结构化数据', link: '/pgsql/03-JSONB与半结构化数据/01-json与jsonb及读写操作符' },
+          { text: '阶段 8 · pgvector 向量检索', link: '/pgsql/08-扩展生态与pgvector/02-pgvector向量检索' },
+          { text: '阶段 11 · 综合实战', link: '/pgsql/11-综合实战-mini-dify数据层/01-ORM的PG特性实战' },
+        ]
       }
     ],
 
@@ -143,6 +153,108 @@ export default defineConfig({
           collapsed: false, // 折叠/展开
           text: '手写vue3',
           link: '/document/vue/handwrite.md'
+        },
+      ],
+      "/pgsql/": [
+        {
+          collapsed: false,
+          text: '首页与索引',
+          items: [
+            { text: '系列首页', link: '/pgsql/index' },
+            { text: '总大纲与技术点索引', link: '/pgsql/INDEX' },
+            { text: '学习总结', link: '/pgsql/学习总结' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 0 · 认识 PG 与环境上手',
+          items: [
+            { text: '01 PostgreSQL 是什么', link: '/pgsql/00-认识PostgreSQL与环境上手/01-PostgreSQL是什么' },
+            { text: '02 环境搭建与基础操作', link: '/pgsql/00-认识PostgreSQL与环境上手/02-环境搭建与基础操作' },
+            { text: '03 数据类型与建表语法', link: '/pgsql/00-认识PostgreSQL与环境上手/03-数据类型与建表语法' },
+            { text: '04 增删改查', link: '/pgsql/00-认识PostgreSQL与环境上手/04-增删改查' },
+            { text: '05 聚合函数与 GROUP BY', link: '/pgsql/00-认识PostgreSQL与环境上手/05-聚合函数与GROUP BY' },
+            { text: '06 多表连接与子查询', link: '/pgsql/00-认识PostgreSQL与环境上手/06-多表连接与子查询' },
+            { text: '07 事务与事务性 DDL', link: '/pgsql/00-认识PostgreSQL与环境上手/07-事务与事务性DDL' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 2 · 与 MySQL 差异专题',
+          items: [
+            { text: '01 标识符、引号与大小写', link: '/pgsql/02-与MySQL差异专题/01-标识符、引号与大小写' },
+            { text: '02 高频语法差异', link: '/pgsql/02-与MySQL差异专题/02-高频语法差异' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 3 · JSONB 与半结构化数据',
+          items: [
+            { text: '01 json/jsonb 及读写操作符', link: '/pgsql/03-JSONB与半结构化数据/01-json与jsonb及读写操作符' },
+            { text: '02 GIN 索引与项目实战', link: '/pgsql/03-JSONB与半结构化数据/02-GIN索引与项目实战' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 4 · 查询进阶',
+          items: [
+            { text: '01 JOIN 全家桶与子查询', link: '/pgsql/04-查询进阶/01-JOIN全家桶与子查询' },
+            { text: '02 窗口函数、CTE 与 PG 特色', link: '/pgsql/04-查询进阶/02-窗口函数、CTE与PG特色' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 5 · 事务、MVCC 与并发',
+          items: [
+            { text: '02 MVCC、锁与 VACUUM', link: '/pgsql/05-事务MVCC与并发/02-MVCC锁与VACUUM' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 6 · 索引与执行计划',
+          items: [
+            { text: '01 索引类型与设计', link: '/pgsql/06-索引与执行计划/01-索引类型与设计' },
+            { text: '02 EXPLAIN 与查询优化', link: '/pgsql/06-索引与执行计划/02-EXPLAIN与查询优化' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 7 · 体系结构、Schema 与权限',
+          items: [
+            { text: '01 Database / Schema / Role 三层', link: '/pgsql/07-体系结构Schema与权限/01-Database_Schema_Role三层' },
+            { text: '02 系统目录与监控', link: '/pgsql/07-体系结构Schema与权限/02-系统目录与监控' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 8 · 扩展生态与 pgvector',
+          items: [
+            { text: '01 扩展机制与常用扩展', link: '/pgsql/08-扩展生态与pgvector/01-扩展机制与常用扩展' },
+            { text: '02 pgvector 向量检索', link: '/pgsql/08-扩展生态与pgvector/02-pgvector向量检索' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 9 · 全文检索（选修）',
+          items: [
+            { text: '01 tsvector 体系与中文方案', link: '/pgsql/09-全文检索/01-tsvector体系与中文方案' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 10 · 备份、复制与运维（选修）',
+          items: [
+            { text: '01 逻辑备份与恢复', link: '/pgsql/10-备份复制与运维/01-逻辑备份与恢复' },
+            { text: '02 WAL、复制与监控调优', link: '/pgsql/10-备份复制与运维/02-WAL复制与监控调优' },
+          ]
+        },
+        {
+          collapsed: true,
+          text: '阶段 11 · 综合实战：mini-dify 数据层',
+          items: [
+            { text: '01 ORM 的 PG 特性实战', link: '/pgsql/11-综合实战-mini-dify数据层/01-ORM的PG特性实战' },
+            { text: '02 事件表 + 向量检索闭环', link: '/pgsql/11-综合实战-mini-dify数据层/02-事件表+向量检索闭环' },
+          ]
         },
       ],
       "/tutorial/": [
