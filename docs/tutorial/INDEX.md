@@ -176,6 +176,21 @@ TS / React / Next / Nest / Python / LangChain / LangGraph **一律同一模式**
 | Python 侧工具注册表 / `ToolError` / `httpx` 异步客户端 / `add_conditional_edges` / `bind_tools` | `06-工具调用/03-Python工具与ReAct对齐.md` |
 | 「能力目录驱动 UI」；多选状态与「不存在的键 = 未启用」；工具事件在运行面板的展示 | `06-工具调用/04-前端工具选择面板.md` |
 | 阶段 6 新增的一致层次（工具事件序列 + 工具错误分类） | `06-工具调用/05-验收.md` |
+| RAG 概念（检索增强生成）；向量与余弦相似度；pgvector `vector(n)` 与 `<=>` 距离；维度固定 1536；Prisma `Unsupported` vs SQLAlchemy `Vector`；HNSW 索引与 Prisma 迁移冲突 | `07-知识库RAG/01-知识库契约与pgvector建模.md` |
+| 递归切分 `RecursiveCharacterTextSplitter` 与「参数即契约」；`OpenAIEmbeddings` 与 `check_embedding_ctx_length=False`；维度校验；mock 哈希向量器 | `07-知识库RAG/02-文档切分与向量化.md` |
+| 向量写入的 `::vector` 强转；`score = 1 - distance` 与排序方向；归属过滤必须在 SQL；`retrieval` 事件与引用可解释性；预检前置 | `07-知识库RAG/03-NestJS检索与检索节点.md` |
+| Python `Vector(1536)`、`UploadFile`、`text()` 参数绑定；前端 `FormData` 不手写 `Content-Type`；检索调试面板 | `07-知识库RAG/04-Python对齐与前端知识库页.md` |
+| 阶段 7 新增的一致层次（chunk 逐字节 + 检索分数全精度） | `07-知识库RAG/05-验收.md` |
+| 分支的必要性；`condition` 三要素（有序 `conditions[]` / 12 个 `operator` 闭集 / `else` 兜底）；**`edge.sourceHandle` 表达多出口**；「第一个匹配生效」；12 个 operator 语义；图校验分工（契约 / 纯函数 / 引擎）；8 类分支预检（8.1.1~8.1.8）；**`else` 为保留分支名（8.1.2a，与 8.1.2 同循环、先查保留名）** | `08-分支与循环/01-分支节点的契约与图校验.md` |
+| **条件边的两种用途**（ReAct 单出口 vs 分支多出口映射）；「跳过普通边」的陷阱；`branches` 状态与「节点算结果、条件边只路由」；`branch_taken` 为什么在节点内发；**`tryRenderTemplate` 与分支安全解析**；aggregator 取第一个非空、输出扁平；**缺失 `label` 统一降级为空串（跨语言一致）** | `08-分支与循环/02-NestJS条件边与变量聚合.md` |
+| 迭代三要素（`inputArray` / `itemName` / `outputTemplate`）与顶层键注入（`itemIndex` / `itemCount`）；`maxIterations` 保护；`iteration_item` 进度事件；输出 `{results,count,joined}`；**跨语言数值序列化（`1.0`→`1`、`NaN`→`null`、`bool` 判断顺序）** | `08-分支与循环/03-迭代节点与跨语言数值对齐.md` |
+| **ReactFlow 多 `source` Handle 与 `sourceHandle` 契约接缝**；动态 Handle 与行内布局；删分支要删边；改 label 不改 id；预检前置到 UI；三类过程事件面板 | `08-分支与循环/04-前端多出口Handle与分支面板.md` |
+| 阶段 8 新增的一致层次（分支事件序列 + 数值序列化） | `08-分支与循环/05-验收.md` |
+| **无状态 → 有状态**（一次运行的输出依赖数据库历史）；`conversations` / `messages` 的职责划分；`seq` 与 `UNIQUE(conversation_id, seq)`；归属三层校验（不存在 / 非本人 / 非本应用一律 404）；`run_started` 可选 `conversationId`；`userMessage` vs `inputs` | `09-会话与记忆/01-会话契约与数据建模.md` |
+| **「先读历史再写 user」的顺序语义**；`pool.conversation`；`history` 格式契约（`role: content` + `\n`）；`useHistory` 注入顺序（`tool` 角色跳过）；`MAX_HISTORY_MESSAGES` 窗口裁剪；assistant 内容规则；`run_failed` 不写 assistant；**终态事件唯一：副作用先做完再发 `run_finished`** | `09-会话与记忆/02-历史加载与上下文注入-NestJS.md` |
+| **checkpointer vs 自建消息表**的设计论证（存什么 / 查询 / 跨语言 / 中断恢复 / 时间旅行 / 迁移风险 / 实现成本） | `09-会话与记忆/03-checkpointer与自建消息表.md` |
+| Python `passive_deletes`、唯一约束的并发兜底（`IntegrityError` 重试）、可选字段的 `null` 语义（`str = Field(default=None)` vs `str \| None`）；前端三件套 body（`conversationId` / `userMessage` / `inputs`）、「以服务端为准」 | `09-会话与记忆/04-Python对齐与前端会话面板.md` |
+| **阶段 9 新增的一致层次**（messages 一致 + 帧一致：事件序列 / 每帧键集合 / 归一后帧 / `role`·`content`·`seq`） | `09-会话与记忆/05-验收.md` |
 
 ---
 
@@ -289,6 +304,42 @@ TS / React / Next / Nest / Python / LangChain / LangGraph **一律同一模式**
 
 **阶段 6 笔记已全部完成（5/5）。**
 
+### `07-知识库RAG/`（阶段 7）
+
+| 篇 | 主题 | 状态 |
+| --- | --- | --- |
+| `01` | 知识库契约与 pgvector 建模（首次教学：RAG 概念 / 向量与余弦相似度 / `vector(n)` 与 `<=>` / 维度固定 / Prisma `Unsupported` vs SQLAlchemy `Vector` / HNSW 与 Prisma 迁移冲突） | ✅ |
+| `02` | 文档切分与向量化（首次教学：`RecursiveCharacterTextSplitter` 与「参数即契约」/ `check_embedding_ctx_length=False` / 维度校验 / mock 哈希向量器） | ✅ |
+| `03` | NestJS 检索与检索节点（首次教学：`::vector` 强转 / `score = 1 - distance` 与排序方向 / 归属过滤必须在 SQL / `retrieval` 事件与引用可解释性 / 预检前置） | ✅ |
+| `04` | Python 对齐与前端知识库页（首次教学：`Vector(1536)` / `UploadFile` / `text()` 参数绑定 / `FormData` 不手写 `Content-Type` / 检索调试面板） | ✅ |
+| `05` | 验收（阶段 7 新增的一致层次：chunk 逐字节 + 检索分数全精度；L1~L7） | ✅ |
+
+**阶段 7 笔记已全部完成（5/5）。**
+
+### `08-分支与循环/`（阶段 8）
+
+| 篇 | 主题 | 状态 |
+| --- | --- | --- |
+| `01` | 分支节点的契约与图校验（首次教学：分支必要性 / `condition` 三要素 / `edge.sourceHandle` 多出口 / 第一个匹配生效 / 12 个 operator / 图校验分工 / 8 类分支预检） | ✅ |
+| `02` | NestJS 条件边与变量聚合（首次教学：条件边两种用途 / 跳过普通边的陷阱 / `branches` 状态与「节点算结果、条件边只路由」/ `branch_taken` 在节点内发 / `tryRenderTemplate` 分支安全解析 / aggregator 取第一个非空与扁平输出） | ✅ |
+| `03` | 迭代节点与跨语言数值对齐（首次教学：迭代三要素与顶层键注入 / `maxIterations` 保护 / `iteration_item` / `{results,count,joined}` / 跨语言数值序列化） | ✅ |
+| `04` | 前端多出口 Handle 与分支面板（首次教学：ReactFlow 多 `source` Handle 与 `sourceHandle` 契约接缝 / 动态 Handle 布局 / 删分支删边 / 改 label 不改 id / 预检前置到 UI / 三类过程事件面板） | ✅ |
+| `05` | 验收（阶段 8 新增的一致层次：分支事件序列 + 数值序列化；L1~L7） | ✅ |
+
+**阶段 8 笔记已全部完成（5/5）。**
+
+### `09-会话与记忆/`（阶段 9）
+
+| 篇 | 主题 | 状态 |
+| --- | --- | --- |
+| `01` | 会话契约与数据建模（首次教学：无状态 → 有状态 / `conversations` 与 `messages` 职责 / `seq` 与 `UNIQUE(conversation_id, seq)` / 归属三层校验 / `run_started` 可选 `conversationId` / `userMessage` vs `inputs`） | ✅ |
+| `02` | 历史加载与上下文注入（NestJS）（首次教学：「先读历史再写 user」/ `pool.conversation` / history 格式契约 / `useHistory` 注入顺序与 `tool` 跳过 / `MAX_HISTORY_MESSAGES` / assistant 内容规则 / `run_failed` 不写 assistant / 终态事件唯一：副作用先做完再发 `run_finished`） | ✅ |
+| `03` | checkpointer 与自建消息表（首次教学：两种「状态」的分工与设计论证 / 跨语言 / 中断恢复 / 时间旅行 / 迁移风险 / 实现成本） | ✅ |
+| `04` | Python 对齐与前端会话面板（首次教学：`passive_deletes` 复用 / 唯一约束并发兜底与 `IntegrityError` 重试 / 可选字段 `null` 语义 / async 引擎里的同步 Session 边界 / 前端三件套 body / 「以服务端为准」） | ✅ |
+| `05` | 验收（阶段 9 新增的一致层次：messages 一致 + 帧一致；L1~L7；L4 含「终态唯一 + `run_finished` 时 assistant 已落库」） | ✅ |
+
+**阶段 9 笔记已全部完成（5/5）。**
+
 ### `lang-diff/`
 
 | 篇 | 状态 |
@@ -322,6 +373,9 @@ TS / React / Next / Nest / Python / LangChain / LangGraph **一律同一模式**
 | **`apps/api-py/.env` 里的 `MAX_TOOL_ROUNDS` 不生效** | 阶段 6 的 `_max_tool_rounds()` 原本直接读 `os.environ`，而 **pydantic-settings 只把 `.env` 读进 `Settings` 对象、不回写进程环境** ⇒ `.env` 里的值被静默忽略 | ✅ 已修复：`config.py` 新增 `max_tool_rounds: int = 5`，`_max_tool_rounds()` 改读 `settings.max_tool_rounds`；两端 `.env` / `.env.example` 均补 `MAX_TOOL_ROUNDS=5`。实测：`settings.max_tool_rounds = 5`、`_max_tool_rounds() = 5`。**通用知识**：读配置要走 `Settings`，别直接读 `os.environ` |
 | **api-py 的 JSON 响应缺 `charset=utf-8`** | Starlette `JSONResponse` 默认 `content-type: application/json`（无 charset）；响应体虽是 UTF-8 字节，但**未声明编码**，导致非浏览器客户端（PowerShell 5.1 等）按 ISO-8859-1 解码 ⇒ 含中文的响应变乱码（`安全` → `å®å¨`）。浏览器 `res.json()` 按规范强制 UTF-8，故前端看不出来 | ✅ 已修复：新建 `apps/api-py/app/json_response.py` 的 `UTF8JSONResponse`（`media_type = "application/json; charset=utf-8"`），作为 `FastAPI(default_response_class=...)` 的默认响应类，并用于 `errors.py` 的错误信封。实测：两端 `Content-Type` 均为 `application/json; charset=utf-8`，`GET /tools` 原始 JSON **逐字节相等** |
 | 端口 `3000`/`3001` 偶尔无法绑定 | Docker Desktop 启动后，Windows WinNAT 会**动态保留**一段端口（实测曾占 `2957–3056`，正好覆盖 3000/3001）；`netsh int ipv4 show excludedportrange protocol=tcp` 可查，绑定时报 `access permissions` | ℹ️ 环境问题（非代码）。**管理员** PowerShell 执行 `net stop winnat` + `net start winnat` 即释放；或重启机器。实测：释放后 3000/3001/8000 均可正常绑定并启动三端 |
+| **Python 删除含文档的知识库曾返回 500**（已修复） | `apps/api-py/app/models/knowledge.py` 的 `KnowledgeBase.documents` / `Document.chunks` 缺 `passive_deletes=True`，SQLAlchemy 删除父行时先把 `documents.knowledge_base_id` 置 NULL → `NotNullViolation` → 500；TS 侧 Prisma 正常 204 | ✅ 已修复：三处关系（含 `User.knowledge_bases`）加 `passive_deletes=True`，删除交给数据库 `ON DELETE CASCADE`。实测：上传 1 篇 2918 字节文档（`chunkCount=2`）后删除知识库 → **204**，随后 `documents` / `chunks` 计数均 **0**；空库删除 204 |
+| **Prisma 会 DROP 手工创建的 HNSW 索引** | `prisma migrate dev` 不认识 `chunks_embedding_hnsw`，会生成 `DROP INDEX` 迁移 | ⚠️ 已知：**删除该自动生成的迁移目录**并手工重建索引；后续每次迁移后都要检查 `\di` 确认索引仍在 |
+| **Prisma 迁移会再次生成 `DROP INDEX "chunks_embedding_hnsw"`** | 阶段 9 新增迁移时实际发生：自动生成的迁移里包含 `DROP INDEX`；已手工删除该语句并同步修正 `_prisma_migrations.checksum` | ⚠️ 每次 `migrate dev` 后都要检查并删除该语句，再跑 `pnpm --filter @mini-dify/api-ts db:index` |
 
 ---
 

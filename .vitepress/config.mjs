@@ -28,6 +28,9 @@ export default defineConfig({
           { text: '阶段 4 · 执行引擎', link: '/tutorial/04-执行引擎/01-运行契约与SSE事件协议' },
           { text: '阶段 5 · LLM 节点', link: '/tutorial/05-LLM节点/01-LLM节点契约与模型配置' },
           { text: '阶段 6 · 工具调用', link: '/tutorial/06-工具调用/01-工具契约与内置工具' },
+          { text: '阶段 7 · 知识库 RAG', link: '/tutorial/07-知识库RAG/01-知识库契约与pgvector建模' },
+          { text: '阶段 8 · 分支与循环', link: '/tutorial/08-分支与循环/01-分支节点的契约与图校验' },
+          { text: '阶段 9 · 会话与记忆', link: '/tutorial/09-会话与记忆/01-会话契约与数据建模' },
         ]
       },
       { text: 'PostgreSQL', items: [
@@ -38,6 +41,14 @@ export default defineConfig({
           { text: '阶段 3 · JSONB 与半结构化数据', link: '/pgsql/03-JSONB与半结构化数据/01-json与jsonb及读写操作符' },
           { text: '阶段 8 · pgvector 向量检索', link: '/pgsql/08-扩展生态与pgvector/02-pgvector向量检索' },
           { text: '阶段 11 · 综合实战', link: '/pgsql/11-综合实战-mini-dify数据层/01-ORM的PG特性实战' },
+        ]
+      },
+      { text: 'Python + FastAPI', items: [
+          { text: '大纲与写作规范', link: '/python/INDEX' },
+          { text: '阶段 0 · Python 基础', link: '/python/00-Python基础/01-环境与工具链' },
+          { text: '阶段 1 · Python 进阶', link: '/python/01-Python进阶/01-类型注解与typing' },
+          { text: '阶段 2 · 异步与并发', link: '/python/02-异步与并发/01-GIL与并发模型选择' },
+          { text: '阶段 3 · 工程化', link: '/python/03-工程化/01-pyproject与依赖管理' },
         ]
       }
     ],
@@ -153,6 +164,55 @@ export default defineConfig({
           collapsed: false, // 折叠/展开
           text: '手写vue3',
           link: '/document/vue/handwrite.md'
+        },
+      ],
+      "/python/": [
+        {
+          collapsed: false,
+          text: '大纲与写作规范',
+          link: '/python/INDEX'
+        },
+        {
+          collapsed: false,
+          text: '阶段 0 · Python 基础',
+          items: [
+            { text: '01 环境与工具链', link: '/python/00-Python基础/01-环境与工具链' },
+            { text: '02 语法最小集与数据类型', link: '/python/00-Python基础/02-语法最小集与数据类型' },
+            { text: '03 函数与作用域', link: '/python/00-Python基础/03-函数与作用域' },
+            { text: '04 模块、包与导入', link: '/python/00-Python基础/04-模块、包与导入' },
+            { text: '05 异常与文件 IO', link: '/python/00-Python基础/05-异常与文件IO' },
+            { text: '06 面向对象', link: '/python/00-Python基础/06-面向对象' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 1 · Python 进阶',
+          items: [
+            { text: '01 类型注解与 typing', link: '/python/01-Python进阶/01-类型注解与typing' },
+            { text: '02 迭代器与生成器', link: '/python/01-Python进阶/02-迭代器与生成器' },
+            { text: '03 装饰器与闭包', link: '/python/01-Python进阶/03-装饰器与闭包' },
+            { text: '04 上下文管理器与 dataclass', link: '/python/01-Python进阶/04-上下文管理器与dataclass' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 2 · 异步与并发',
+          items: [
+            { text: '01 GIL 与并发模型选择', link: '/python/02-异步与并发/01-GIL与并发模型选择' },
+            { text: '02 asyncio 核心', link: '/python/02-异步与并发/02-asyncio核心' },
+            { text: '03 异步实战模式', link: '/python/02-异步与并发/03-异步实战模式' },
+            { text: '04 并发工具箱', link: '/python/02-异步与并发/04-并发工具箱' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 3 · 工程化',
+          items: [
+            { text: '01 pyproject 与依赖管理', link: '/python/03-工程化/01-pyproject与依赖管理' },
+            { text: '02 配置与日志', link: '/python/03-工程化/02-配置与日志' },
+            { text: '03 pytest 入门', link: '/python/03-工程化/03-pytest入门' },
+            { text: '04 静态检查与格式化', link: '/python/03-工程化/04-静态检查与格式化' },
+          ]
         },
       ],
       "/pgsql/": [
@@ -350,6 +410,39 @@ export default defineConfig({
             { text: '03 Python 工具与 ReAct 对齐', link: '/tutorial/06-工具调用/03-Python工具与ReAct对齐' },
             { text: '04 前端工具选择面板', link: '/tutorial/06-工具调用/04-前端工具选择面板' },
             { text: '05 验收', link: '/tutorial/06-工具调用/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 7 · 知识库 RAG',
+          items: [
+            { text: '01 知识库契约与 pgvector 建模', link: '/tutorial/07-知识库RAG/01-知识库契约与pgvector建模' },
+            { text: '02 文档切分与向量化', link: '/tutorial/07-知识库RAG/02-文档切分与向量化' },
+            { text: '03 NestJS 检索与检索节点', link: '/tutorial/07-知识库RAG/03-NestJS检索与检索节点' },
+            { text: '04 Python 对齐与前端知识库页', link: '/tutorial/07-知识库RAG/04-Python对齐与前端知识库页' },
+            { text: '05 验收', link: '/tutorial/07-知识库RAG/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 8 · 分支与循环',
+          items: [
+            { text: '01 分支节点的契约与图校验', link: '/tutorial/08-分支与循环/01-分支节点的契约与图校验' },
+            { text: '02 NestJS 条件边与变量聚合', link: '/tutorial/08-分支与循环/02-NestJS条件边与变量聚合' },
+            { text: '03 迭代节点与跨语言数值对齐', link: '/tutorial/08-分支与循环/03-迭代节点与跨语言数值对齐' },
+            { text: '04 前端多出口 Handle 与分支面板', link: '/tutorial/08-分支与循环/04-前端多出口Handle与分支面板' },
+            { text: '05 验收', link: '/tutorial/08-分支与循环/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 9 · 会话与记忆',
+          items: [
+            { text: '01 会话契约与数据建模', link: '/tutorial/09-会话与记忆/01-会话契约与数据建模' },
+            { text: '02 历史加载与上下文注入（NestJS）', link: '/tutorial/09-会话与记忆/02-历史加载与上下文注入-NestJS' },
+            { text: '03 checkpointer 与自建消息表', link: '/tutorial/09-会话与记忆/03-checkpointer与自建消息表' },
+            { text: '04 Python 对齐与前端会话面板', link: '/tutorial/09-会话与记忆/04-Python对齐与前端会话面板' },
+            { text: '05 验收', link: '/tutorial/09-会话与记忆/05-验收' },
           ]
         },
       ],
