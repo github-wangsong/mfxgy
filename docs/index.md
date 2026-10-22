@@ -47,5 +47,11 @@ features:
   - title: agent开发教程
     details: 从 0 开发 mini-dify 的完整教学笔记（阶段 0–3）
     link: /tutorial/INDEX
+  - title: Python + FastAPI
+    details: 从 0 开发 mini-dify 的完整教学笔记（阶段 0–3）
+    link: /python/INDEX
+  - title: PostgreSQL 教学
+    details: 从 0 开发 mini-dify 的完整教学笔记（阶段 0–3）
+    link: /pgsql/INDEX
 ---
 
