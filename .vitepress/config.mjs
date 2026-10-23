@@ -20,6 +20,7 @@ export default defineConfig({
         ] 
       },
       { text: '教程笔记', items: [
+          { text: '开发总纲', link: '/tutorial/000-开发总纲' },
           { text: '索引与写作规范', link: '/tutorial/INDEX' },
           { text: '阶段 0 · 项目初始化', link: '/tutorial/00-项目初始化/01-环境准备' },
           { text: '阶段 1 · 账号与认证', link: '/tutorial/01-账号与认证/01-契约扩展' },
@@ -31,6 +32,8 @@ export default defineConfig({
           { text: '阶段 7 · 知识库 RAG', link: '/tutorial/07-知识库RAG/01-知识库契约与pgvector建模' },
           { text: '阶段 8 · 分支与循环', link: '/tutorial/08-分支与循环/01-分支节点的契约与图校验' },
           { text: '阶段 9 · 会话与记忆', link: '/tutorial/09-会话与记忆/01-会话契约与数据建模' },
+          { text: '阶段 10 · 发布与 API', link: '/tutorial/10-发布与API/01-发布语义与API-Key契约' },
+          { text: '阶段 11 · 自主 Agent 运行时', link: '/tutorial/11-自主Agent运行时/01-Run模型与事件重放' },
         ]
       },
       { text: 'PostgreSQL', items: [
@@ -240,6 +243,7 @@ export default defineConfig({
           items: [
             { text: '01 SQLAlchemy 2.0 核心', link: '/python/06-数据层/01-SQLAlchemy2.0核心' },
             { text: '02 Session 生命周期与依赖', link: '/python/06-数据层/02-Session生命周期与依赖' },
+            { text: '03 关系、级联与查询', link: '/python/06-数据层/03-关系、级联与查询' },
           ]
         },
       ],
@@ -346,6 +350,11 @@ export default defineConfig({
         },
       ],
       "/tutorial/": [
+        {
+          collapsed: false,
+          text: '开发总纲',
+          link: '/tutorial/000-开发总纲'
+        },
         {
           collapsed: false,
           text: '索引与写作规范',
@@ -471,6 +480,28 @@ export default defineConfig({
             { text: '03 checkpointer 与自建消息表', link: '/tutorial/09-会话与记忆/03-checkpointer与自建消息表' },
             { text: '04 Python 对齐与前端会话面板', link: '/tutorial/09-会话与记忆/04-Python对齐与前端会话面板' },
             { text: '05 验收', link: '/tutorial/09-会话与记忆/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 10 · 发布与 API',
+          items: [
+            { text: '01 发布语义与 API Key 契约', link: '/tutorial/10-发布与API/01-发布语义与API-Key契约' },
+            { text: '02 API Key 安全设计', link: '/tutorial/10-发布与API/02-API-Key安全设计' },
+            { text: '03 对外 SSE 接口与双后端对齐', link: '/tutorial/10-发布与API/03-对外SSE接口与双后端对齐' },
+            { text: '04 前端发布面板与调用示例', link: '/tutorial/10-发布与API/04-前端发布面板与调用示例' },
+            { text: '05 验收', link: '/tutorial/10-发布与API/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 11 · 自主 Agent 运行时',
+          items: [
+            { text: '01 Run 模型与事件重放', link: '/tutorial/11-自主Agent运行时/01-Run模型与事件重放' },
+            { text: '02 Composition 声明式装配与层设计', link: '/tutorial/11-自主Agent运行时/02-Composition声明式装配与层设计' },
+            { text: '03 ReAct 循环与上下文压缩', link: '/tutorial/11-自主Agent运行时/03-ReAct循环与上下文压缩' },
+            { text: '04 前端 Agent 控制台与 SSE 重连', link: '/tutorial/11-自主Agent运行时/04-前端Agent控制台与SSE重连' },
+            { text: '05 验收', link: '/tutorial/11-自主Agent运行时/05-验收' },
           ]
         },
       ],

@@ -191,6 +191,16 @@ TS / React / Next / Nest / Python / LangChain / LangGraph **一律同一模式**
 | **checkpointer vs 自建消息表**的设计论证（存什么 / 查询 / 跨语言 / 中断恢复 / 时间旅行 / 迁移风险 / 实现成本） | `09-会话与记忆/03-checkpointer与自建消息表.md` |
 | Python `passive_deletes`、唯一约束的并发兜底（`IntegrityError` 重试）、可选字段的 `null` 语义（`str = Field(default=None)` vs `str \| None`）；前端三件套 body（`conversationId` / `userMessage` / `inputs`）、「以服务端为准」 | `09-会话与记忆/04-Python对齐与前端会话面板.md` |
 | **阶段 9 新增的一致层次**（messages 一致 + 帧一致：事件序列 / 每帧键集合 / 归一后帧 / `role`·`content`·`seq`） | `09-会话与记忆/05-验收.md` |
+| 草稿 vs 快照隔离、发布=复制、API Key 四元组、key 格式与 `prefix`、`apiKeyAuth` 安全方案、`PublicRunRequest` 只含 `inputs` | `10-发布与API/01-发布语义与API-Key契约.md` |
+| **密码慢哈希 vs key 快哈希**、一次性明文、软撤销、401/404 的信息泄露控制、哈希查找 O(1)、`lastUsedAt` 写放大、限流未做、key 轮换 | `10-发布与API/02-API-Key安全设计.md` |
+| `precheck()` 抽取、`run` vs `runPublished` 三处差异、双认证头、校验顺序与状态码语义、`additionalProperties` 拒绝多余字段 | `10-发布与API/03-对外SSE接口与双后端对齐.md` |
+| 发布三态 UI、一次性密钥 UX、`-N` 让 SSE 逐段可见、示例端口从环境变量推导 | `10-发布与API/04-前端发布面板与调用示例.md` |
+| **阶段 10 新增的一致层次**（对外 SSE + 错误文案） | `10-发布与API/05-验收.md` |
+| **202 异步受理 / Run 状态机 / `run_queued` 为何落库 / 事件「先写库再推送」/ `Last-Event-ID` 重放与衔接窗口 / 取消是协作式：以 SSE 终态为准 / 终态唯一** | `11-自主Agent运行时/01-Run模型与事件重放.md` |
+| **Composition vs Graph / 层统一契约 / `llm` 层唯一 / 层顺序语义 / `composition.version` 校验 + `layer name` 必填（两端同一文案）/ 默认值入契约 / 砍掉的 Workspace·Lease·沙箱** | `11-自主Agent运行时/02-Composition声明式装配与层设计.md` |
+| **Agent 级 ReAct / `maxRounds` / 确定性压缩（12/6/20 → 8 条）/ 框架取舍：为何不用 Pydantic AI** | `11-自主Agent运行时/03-ReAct循环与上下文压缩.md` |
+| **三栏工作台 / Composition JSON 预校验 / `id:` 行 = 重连游标 / `sse.ts` 迁到 `lib/` / token 合并渲染** | `11-自主Agent运行时/04-前端Agent控制台与SSE重连.md` |
+| **阶段 11 新增的一致层次（`id` 序列 + 事件序列 + 压缩结果）** | `11-自主Agent运行时/05-验收.md` |
 
 ---
 
@@ -340,6 +350,30 @@ TS / React / Next / Nest / Python / LangChain / LangGraph **一律同一模式**
 
 **阶段 9 笔记已全部完成（5/5）。**
 
+### `10-发布与API/`（阶段 10）
+
+| 篇 | 主题 | 状态 |
+| --- | --- | --- |
+| `01` | 发布语义与 API Key 契约（首次教学：草稿 vs 快照隔离 / 发布=复制 / API Key 四元组 / key 格式与 `prefix` / `apiKeyAuth` / `PublicRunRequest` 只含 `inputs`） | ✅ |
+| `02` | API Key 安全设计（首次教学：密码慢哈希 vs key 快哈希 / 一次性明文 / 软撤销 / 401·404 信息泄露控制 / 哈希查找 O(1) / `lastUsedAt` 写放大 / 限流未做 / key 轮换） | ✅ |
+| `03` | 对外 SSE 接口与双后端对齐（首次教学：`precheck()` 抽取 / `run` vs `runPublished` 三处差异 / 双认证头 / 校验顺序与状态码语义 / `additionalProperties` 拒绝多余字段） | ✅ |
+| `04` | 前端发布面板与调用示例（首次教学：发布三态 UI / 一次性密钥 UX / `-N` 让 SSE 逐段可见 / 示例端口从环境变量推导） | ✅ |
+| `05` | 验收（阶段 10 新增的一致层次：对外 SSE + 9 组错误文案；L1~L7） | ✅ |
+
+**阶段 10 笔记已全部完成（5/5）。**
+
+### `11-自主Agent运行时/`（阶段 11）
+
+| 篇 | 主题 | 状态 |
+| --- | --- | --- |
+| `01` | Run 模型与事件重放（首次教学：202 异步受理 / Run 状态机 / `run_queued` 落库 / 「先写库再推送」/ `Last-Event-ID` 重放与衔接窗口 / 取消是协作式：以 SSE 终态为准 / 终态唯一） | ✅ |
+| `02` | Composition 声明式装配与层设计（首次教学：Composition vs Graph / 层统一契约 / `llm` 层唯一 / 层顺序语义 / `composition.version` 校验 + `layer name` 必填（两端同一文案）/ 默认值入契约 / 砍掉的 Workspace·Lease·沙箱） | ✅ |
+| `03` | ReAct 循环与上下文压缩（首次教学：Agent 级 ReAct / `maxRounds` / 确定性压缩 12·6·20 → 8 条 / 框架取舍：为何不用 Pydantic AI） | ✅ |
+| `04` | 前端 Agent 控制台与 SSE 重连（首次教学：三栏工作台 / Composition JSON 预校验 / `id:` 行 = 重连游标 / `sse.ts` 迁到 `lib/` / token 合并渲染） | ✅ |
+| `05` | 验收（阶段 11 新增的一致层次：`id` 序列 + 事件序列 + 压缩结果；L1~L7） | ✅ |
+
+**阶段 11 笔记已全部完成（5/5）。**
+
 ### `lang-diff/`
 
 | 篇 | 状态 |
@@ -376,6 +410,8 @@ TS / React / Next / Nest / Python / LangChain / LangGraph **一律同一模式**
 | **Python 删除含文档的知识库曾返回 500**（已修复） | `apps/api-py/app/models/knowledge.py` 的 `KnowledgeBase.documents` / `Document.chunks` 缺 `passive_deletes=True`，SQLAlchemy 删除父行时先把 `documents.knowledge_base_id` 置 NULL → `NotNullViolation` → 500；TS 侧 Prisma 正常 204 | ✅ 已修复：三处关系（含 `User.knowledge_bases`）加 `passive_deletes=True`，删除交给数据库 `ON DELETE CASCADE`。实测：上传 1 篇 2918 字节文档（`chunkCount=2`）后删除知识库 → **204**，随后 `documents` / `chunks` 计数均 **0**；空库删除 204 |
 | **Prisma 会 DROP 手工创建的 HNSW 索引** | `prisma migrate dev` 不认识 `chunks_embedding_hnsw`，会生成 `DROP INDEX` 迁移 | ⚠️ 已知：**删除该自动生成的迁移目录**并手工重建索引；后续每次迁移后都要检查 `\di` 确认索引仍在 |
 | **Prisma 迁移会再次生成 `DROP INDEX "chunks_embedding_hnsw"`** | 阶段 9 新增迁移时实际发生：自动生成的迁移里包含 `DROP INDEX`；已手工删除该语句并同步修正 `_prisma_migrations.checksum` | ⚠️ 每次 `migrate dev` 后都要检查并删除该语句，再跑 `pnpm --filter @mini-dify/api-ts db:index` |
+| **Prisma 把 `DROP INDEX "chunks_embedding_hnsw"` 写进同一个新迁移** | 阶段 10 的 `add_api_keys` 迁移里同时包含该 DROP 语句（不再是单独目录） | ⚠️ 每次迁移后都要检查该语句并删除，再跑 `db:index`；`\di` 确认索引仍在 |
+| **Agent 运行不跨进程恢复** | 进程重启时 DB 中 `queued`/`running` 的 run 不会自动续跑；`Last-Event-ID` 仍可重放已落库事件 | ⚠️ 已知边界：阶段 11 明确不做 worker/断点续跑；生产需引入独立 worker 与租约 |
 
 ---
 

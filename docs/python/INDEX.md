@@ -444,6 +444,16 @@ docs/python/
 | `flush`/`commit`/`refresh`/`rollback`/`close` 语义与对象状态机、`commit` 后 `refresh` 拿 DB 默认值 | `06-数据层/02-Session生命周期与依赖.md` |
 | 并发写冲突重试（`IntegrityError` → **先 rollback** → 每次重读状态 → 上限抛出、`PendingRollbackError`）、`begin_nested()` SAVEPOINT 批量部分失败 | `06-数据层/02-Session生命周期与依赖.md` |
 | 长事务三重危害（锁/VACUUM/连接）与分批提交、`DetachedInstanceError` 与懒加载、外层事务回滚测试夹具（`join_transaction_mode="create_savepoint"`） | `06-数据层/02-Session生命周期与依赖.md` |
+| `relationship()` 方向判断与 `back_populates` 双向绑定、一对多/多对一映射、`TYPE_CHECKING` + 字符串前向引用解决循环导入 | `06-数据层/03-关系、级联与查询.md` |
+| 一对一映射（`unique=True` + `uselist=False`）与一对一/一对多判定 | `06-数据层/03-关系、级联与查询.md` |
+| 多对多映射（`secondary` 中间表、复合主键、两侧 `ondelete="CASCADE"`）、关联对象模式（需要额外字段时） | `06-数据层/03-关系、级联与查询.md` |
+| ORM `cascade` 选项表（`save-update`/`delete`/`delete-orphan`/`all`）、`delete-orphan` 语义与多对多禁用 | `06-数据层/03-关系、级联与查询.md` |
+| 数据库 `ondelete="CASCADE"` vs ORM cascade、`passive_deletes=True` / `"all"`、删除 SQL 对比（只 DELETE 父行） | `06-数据层/03-关系、级联与查询.md` |
+| 四种加载策略（`lazy="select"`/`"selectin"`/`"joined"`/`"raise"`/`"noload"`）、`selectinload` vs `joinedload`、`contains_eager` | `06-数据层/03-关系、级联与查询.md` |
+| N+1 复现与修复、嵌套 `selectinload`、序列化 `DetachedInstanceError`、`selectinload` 大集合边界 | `06-数据层/03-关系、级联与查询.md` |
+| `select` 关系过滤（`any()`/`has()`/`join`）、`outerjoin` + `group_by` + `having` 聚合、`limit`/`offset` 稳定分页、`exists` | `06-数据层/03-关系、级联与查询.md` |
+| `AsyncSession` 下 `MissingGreenlet`、`session.get(options=...)`、`refresh` 补加载、`lazy="raise"` | `06-数据层/03-关系、级联与查询.md` |
+| Prisma `include` / `some` / `onDelete: Cascade` 与 SQLAlchemy 关系查询对照 | `06-数据层/03-关系、级联与查询.md` |
 
 ---
 
@@ -479,7 +489,7 @@ docs/python/
 | 5 | 05 | APIRouter 分层与项目结构 | ✅ |
 | 6 | 01 | SQLAlchemy 2.0 核心 | ✅ |
 | 6 | 02 | Session 生命周期与依赖 | ✅ |
-| 6 | 03 | 关系、级联与查询 | ⬜ |
+| 6 | 03 | 关系、级联与查询 | ✅ |
 | 6 | 04 | Alembic 迁移与异步驱动 | ⬜ |
 | 7 | 01 | 密码哈希 | ⬜ |
 | 7 | 02 | JWT 与 OAuth2 密码流 | ⬜ |
