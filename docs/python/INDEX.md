@@ -404,6 +404,46 @@ docs/python/
 | ruff 规则码（`E`/`F`/`I`/`B`/`UP`/`SIM`/`C4`/`ANN`）与 `[tool.ruff]`/`[tool.ruff.lint]` 配置、`select` 逐步加、`per-file-ignores`、`# noqa: 码` | `03-工程化/04-静态检查与格式化.md` |
 | `mypy` 渐进严格（`check_untyped_defs` → `disallow_untyped_defs` → `strict`）、`# type: ignore[code]` + `warn_unused_ignores`、`pydantic.mypy` 插件、`ignore_missing_imports` | `03-工程化/04-静态检查与格式化.md` |
 | `pyright`/`basedpyright` 选型、`pre-commit` 配置（固定 `rev`、`args`、`additional_dependencies`、`run --all-files` 首次全量）、「提交快 CI 严」分层 | `03-工程化/04-静态检查与格式化.md` |
+| HTTP 请求/响应模型、方法的安全性与幂等性、状态码五组与选码表（`401` vs `403`、`400` vs `422`、`409`）、REST 资源命名 | `04-Web基础与FastAPI起步/01-HTTP与ASGI-WSGI.md` |
+| 分层架构（服务器 / 协议 / 框架）、**WSGI 协议**（`app(environ, start_response)`、同步占线程、长连接瓶颈、C10K） | `04-Web基础与FastAPI起步/01-HTTP与ASGI-WSGI.md` |
+| **ASGI 协议**（`app(scope, receive, send)` 三元组、`http`/`websocket`/`lifespan` 三类 scope、事件字典、请求体与响应分片）、WSGI vs ASGI 对照 | `04-Web基础与FastAPI起步/01-HTTP与ASGI-WSGI.md` |
+| 手写最小 ASGI 应用并跑起、uvicorn 作为 ASGI 服务器的职责、`--reload` 与 `--workers` 互斥、生产拓扑（nginx + uvicorn + workers） | `04-Web基础与FastAPI起步/01-HTTP与ASGI-WSGI.md` |
+| FastAPI 三块组成（Starlette + Pydantic + ASGI 服务器）、最小应用、三种启动方式（`main:app` 冒号语义）、`/docs` `/redoc` `/openapi.json` 自动生成链路 | `04-Web基础与FastAPI起步/02-FastAPI第一个应用.md` |
+| 路径操作装饰器、返回值序列化（`jsonable_encoder`）、`response_model` 的过滤/校验/文档三重作用、`exclude_unset`/`exclude_none` | `04-Web基础与FastAPI起步/02-FastAPI第一个应用.md` |
+| `operation_id` 与契约 `operationId` 对齐、自动校验与 `422`、`APIRouter`（`prefix`/`tags`/`dependencies`/`responses`）、`FastAPI()` 参数（`title`/`version`/`docs_url`/`default_response_class`） | `04-Web基础与FastAPI起步/02-FastAPI第一个应用.md` |
+| 路由匹配顺序与固定路径优先、路径转换器（`{id:int}`/`{p:path}`）、尾部斜杠与 307 | `04-Web基础与FastAPI起步/03-路由、参数与响应.md` |
+| 参数来源判定三规则（路径 → Path、模型 → Body、其余标量 → Query）与显式声明 `Annotated[T, Query()/Path()/Body()/Header()/Cookie()]`、列表 query、`Body(embed=True)` | `04-Web基础与FastAPI起步/03-路由、参数与响应.md` |
+| `Form()`/`UploadFile`（`python-multipart`）、`status_code`（201/204 空体约束）、注入 `Response` 设置头与 Cookie、`JSONResponse`/`StreamingResponse`/`FileResponse` | `04-Web基础与FastAPI起步/03-路由、参数与响应.md` |
+| PATCH 的 `model_dump(exclude_unset=True)` 语义（vs `exclude_none`）、归属校验用 404 不泄露资源存在性 | `04-Web基础与FastAPI起步/03-路由、参数与响应.md` |
+| Pydantic v2 宽松/严格模式（`"1"`→`1`、`Strict*`、`model_validate(strict=True)`）、`X \| None` 必须显式 `= None`、`Field` 约束表与 `default_factory` | `05-FastAPI核心/01-Pydantic-v2模型与校验.md` |
+| `model_config`（`extra="forbid"`、`str_strip_whitespace`、`populate_by_name`、`from_attributes`、`frozen`、`validate_assignment`）、三类别名（`alias`/`validation_alias`/`serialization_alias`） | `05-FastAPI核心/01-Pydantic-v2模型与校验.md` |
+| 校验器（`@field_validator` 的 `before`/`after` 时机、`@model_validator(mode="after")` 必须 `return self`、`Annotated[T, AfterValidator]` 可复用类型）、`ValidationError.errors()` 的 `type`/`loc`/`msg`/`input` | `05-FastAPI核心/01-Pydantic-v2模型与校验.md` |
+| 序列化（`model_dump(mode="json")`、`exclude_*` 家族、`field_serializer`、`computed_field`）、`TypeAdapter`、嵌套与递归模型、v1→v2 迁移对照 | `05-FastAPI核心/01-Pydantic-v2模型与校验.md` |
+| `Depends` 语义（返回值注入、依赖参数继续解析）、依赖图与**同请求默认缓存**、`use_cache=False` | `05-FastAPI核心/02-Depends依赖注入.md` |
+| 生成器依赖（`yield` 前 setup / 后 teardown、异常路径也清理、`with` 与 `try/finally`、事务依赖必须重抛） | `05-FastAPI核心/02-Depends依赖注入.md` |
+| 类依赖（`__call__` 与 `__init__` 参数）、三层依赖（参数级 `/` 路由级 `dependencies=` 只执行不注入 `/` `APIRouter` 级）、执行顺序 | `05-FastAPI核心/02-Depends依赖注入.md` |
+| `Security()` vs `Depends()`、`app.dependency_overrides` 测试替换（key 须同一函数对象、用后清理）、同步依赖走线程池 vs `async def` 依赖 | `05-FastAPI核心/02-Depends依赖注入.md` |
+| FastAPI 三类默认错误（`{detail}` / 422 数组 / 500）、`HTTPException(status, detail, headers)`、`StarletteHTTPException` 是父类（注册父类可兜住内部 404/405） | `05-FastAPI核心/03-异常处理与错误契约.md` |
+| `@app.exception_handler` 按继承链匹配（具体类优先）、自定义业务异常 + 全局映射、未捕获异常兜底（日志带堆栈 / 响应脱敏） | `05-FastAPI核心/03-异常处理与错误契约.md` |
+| `RequestValidationError.errors()` 消费与文案映射（用 `type` 不用 `msg`）、错误信封 `{statusCode, message, error}`、422→400 双栈对齐、文案确定性排序（字段序 + 规则序） | `05-FastAPI核心/03-异常处理与错误契约.md` |
+| `_enum_values` 对 Pydantic 枚举 `expected` 的宽松解析（2 个/3 个取值的格式差异）与兜底未知类型 | `05-FastAPI核心/03-异常处理与错误契约.md` |
+| 中间件洋葱模型（请求正序/响应逆序）、`add_middleware` **后注册在外层**、`@app.middleware("http")` = `BaseHTTPMiddleware`、纯 ASGI 中间件包装 `send` | `05-FastAPI核心/04-中间件、CORS与生命周期.md` |
+| 中间件能力边界（不能 `Depends`、拿不到路径参数、不能改已发送 body、短路响应需自拼信封）、`request_id`/耗时中间件 | `05-FastAPI核心/04-中间件、CORS与生命周期.md` |
+| CORS 同源策略与预检 `OPTIONS`、`CORSMiddleware` 七参数、`allow_origins=["*"]` 与 `allow_credentials` 冲突、`expose_headers` 常漏 | `05-FastAPI核心/04-中间件、CORS与生命周期.md` |
+| `lifespan`（`@asynccontextmanager` + `yield` 前后、`try/finally`、`app.state` 存共享资源）与 `@app.on_event` 的弃用、多 worker 每进程一次 | `05-FastAPI核心/04-中间件、CORS与生命周期.md` |
+| `APIRouter` 作为业务域边界、`prefix` 拼接规则（不以 `/` 结尾、`""` vs `"/"` 与 307）、嵌套 router、`include_router` 的 `prefix`/`tags`/`dependencies`/`responses` | `05-FastAPI核心/05-APIRouter分层与项目结构.md` |
+| **单向依赖方向**（`api → service → models`，底层模块须能脱离 HTTP 调用）、接口层 vs 服务层职责表（谁能 `raise HTTPException`） | `05-FastAPI核心/05-APIRouter分层与项目结构.md` |
+| `__init__.py` 收口导出（稳定导入路径 + 确保模型注册进 metadata）、拆分三判据（行数/复用/变化频率）与过度设计反例 | `05-FastAPI核心/05-APIRouter分层与项目结构.md` |
+| SQLAlchemy 四层（ORM/Core/Engine/Dialect）、Engine 进程级单例 vs Session 请求级、URL 的 `+driver` 段（`postgresql+psycopg`） | `06-数据层/01-SQLAlchemy2.0核心.md` |
+| `create_engine` 连接池六参数（`pool_size`/`max_overflow`/`pool_timeout`/`pool_recycle`/`pool_pre_ping`/`echo`）与容量测算（`workers × (pool+overflow)`） | `06-数据层/01-SQLAlchemy2.0核心.md` |
+| 2.0 声明式（`DeclarativeBase` + `Mapped[T]` + `mapped_column`、`nullable` 推导）、类型映射表、`postgresql.JSONB` 方言类型、FK 的 `ondelete` 与 `index=True` | `06-数据层/01-SQLAlchemy2.0核心.md` |
+| 三种默认值（`server_default` DDL / `default` ORM insert / `onupdate` ORM update）与跨栈「DB 权威 + ORM 兜底」、应用侧 UUID 主键 vs DB 默认 | `06-数据层/01-SQLAlchemy2.0核心.md` |
+| `select()` 2.0 查询、`scalars()` vs `execute()`、`first`/`one`/`one_or_none`/`scalar` 取数对照、`session.get()`、CRUD 与 `refresh`、`autoflush=False`、`expire_on_commit=False` | `06-数据层/01-SQLAlchemy2.0核心.md` |
+| Session 四身份（工作单元/身份映射/一级缓存/事务）与四种生命周期（全局禁/函数/请求/嵌套）、请求级完整时序（创建→借连接→提交→归还） | `06-数据层/02-Session生命周期与依赖.md` |
+| 事务边界三模式（视图内 commit / 依赖内 commit / 服务层 commit）与取舍、独立 Session 写审计 | `06-数据层/02-Session生命周期与依赖.md` |
+| `flush`/`commit`/`refresh`/`rollback`/`close` 语义与对象状态机、`commit` 后 `refresh` 拿 DB 默认值 | `06-数据层/02-Session生命周期与依赖.md` |
+| 并发写冲突重试（`IntegrityError` → **先 rollback** → 每次重读状态 → 上限抛出、`PendingRollbackError`）、`begin_nested()` SAVEPOINT 批量部分失败 | `06-数据层/02-Session生命周期与依赖.md` |
+| 长事务三重危害（锁/VACUUM/连接）与分批提交、`DetachedInstanceError` 与懒加载、外层事务回滚测试夹具（`join_transaction_mode="create_savepoint"`） | `06-数据层/02-Session生命周期与依赖.md` |
 
 ---
 
@@ -429,16 +469,16 @@ docs/python/
 | 3 | 02 | 配置与日志 | ✅ |
 | 3 | 03 | pytest 入门 | ✅ |
 | 3 | 04 | 静态检查与格式化 | ✅ |
-| 4 | 01 | HTTP 与 ASGI/WSGI | ⬜ |
-| 4 | 02 | FastAPI 第一个应用 | ⬜ |
-| 4 | 03 | 路由、参数与响应 | ⬜ |
-| 5 | 01 | Pydantic v2 模型与校验 | ⬜ |
-| 5 | 02 | 依赖注入 Depends | ⬜ |
-| 5 | 03 | 异常处理与错误契约 | ⬜ |
-| 5 | 04 | 中间件、CORS 与生命周期 | ⬜ |
-| 5 | 05 | APIRouter 分层与项目结构 | ⬜ |
-| 6 | 01 | SQLAlchemy 2.0 核心 | ⬜ |
-| 6 | 02 | Session 生命周期与依赖 | ⬜ |
+| 4 | 01 | HTTP 与 ASGI/WSGI | ✅ |
+| 4 | 02 | FastAPI 第一个应用 | ✅ |
+| 4 | 03 | 路由、参数与响应 | ✅ |
+| 5 | 01 | Pydantic v2 模型与校验 | ✅ |
+| 5 | 02 | 依赖注入 Depends | ✅ |
+| 5 | 03 | 异常处理与错误契约 | ✅ |
+| 5 | 04 | 中间件、CORS 与生命周期 | ✅ |
+| 5 | 05 | APIRouter 分层与项目结构 | ✅ |
+| 6 | 01 | SQLAlchemy 2.0 核心 | ✅ |
+| 6 | 02 | Session 生命周期与依赖 | ✅ |
 | 6 | 03 | 关系、级联与查询 | ⬜ |
 | 6 | 04 | Alembic 迁移与异步驱动 | ⬜ |
 | 7 | 01 | 密码哈希 | ⬜ |

@@ -214,6 +214,34 @@ export default defineConfig({
             { text: '04 静态检查与格式化', link: '/python/03-工程化/04-静态检查与格式化' },
           ]
         },
+        {
+          collapsed: false,
+          text: '阶段 4 · Web 基础与 FastAPI 起步',
+          items: [
+            { text: '01 HTTP 与 ASGI/WSGI', link: '/python/04-Web基础与FastAPI起步/01-HTTP与ASGI-WSGI' },
+            { text: '02 FastAPI 第一个应用', link: '/python/04-Web基础与FastAPI起步/02-FastAPI第一个应用' },
+            { text: '03 路由、参数与响应', link: '/python/04-Web基础与FastAPI起步/03-路由、参数与响应' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 5 · FastAPI 核心',
+          items: [
+            { text: '01 Pydantic v2 模型与校验', link: '/python/05-FastAPI核心/01-Pydantic-v2模型与校验' },
+            { text: '02 依赖注入 Depends', link: '/python/05-FastAPI核心/02-Depends依赖注入' },
+            { text: '03 异常处理与错误契约', link: '/python/05-FastAPI核心/03-异常处理与错误契约' },
+            { text: '04 中间件、CORS 与生命周期', link: '/python/05-FastAPI核心/04-中间件、CORS与生命周期' },
+            { text: '05 APIRouter 分层与项目结构', link: '/python/05-FastAPI核心/05-APIRouter分层与项目结构' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 6 · 数据层',
+          items: [
+            { text: '01 SQLAlchemy 2.0 核心', link: '/python/06-数据层/01-SQLAlchemy2.0核心' },
+            { text: '02 Session 生命周期与依赖', link: '/python/06-数据层/02-Session生命周期与依赖' },
+          ]
+        },
       ],
       "/pgsql/": [
         {
