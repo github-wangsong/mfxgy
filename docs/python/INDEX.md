@@ -174,7 +174,7 @@ docs/python/
 
 ---
 
-### 阶段 6 · 数据层（4 篇）
+### 阶段 6 · 数据层（6 篇）
 
 > 目标：用 SQLAlchemy 2.0 + Alembic 管理数据，异步访问 PostgreSQL。
 > 项目锚点：`app/db.py`、`app/models/`、`apps/api-ts/prisma` 的 DDL 归属。
@@ -185,8 +185,10 @@ docs/python/
 | 02 | Session 生命周期与依赖 | `Session`/`AsyncSession`、`sessionmaker`、`get_db` 依赖、事务边界 | Unit of Work、会话作用域 |
 | 03 | 关系、级联与查询 | 一对多/多对多、`select`/`join`/`options`、N+1 问题、`passive_deletes` | 关系加载策略、N+1 与预加载 |
 | 04 | Alembic 迁移与异步驱动 | `alembic init`、`autogenerate`、手写迁移、`asyncpg`、原生 SQL 逃生口 | 迁移版本管理、异步驱动、DDL 归属原则 |
+| 05 | 索引、执行计划与查询优化 | B-tree/GIN/BRIN、选择率、`EXPLAIN ANALYZE`、联合索引、覆盖/部分/表达式索引、keyset 分页、慢查询定位 | 执行计划解读、索引设计、统计信息与 VACUUM |
+| 06 | 事务、隔离级别与并发控制 | PG MVCC、隔离级别、`FOR UPDATE`/`SKIP LOCKED`、死锁、timeout、`ON CONFLICT`、乐观锁、任务队列与租约 | 快照语义、显式锁、幂等写入、租约回收 |
 
-**验收**：为「应用 + 图」两张表建模型、生成迁移、用异步 Session 完成增删查。
+**验收**：为「应用 + 图」两张表建模型、生成迁移、用异步 Session 完成增删查；能读懂执行计划并解释一次并发冲突。
 
 ---
 
@@ -454,6 +456,34 @@ docs/python/
 | `select` 关系过滤（`any()`/`has()`/`join`）、`outerjoin` + `group_by` + `having` 聚合、`limit`/`offset` 稳定分页、`exists` | `06-数据层/03-关系、级联与查询.md` |
 | `AsyncSession` 下 `MissingGreenlet`、`session.get(options=...)`、`refresh` 补加载、`lazy="raise"` | `06-数据层/03-关系、级联与查询.md` |
 | Prisma `include` / `some` / `onDelete: Cascade` 与 SQLAlchemy 关系查询对照 | `06-数据层/03-关系、级联与查询.md` |
+| 迁移版本链、`alembic_version` 单行版本表、`revision`/`down_revision` 与 `head`/`base` | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| `alembic init` 目录结构、`alembic.ini` 关键项（`script_location`/`prepend_sys_path`/`file_template`/URL 留空） | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| `env.py` 同步版逐项解读、`target_metadata` 必须导入全部模型、`NullPool`、`compare_type`/`compare_server_default`、离线模式 `--sql` | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| `naming_convention` 必须在建表前定义、`op.f()` 防止二次套用、约束名可预测与 `drop_constraint` | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| `autogenerate` 产物逐行解读、能力边界（重命名/CHECK/表达式索引/枚举/触发器不检测）、审阅清单 | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| 手写迁移 `op` 速查（表/列/索引/约束）、数据迁移 `op.get_bind()` 与 `from_select`、不可逆迁移标注 | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| PG 事务性 DDL、`CREATE INDEX CONCURRENTLY` + `autocommit_block()`、`invalid` 索引排查、`lock_timeout`、`NOT VALID` + `VALIDATE` 校验、expand/contract | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| DDL 归属铁律（一表一主）、接管已有库三件套（空基线 + `stamp head` + `include_object`）、`alembic check` 漂移检测 | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| 驱动矩阵（`psycopg2`/`psycopg`/`asyncpg`）与 `+driver` 段、`create_async_engine`、`async_sessionmaker`、`AsyncSession` CRUD 的 await 规则 | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| Alembic 异步模板、`connection.run_sync()` 桥接原理、`async_engine_from_config`、迁移脚本永远同步 | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| PgBouncer 下关闭预备语句缓存、asyncpg 不支持 `sslmode`、两套引擎连接池预算、多副本迁移 advisory lock | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| Prisma `migrate dev/deploy/resolve`、`migrate diff`、`db pull` 与 Alembic 命令对照 | `06-数据层/04-Alembic迁移与异步驱动.md` |
+| 索引是成本决策、选择率与 `Seq Scan`/`Index Scan`/`Bitmap Heap Scan` 的适用区间、B-tree 页/扇出/树高 | `06-数据层/05-索引、执行计划与查询优化.md` |
+| PG 五种索引（B-tree/Hash/GIN/GiST/BRIN）与 JSONB `jsonb_path_ops`、pgvector HNSW 参数 | `06-数据层/05-索引、执行计划与查询优化.md` |
+| `EXPLAIN (ANALYZE, BUFFERS)` 逐字段解读、`cost`/`rows`/`actual`/`loops`/`Index Cond`/`Filter` | `06-数据层/05-索引、执行计划与查询优化.md` |
+| `Index Only Scan` 与 `Heap Fetches`、可见性地图、必须先 `VACUUM` | `06-数据层/05-索引、执行计划与查询优化.md` |
+| 联合索引列顺序（等值在前/范围在后/排序跟随）、`INCLUDE` 覆盖索引、部分索引、表达式索引、冗余索引 | `06-数据层/05-索引、执行计划与查询优化.md` |
+| 统计信息 `ANALYZE` / `SET STATISTICS`、autovacuum、死元组与膨胀、`REINDEX CONCURRENTLY` | `06-数据层/05-索引、执行计划与查询优化.md` |
+| `pg_stat_statements`、`log_min_duration_statement`、`auto_explain` 定位慢 SQL | `06-数据层/05-索引、执行计划与查询优化.md` |
+| `OFFSET` 深分页 vs keyset 分页、稳定排序键、SQLAlchemy 游标写法 | `06-数据层/05-索引、执行计划与查询优化.md` |
+| SQLAlchemy `Index(...)` 声明（`postgresql_using`/`postgresql_where`/`postgresql_ops`）与 `text("EXPLAIN ...")` 验证 | `06-数据层/05-索引、执行计划与查询优化.md` |
+| PG MVCC（`xmin`/`xmax`/快照）、读已提交「每条语句新快照」vs 可重复读「事务级快照」、写偏斜与 SSI | `06-数据层/06-事务、隔离级别与并发控制.md` |
+| `FOR UPDATE`/`FOR NO KEY UPDATE`/`FOR SHARE`/`FOR KEY SHARE`、`NOWAIT`、`SKIP LOCKED`、表锁、advisory lock | `06-数据层/06-事务、隔离级别与并发控制.md` |
+| 死锁复现与 `40P01`、固定加锁顺序、`pg_blocking_pids` 排查阻塞链 | `06-数据层/06-事务、隔离级别与并发控制.md` |
+| `statement_timeout`/`lock_timeout`/`idle_in_transaction_session_timeout`/`deadlock_timeout` 的分工与 SQLSTATE | `06-数据层/06-事务、隔离级别与并发控制.md` |
+| `ON CONFLICT DO NOTHING/DO UPDATE`、唯一约束做幂等、`returning` 补查、SQLAlchemy `postgresql.insert` | `06-数据层/06-事务、隔离级别与并发控制.md` |
+| 乐观锁（version + rowcount）vs 悲观锁、条件更新（`WHERE x >= ?`）、并发异常重试（`40001`/`40P01` 整事务重试） | `06-数据层/06-事务、隔离级别与并发控制.md` |
+| `SKIP LOCKED` 任务队列、状态机领取、租约 `lease_until`、心跳续租、过期回收、DB 队列 vs Redis/Kafka | `06-数据层/06-事务、隔离级别与并发控制.md` |
 
 ---
 
@@ -490,7 +520,9 @@ docs/python/
 | 6 | 01 | SQLAlchemy 2.0 核心 | ✅ |
 | 6 | 02 | Session 生命周期与依赖 | ✅ |
 | 6 | 03 | 关系、级联与查询 | ✅ |
-| 6 | 04 | Alembic 迁移与异步驱动 | ⬜ |
+| 6 | 04 | Alembic 迁移与异步驱动 | ✅ |
+| 6 | 05 | 索引、执行计划与查询优化 | ✅ |
+| 6 | 06 | 事务、隔离级别与并发控制 | ✅ |
 | 7 | 01 | 密码哈希 | ⬜ |
 | 7 | 02 | JWT 与 OAuth2 密码流 | ⬜ |
 | 7 | 03 | 权限守卫与安全加固 | ⬜ |

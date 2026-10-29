@@ -1,8 +1,14 @@
 import { defineConfig } from 'vitepress'
 import { demoblockPlugin, demoblockVitePlugin } from 'vitepress-theme-demoblock'
-import path from 'path'
+import { fileURLToPath } from 'node:url'
 // import vue from '@vitejs/plugin-vue'
 import { containerPreview, componentPreview } from '@vitepress-demo-preview/plugin'
+
+// 文档站通过 npm 包名引入 mfxgy-ui；发布前使用 file: 本地依赖。
+// 如果包管理工具把本地依赖建成了软链，需要放行组件库所在的工作区目录。
+const mfxgyRoot = fileURLToPath(new URL('..', import.meta.url))
+const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
+
 export default defineConfig({
   base: '/mfxgy/',
   title: "MuFengXingGuYing",
@@ -52,6 +58,16 @@ export default defineConfig({
           { text: '阶段 1 · Python 进阶', link: '/python/01-Python进阶/01-类型注解与typing' },
           { text: '阶段 2 · 异步与并发', link: '/python/02-异步与并发/01-GIL与并发模型选择' },
           { text: '阶段 3 · 工程化', link: '/python/03-工程化/01-pyproject与依赖管理' },
+        ]
+      },
+      { text: '计算机基础', items: [
+          { text: '总览与复习路线', link: '/cs-basics/INDEX' },
+          { text: '01 计算机基础', link: '/cs-basics/01-计算机基础' },
+          { text: '02 计算机网络', link: '/cs-basics/02-计算机网络' },
+          { text: '03 操作系统', link: '/cs-basics/03-操作系统' },
+          { text: '04 数据结构', link: '/cs-basics/04-数据结构' },
+          { text: '05 数据库与存储', link: '/cs-basics/05-数据库与存储' },
+          { text: '06 系统设计与分布式', link: '/cs-basics/06-系统设计与分布式' },
         ]
       }
     ],
@@ -114,12 +130,31 @@ export default defineConfig({
       "/demo/examples/": [
         {
           text: "基础组件",
-          redirect:'button',
           items: [
             {
-              
-              text: "Button按钮",
+              text: "Button 按钮",
               link: "/demo/examples/button/",
+            },
+            {
+              text: "Input 输入框",
+              link: "/demo/examples/input/",
+            },
+            {
+              text: "Switch 开关",
+              link: "/demo/examples/switch/",
+            },
+          ],
+        },
+        {
+          text: "反馈组件",
+          items: [
+            {
+              text: "Dialog 对话框",
+              link: "/demo/examples/dialog/",
+            },
+            {
+              text: "Message 消息提示",
+              link: "/demo/examples/message/",
             },
           ],
         },
@@ -244,6 +279,9 @@ export default defineConfig({
             { text: '01 SQLAlchemy 2.0 核心', link: '/python/06-数据层/01-SQLAlchemy2.0核心' },
             { text: '02 Session 生命周期与依赖', link: '/python/06-数据层/02-Session生命周期与依赖' },
             { text: '03 关系、级联与查询', link: '/python/06-数据层/03-关系、级联与查询' },
+            { text: '04 Alembic 迁移与异步驱动', link: '/python/06-数据层/04-Alembic迁移与异步驱动' },
+            { text: '05 索引、执行计划与查询优化', link: '/python/06-数据层/05-索引、执行计划与查询优化' },
+            { text: '06 事务、隔离级别与并发控制', link: '/python/06-数据层/06-事务、隔离级别与并发控制' },
           ]
         },
       ],
@@ -505,6 +543,25 @@ export default defineConfig({
           ]
         },
       ],
+      "/cs-basics/": [
+        {
+          collapsed: false,
+          text: '总览与复习路线',
+          link: '/cs-basics/INDEX'
+        },
+        {
+          collapsed: false,
+          text: '知识篇',
+          items: [
+            { text: '01 计算机基础', link: '/cs-basics/01-计算机基础' },
+            { text: '02 计算机网络', link: '/cs-basics/02-计算机网络' },
+            { text: '03 操作系统', link: '/cs-basics/03-操作系统' },
+            { text: '04 数据结构', link: '/cs-basics/04-数据结构' },
+            { text: '05 数据库与存储', link: '/cs-basics/05-数据库与存储' },
+            { text: '06 系统设计与分布式', link: '/cs-basics/06-系统设计与分布式' },
+          ]
+        },
+      ],
     },
 
     socialLinks: [
@@ -523,11 +580,12 @@ export default defineConfig({
       emptyOutDir: true, // 构建前清空输出目录
     },
     resolve: {
-      alias: {
-        // '@vitepress-demo-preview/component': path.resolve(
-        //   __dirname,
-        //   'node_modules/@vitepress-demo-preview/component'
-        // ),
+      dedupe: ['vue'],
+    },
+    server: {
+      fs: {
+        // 本地 file: 依赖可能指向 mfxgy 根目录之外的组件库
+        allow: [mfxgyRoot, workspaceRoot],
       },
     },
     plugins: [demoblockVitePlugin()]

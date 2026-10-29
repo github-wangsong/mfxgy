@@ -1,6 +1,7 @@
 import DefaultTheme from 'vitepress/theme'
 import "element-plus/dist/index.css";
 import elementplus from "element-plus"
+import "mfxgy-ui/style.css";
 
 import './style/index.css'
 // 导入主题样式

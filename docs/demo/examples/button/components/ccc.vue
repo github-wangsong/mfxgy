@@ -1,15 +1,19 @@
 <template>
   <div>
-    <el-button>默认按钮</el-button>
-    <el-button size="medium">中等按钮</el-button>
-    <el-button size="small">小型按钮</el-button>
-    <el-button size="mini">超小按钮</el-button>
+    <mf-button>默认按钮</mf-button>
+    <mf-button size="large">大尺寸按钮</mf-button>
+    <mf-button size="small">小尺寸按钮</mf-button>
+    <mf-button type="primary" size="large">主要按钮</mf-button>
+    <mf-button type="primary" size="small">主要按钮</mf-button>
   </div>
 </template>
+
 <script setup>
+import { MfButton } from 'mfxgy-ui'
 </script>
-<style>
-.k-el-button {
-  margin-right: 10px;
+
+<style scoped>
+.mf-button {
+  margin: 10px 5px;
 }
 </style>
