@@ -1,6 +1,6 @@
 <template>
   <div>
-    <canvas id='canvas1' width="300" height="200"></canvas>
+    <canvas id='canvas1' width="400" height="300"></canvas>
   </div>
 </template> 
 
@@ -17,36 +17,33 @@ export default {
     this.$nextTick(() => {
       this.canvas = document.querySelector("#canvas1")
       this.ctx = this.canvas.getContext("2d")
-      this.drawCircle(10,10,10,'#ccc','#ccc')
-      this.move(() => {
-        this.drawCircle(10,10,10,'#ccc','#ccc')
-      })
+      this.init()
     })
   },
   methods: {
     init () {
-      
-      //this.drawLine(10,10,50,10, 5)
-      //this.drawLine(10,20,50,20, 2)
-      //this.drawLine(10,30,50,30, 6)
-      //this.drawLine(10,40,50,40)
-      //this.continuousLine([[10, 10], [20, 10],[20, 20],[10, 20],[10, 10]])
-      //this.drawRect(10,10,40,40)
-      //this.drawRect(20,20,20,20)
-      //this.drawCircle(30,30,30)
-      //this.drawCircle(30,30,20)
-      this.drawImage('../../public/logo.png')
+      this.drawLine(10,10,50,10, 5)
+      // this.drawLine(10,20,50,20, 2)
+      // this.drawLine(10,30,50,30, 6)
+      // this.drawLine(10,40,50,40)
+      // this.continuousLine([[10, 10], [20, 10],[20, 20],[10, 20],[10, 10]])
+      // this.drawRect(10,10,40,40)
+      // this.drawRect(20,20,20,20)
+      // this.drawCircle(30,30,30)
+      // this.drawCircle(30,30,20)
+      // this.drawImage('../../public/logo.png')
     },
     // 画直线
     drawLine (startX, startY, endX, endY, w, lineCap, lineJoin, setLineDash) {
         this.ctx.beginPath()
-        this.ctx.lineWidth = w || 1 // 线条粗细
+        this.ctx.lineWidth = w || 10 // 线条粗细
         this.ctx.lineCap = lineCap || 'butt' // 线条开始和结束处的样式butt/round/square
         this.ctx.lineJoin = lineJoin || 'miter' // 线条连接处的样式 miter/bevel/round
         this.ctx.setLineDash(setLineDash || [0, 0]) // 设置线条虚实样式
 
         this.ctx.moveTo(startX, startY)
         this.ctx.lineTo(endX, endY)
+        this.ctx.strokeStyle = '#000';   // 必须在 stroke() 之前设置
         this.ctx.stroke()
         this.ctx.closePath()
     },
@@ -91,6 +88,7 @@ export default {
 
       this.ctx.restore();
     },
+    // 绘制图片
     drawImage (src, ) {
       const img = new Image();
       img.src = src

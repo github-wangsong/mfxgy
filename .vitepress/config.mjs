@@ -562,6 +562,24 @@ export default defineConfig({
           ]
         },
       ],
+      "/document/canvas/": [
+        {
+          collapsed: false,
+          text: '基本绘制',
+          link: '/document/canvas/canvas'
+        },
+        {
+          collapsed: false,
+          text: '小游戏',
+          items: [
+            { text: '贪吃蛇', link: '/document/canvas/snake' },
+            { text: '飞机游戏', link: '/document/canvas/aircraft' },
+            { text: '砖块游戏', link: '/document/canvas/breakout' },
+            { text: '扫雷游戏', link: '/document/canvas/minesweeper' },
+            { text: '俄罗斯方块游戏', link: '/document/canvas/tetris' },
+          ]
+        },
+      ],
     },
 
     socialLinks: [

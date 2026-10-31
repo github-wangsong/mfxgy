@@ -1,0 +1,55 @@
+﻿
+> vitepress-blog@1.0.0 docs:build D:\user\my_project\个人项目\my_project\mfxgy
+> vitepress build
+
+
+  [32m[1mvitepress[22m v1.6.3[39m
+
+pnpm.cmd : - building client + server bundles...
+At line:15 char:1770
++ ... de_modules\@vscode\ripgrep\bin'; pnpm.cmd run docs:build 2>&1 | Out-F ...
++                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (- building client + server bundles...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[33m
+The language 'open' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+[33m
+The language 'conf' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+[33m
+The language 'gitignore' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+[33m
+The language 'gitignore' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+[33m
+The language 'gitignore' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+[33m
+The language 'open' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+[33m
+The language 'conf' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+[33m
+The language 'gitignore' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+[33m
+The language 'gitignore' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+[33m
+The language 'gitignore' is not loaded, falling back to 'txt' for syntax highlighting.[39m
+node_modules/.pnpm/vitepress-theme-demoblock@3_e8e8f309b359b0b76fd073ee26c8edc2/node_modules/vitepress-theme-demoblock/
+dist/client/components/Demo.vue (99:32): Error when using sourcemap for reporting an error: Can't resolve original loca
+tion of error.
+node_modules/.pnpm/vitepress-theme-demoblock@3_e8e8f309b359b0b76fd073ee26c8edc2/node_modules/vitepress-theme-demoblock/
+dist/client/components/Demo.vue (99:32): Use of eval in "node_modules/.pnpm/vitepress-theme-demoblock@3_e8e8f309b359b0b
+76fd073ee26c8edc2/node_modules/vitepress-theme-demoblock/dist/client/components/Demo.vue" is strongly discouraged as it
+ poses security risks and may cause issues with minification.
+node_modules/.pnpm/vitepress-theme-demoblock@3_e8e8f309b359b0b76fd073ee26c8edc2/node_modules/vitepress-theme-demoblock/
+dist/client/components/Demo.vue (106:30): Error when using sourcemap for reporting an error: Can't resolve original loc
+ation of error.
+node_modules/.pnpm/vitepress-theme-demoblock@3_e8e8f309b359b0b76fd073ee26c8edc2/node_modules/vitepress-theme-demoblock/
+dist/client/components/Demo.vue (106:30): Use of eval in "node_modules/.pnpm/vitepress-theme-demoblock@3_e8e8f309b359b0
+b76fd073ee26c8edc2/node_modules/vitepress-theme-demoblock/dist/client/components/Demo.vue" is strongly discouraged as i
+t poses security risks and may cause issues with minification.
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-m
+anualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+ ELIFECYCLE  Command failed with exit code 3221225477.
