@@ -13,7 +13,25 @@
       </div>
     </div>
     <canvas ref="canvasRef" width="360" height="520"></canvas>
-    <p class="tip">← → 移动，自动连发子弹</p>
+    <div class="pad">
+      <button
+        type="button"
+        aria-label="左移"
+        @pointerdown.prevent="hold('ArrowLeft', true, $event)"
+        @pointerup="hold('ArrowLeft', false)"
+        @pointerleave="hold('ArrowLeft', false)"
+        @pointercancel="hold('ArrowLeft', false)"
+      >←</button>
+      <button
+        type="button"
+        aria-label="右移"
+        @pointerdown.prevent="hold('ArrowRight', true, $event)"
+        @pointerup="hold('ArrowRight', false)"
+        @pointerleave="hold('ArrowRight', false)"
+        @pointercancel="hold('ArrowRight', false)"
+      >→</button>
+    </div>
+    <p class="tip">← → 移动，自动连发子弹；没有键盘时按住下方按钮</p>
   </div>
 </template>
 
@@ -46,7 +64,7 @@ const H = 520 // 画布高
 
 // ---------- 游戏实体 ----------
 // 玩家飞机：尺寸、位置、移动速度、子弹冷却计数
-const player = { w: 40, h: 40, x: W / 2 - 20, y: H - 60, speed: 5, cooldown: 0 }
+const player = { w: 40, h: 40, x: W / 2 - 20, y: H - 60, speed: 4, cooldown: 0 }
 let bullets = []    // 子弹数组
 let enemies = []    // 敌机数组
 let particles = []  // 爆炸粒子数组
@@ -66,6 +84,7 @@ function resetState () {
   particles = []
   enemyTimer = 0
   frame = 0
+  keys = {}
 }
 
 // ---------- 状态控制 ----------
@@ -301,6 +320,17 @@ function onKeyDown (e) {
 }
 function onKeyUp (e) { keys[e.key] = false }
 
+/**
+ * 屏幕按钮：按下/松开时同步按键状态
+ * 按下时捕获指针，手指滑出按钮后松开也能正确复位，不会一直移动
+ */
+function hold (key, down, e) {
+  if (down && e?.currentTarget?.setPointerCapture) {
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  keys[key] = down
+}
+
 // ---------- 生命周期 ----------
 
 // 组件挂载时：获取 2D 上下文，重置状态，绘制待开始画面，注册键盘监听
@@ -317,6 +347,7 @@ onMounted(() => {
 // 组件卸载时：取消动画帧并移除键盘监听，防止内存泄漏
 onUnmounted(() => {
   if (rafId) cancelAnimationFrame(rafId)
+  keys = {}
   window.removeEventListener('keydown', onKeyDown)
   window.removeEventListener('keyup', onKeyUp)
 })
@@ -329,5 +360,19 @@ onUnmounted(() => {
 .btns { display: flex; gap: 6px; }
 .info button { cursor: pointer; padding: 2px 10px; border: 1px solid #22d3ee; background: #22d3ee; color: #0f172a; border-radius: 4px; }
 .info button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pad { display: flex; justify-content: center; gap: 12px; margin-top: 8px; }
+.pad button {
+  min-width: 96px;
+  height: 40px;
+  font-size: 18px;
+  color: #0f172a;
+  background: #22d3ee;
+  border: 1px solid #22d3ee;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+.pad button:active { filter: brightness(0.9); }
 .tip { color: #94a3b8; font-size: 12px; margin-top: 6px; }
 </style>

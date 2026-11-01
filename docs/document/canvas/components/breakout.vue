@@ -13,7 +13,25 @@
       </div>
     </div>
     <canvas ref="canvasRef" width="480" height="320"></canvas>
-    <p class="tip">← → 或 A / D 移动挡板</p>
+    <div class="pad">
+      <button
+        type="button"
+        aria-label="左移挡板"
+        @pointerdown.prevent="hold('ArrowLeft', true, $event)"
+        @pointerup="hold('ArrowLeft', false)"
+        @pointerleave="hold('ArrowLeft', false)"
+        @pointercancel="hold('ArrowLeft', false)"
+      >←</button>
+      <button
+        type="button"
+        aria-label="右移挡板"
+        @pointerdown.prevent="hold('ArrowRight', true, $event)"
+        @pointerup="hold('ArrowRight', false)"
+        @pointerleave="hold('ArrowRight', false)"
+        @pointercancel="hold('ArrowRight', false)"
+      >→</button>
+    </div>
+    <p class="tip">← → 或 A / D 移动挡板；没有键盘时按住下方按钮</p>
   </div>
 </template>
 
@@ -99,6 +117,7 @@ function resetState () {
   paddle.x = 190
   initBricks()
   resetBall()
+  keys = {}
 }
 
 // ---------- 状态控制 ----------
@@ -289,6 +308,17 @@ function onKeyUp (e) {
   keys[e.key] = false
 }
 
+/**
+ * 屏幕按钮：按下/松开时同步按键状态
+ * 按下时捕获指针，手指滑出按钮后松开也能正确复位，挡板不会一直移动
+ */
+function hold (key, down, e) {
+  if (down && e?.currentTarget?.setPointerCapture) {
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  keys[key] = down
+}
+
 // ---------- 生命周期 ----------
 
 // 组件挂载时：获取 2D 上下文，初始化砖块与球，绘制待开始画面，注册键盘监听
@@ -317,6 +347,7 @@ function drawIdle () {
 onUnmounted(() => {
   // 组件卸载时取消动画帧并移除键盘监听，防止内存泄漏
   if (rafId) cancelAnimationFrame(rafId)
+  keys = {}
   window.removeEventListener('keydown', onKeyDown)
   window.removeEventListener('keyup', onKeyUp)
 })
@@ -329,5 +360,19 @@ onUnmounted(() => {
 .btns { display: flex; gap: 6px; }
 .info button { cursor: pointer; padding: 2px 10px; border: 1px solid #6366f1; background: #6366f1; color: #fff; border-radius: 4px; }
 .info button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pad { display: flex; justify-content: center; gap: 12px; margin-top: 8px; }
+.pad button {
+  min-width: 140px;
+  height: 40px;
+  font-size: 18px;
+  color: #fff;
+  background: #6366f1;
+  border: 1px solid #6366f1;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+.pad button:active { filter: brightness(0.9); }
 .tip { color: #94a3b8; font-size: 12px; margin-top: 6px; }
 </style>

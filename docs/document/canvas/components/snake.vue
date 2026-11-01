@@ -11,7 +11,13 @@
       </div>
     </div>
     <canvas id='canvas2' style="border: 1px solid #ff0" width="300" height="300"></canvas>
-    <p class="tip">方向键或 WASD 控制方向</p>
+    <div class="pad dir-pad">
+      <button type="button" class="up" aria-label="向上" :disabled="status !== 'playing'" @click="setDirection('up')">↑</button>
+      <button type="button" class="left" aria-label="向左" :disabled="status !== 'playing'" @click="setDirection('left')">←</button>
+      <button type="button" class="down" aria-label="向下" :disabled="status !== 'playing'" @click="setDirection('down')">↓</button>
+      <button type="button" class="right" aria-label="向右" :disabled="status !== 'playing'" @click="setDirection('right')">→</button>
+    </div>
+    <p class="tip">方向键或 WASD 控制方向；没有键盘时点下方按钮</p>
   </div>
 </template>
 <script setup>
@@ -249,8 +255,17 @@ function animate (timestamp) {
 // ---------- 键盘输入 ----------
 
 /**
+ * 设置蛇的移动方向：仅进行中有效，禁止 180° 反向（会立即撞到自己）
+ * 键盘与屏幕按钮共用这一入口
+ */
+function setDirection (newDir) {
+  if (status.value !== 'playing') return
+  if (opposites[game.value.snake.direction] === newDir) return
+  game.value.snake.direction = newDir
+}
+
+/**
  * 方向键或 WASD 控制蛇的方向
- * 禁止 180° 反向（会立即撞到自己）
  */
 function handleKeyDown (e) {
   const keyMap = {
@@ -260,10 +275,7 @@ function handleKeyDown (e) {
   const newDir = keyMap[e.key]
   if (!newDir) return
   if (e.key.startsWith('Arrow')) e.preventDefault()
-  if (status.value !== 'playing') return
-  // 禁止反向掉头
-  if (opposites[game.value.snake.direction] === newDir) return
-  game.value.snake.direction = newDir
+  setDirection(newDir)
 }
 
 // ---------- 生命周期 ----------
@@ -291,5 +303,30 @@ onUnmounted(() => {
 .btns { display: flex; gap: 6px; }
 .info button { cursor: pointer; padding: 2px 10px; border: 1px solid #eab308; background: #eab308; color: #0f172a; border-radius: 4px; }
 .info button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pad { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+.pad button {
+  min-width: 52px;
+  height: 40px;
+  font-size: 18px;
+  color: #0f172a;
+  background: #eab308;
+  border: 1px solid #eab308;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+.pad button:active { filter: brightness(0.9); }
+.pad button:disabled { opacity: 0.4; cursor: not-allowed; }
+.dir-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(2, 40px);
+  justify-content: center;
+}
+.dir-pad .up { grid-column: 2; grid-row: 1; }
+.dir-pad .left { grid-column: 1; grid-row: 2; }
+.dir-pad .down { grid-column: 2; grid-row: 2; }
+.dir-pad .right { grid-column: 3; grid-row: 2; }
 .tip { color: #94a3b8; font-size: 12px; margin-top: 6px; }
 </style>

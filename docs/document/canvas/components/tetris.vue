@@ -21,7 +21,14 @@
         </div>
       </div>
     </div>
-    <p class="tip">← → 移动，↑ 旋转，↓ 加速，空格 硬降</p>
+    <div class="pad">
+      <button type="button" aria-label="左移" :disabled="status !== 'playing'" @click="move(-1)">←</button>
+      <button type="button" aria-label="右移" :disabled="status !== 'playing'" @click="move(1)">→</button>
+      <button type="button" aria-label="旋转" :disabled="status !== 'playing'" @click="rotateCurrent">旋转</button>
+      <button type="button" aria-label="软降" :disabled="status !== 'playing'" @click="softDrop">↓</button>
+      <button type="button" aria-label="硬降" :disabled="status !== 'playing'" @click="hardDrop">硬降</button>
+    </div>
+    <p class="tip">← → 移动，↑ 旋转，↓ 加速，空格 硬降；没有键盘时点下方按钮</p>
   </div>
 </template>
 
@@ -433,6 +440,28 @@ onUnmounted(() => {
 .btns { display: flex; gap: 6px; }
 .info button { cursor: pointer; padding: 2px 10px; border: 1px solid #a855f7; background: #a855f7; color: #fff; border-radius: 4px; }
 .info button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pad {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.pad button {
+  min-width: 44px;
+  height: 40px;
+  padding: 0 8px;
+  font-size: 16px;
+  color: #fff;
+  background: #a855f7;
+  border: 1px solid #a855f7;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+.pad button:active { filter: brightness(0.9); }
+.pad button:disabled { opacity: 0.4; cursor: not-allowed; }
 .side .box { border: 1px solid #334155; padding: 6px; }
 .label { color: #94a3b8; font-size: 12px; margin-bottom: 4px; }
 .tip { color: #94a3b8; font-size: 12px; margin-top: 6px; }

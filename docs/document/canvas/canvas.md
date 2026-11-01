@@ -10,7 +10,7 @@
 
 <article class="demo-item">
 
-### 纯色填充
+### 纯色填充 `fillRect`
 
 <preview path="./base/rect/fill.vue" title="fillRect"></preview>
 
@@ -18,7 +18,7 @@
 
 <article class="demo-item">
 
-### 纯色描边
+### 纯色描边 `strokeRect`
 
 <preview path="./base/rect/stroke.vue" title="strokeRect"></preview>
 
@@ -26,7 +26,7 @@
 
 <article class="demo-item">
 
-### 线性渐变填充
+### 线性渐变填充 `createLinearGradient`
 
 <preview path="./base/rect/gradient.vue" title="createLinearGradient + fillRect"></preview>
 
@@ -34,7 +34,7 @@
 
 <article class="demo-item">
 
-### 虚线描边
+### 虚线描边 `setLineDash`
 
 <preview path="./base/rect/dash.vue" title="setLineDash + strokeRect"></preview>
 
@@ -42,7 +42,7 @@
 
 <article class="demo-item">
 
-### 阴影
+### 阴影 `shadowBlur`
 
 <preview path="./base/rect/shadow.vue" title="shadowBlur + shadowOffsetX/Y"></preview>
 
@@ -50,7 +50,7 @@
 
 <article class="demo-item">
 
-### 半透明叠加
+### 半透明叠加 `globalAlpha`
 
 <preview path="./base/rect/alpha.vue" title="globalAlpha"></preview>
 
@@ -58,7 +58,7 @@
 
 <article class="demo-item">
 
-### 擦除缺口
+### 擦除缺口 `clearRect`
 
 <preview path="./base/rect/clear.vue" title="clearRect"></preview>
 
@@ -66,7 +66,7 @@
 
 <article class="demo-item">
 
-### 多层描边
+### 多层描边 `lineWidth`
 
 <preview path="./base/rect/multi-stroke.vue" title="lineWidth + strokeRect"></preview>
 

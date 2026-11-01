@@ -13,8 +13,23 @@
       </div>
     </div>
     <canvas ref="canvasRef" :width="cols * cell" :height="rows * cell"
-      @click="onClick" @contextmenu.prevent="onRightClick"></canvas>
-    <p class="tip">左键揭开，右键标记旗帜</p>
+      @click="onCellClick" @contextmenu.prevent="toggleFlag"></canvas>
+    <div class="mode">
+      <button
+        type="button"
+        class="switch"
+        role="switch"
+        :aria-checked="mode === 'flag'"
+        aria-label="切换点击模式"
+        @click="toggleMode"
+      >
+        <span class="track" :class="mode === 'flag' ? 'is-flag' : 'is-reveal'">
+          <span class="knob"></span>
+        </span>
+        <span>{{ mode === 'flag' ? '点击 = 标记' : '点击 = 揭开' }}</span>
+      </button>
+    </div>
+    <p class="tip">触屏用上方开关切换「揭开 / 标记」；桌面端右键始终是标记</p>
   </div>
 </template>
 
@@ -23,8 +38,9 @@
  * 扫雷（Minesweeper）
  * ----------------------------------
  * 核心玩法：12×12 棋盘，20 颗雷。
- * - 左键揭开格子，数字表示周围 8 格的雷数；点到雷则失败。
+ * - 点击格子揭开，数字表示周围 8 格的雷数；点到雷则失败。
  * - 右键标记/取消旗帜，剩余雷数 = 总雷数 - 旗帜数。
+ * - 下方开关可把「点击」切换成「标记」，方便触屏设备操作。
  * - 揭开所有非雷格子即获胜。
  * - 首次点击保证安全（雷在首次点击后才布置，且避开点击点周围 3×3）。
  *
@@ -43,6 +59,8 @@ const mineCount = ref(mineTotal) // 剩余雷数（总雷 - 已插旗）
 const timer = ref(0)             // 用时（秒）
 // 游戏状态：idle | playing | paused | over
 const status = ref('idle')
+// 点击模式：reveal 揭开 | flag 标记（触屏没有右键时用开关切换）
+const mode = ref('reveal')
 
 const statusText = computed(() => {
   return { idle: '待开始', playing: '进行中', paused: '已暂停', over: '已结束' }[status.value]
@@ -186,13 +204,24 @@ function restart () {
 
 // ---------- 输入处理 ----------
 
+/** 切换点击模式：揭开 <-> 标记（触屏没有右键时用） */
+function toggleMode () {
+  mode.value = mode.value === 'reveal' ? 'flag' : 'reveal'
+}
+
+/** 画布点击：按当前开关模式执行揭开或标记 */
+function onCellClick (e) {
+  if (mode.value === 'flag') toggleFlag(e)
+  else revealCell(e)
+}
+
 /**
- * 左键点击：揭开格子
+ * 揭开格子
  * - 首次点击：布雷（保证安全）+ 启动计时器
  * - 点到雷：揭开所有雷，游戏失败
  * - 点到数字：洪水填充揭开
  */
-function onClick (e) {
+function revealCell (e) {
   if (status.value !== 'playing') return
   const rect = canvasRef.value.getBoundingClientRect()
   const c = Math.floor((e.clientX - rect.left) / cell)
@@ -223,8 +252,8 @@ function onClick (e) {
   draw()
 }
 
-/** 右键点击：切换旗帜标记，更新剩余雷数 */
-function onRightClick (e) {
+/** 切换旗帜标记，更新剩余雷数（右键与标记模式共用） */
+function toggleFlag (e) {
   if (status.value !== 'playing') return
   const rect = canvasRef.value.getBoundingClientRect()
   const c = Math.floor((e.clientX - rect.left) / cell)
@@ -341,5 +370,39 @@ onUnmounted(() => {
 .btns { display: flex; gap: 6px; }
 .info button { cursor: pointer; padding: 2px 10px; border: 1px solid #475569; background: #475569; color: #fff; border-radius: 4px; }
 .info button:disabled { opacity: 0.4; cursor: not-allowed; }
+.mode { display: flex; justify-content: center; margin-top: 8px; }
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  font-size: 13px;
+  color: #475569;
+  background: transparent;
+  border: 1px solid #475569;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+}
+.track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+.track.is-reveal { background: #16a34a; }
+.track.is-flag { background: #dc2626; }
+.knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.track.is-flag .knob { transform: translateX(16px); }
 .tip { color: #94a3b8; font-size: 12px; margin-top: 6px; }
 </style>
