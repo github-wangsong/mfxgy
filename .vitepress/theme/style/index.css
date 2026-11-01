@@ -17,3 +17,78 @@ details summary {
   cursor: pointer;
   font-weight: bold;
 }
+
+/* Canvas 速查文档的示例画布：样式统一在这里，组件文件不用重复写 */
+.demo-canvas {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid var(--vp-c-divider, #e2e8f0);
+  border-radius: 6px;
+}
+
+/* Canvas 速查页：两列紧凑排版，只作用于 .canvas-doc 内 */
+.canvas-doc h2 {
+  margin: 18px 0 4px;
+  padding-top: 8px;
+  font-size: 17px;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.canvas-doc h3 {
+  margin: 6px 0 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--vp-c-brand-1);
+}
+
+.canvas-doc > p {
+  margin: 6px 0 10px;
+  font-size: 13px;
+  color: var(--vp-c-text-2);
+}
+
+.canvas-doc .demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 4px 16px;
+  align-items: start;
+}
+
+.canvas-doc .demo-item {
+  min-width: 0;
+}
+
+.canvas-doc .vitepress-demo-preview__element-plus__container {
+  margin: 2px 0 8px;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.canvas-doc .vitepress-demo-preview__element-plus__container > .vitepress-demo-preview-preview {
+  padding: 8px 8px 10px;
+}
+
+.canvas-doc .vitepress-demo-preview-description__split-line {
+  display: none;
+}
+
+.canvas-doc .vitepress-demo-preview__element-plus__container > .vitepress-demo-preview-description .vitepress-demo-preview-description__handle-btn {
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--component-preview-border, #e2e8f0);
+}
+
+.canvas-doc .vitepress-demo-preview-description__handle-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.canvas-doc .vitepress-demo-preview-source > div {
+  max-height: 180px;
+  overflow: auto;
+  font-size: 12px;
+}
