@@ -42,6 +42,21 @@ export default defineConfig({
           { text: '阶段 11 · 自主 Agent 运行时', link: '/tutorial/11-自主Agent运行时/01-Run模型与事件重放' },
         ]
       },
+      { text: 'mini-dify 实录', items: [
+          { text: '索引与进度', link: '/tutorial2/INDEX' },
+          { text: '阶段 0 · 项目初始化', link: '/tutorial2/00-项目初始化/01-环境与仓库骨架' },
+          { text: '阶段 1 · 账号与认证', link: '/tutorial2/01-账号与认证/01-契约扩展' },
+          { text: '阶段 2 · 应用管理', link: '/tutorial2/02-应用管理/01-契约扩展' },
+          { text: '阶段 3 · 画布', link: '/tutorial2/03-画布/01-图契约与校验' },
+          { text: '阶段 4 · 执行引擎', link: '/tutorial2/04-执行引擎/01-SSE事件协议' },
+          { text: '阶段 5 · LLM 节点', link: '/tutorial2/05-LLM节点/01-LLM节点契约与模型配置' },
+          { text: '阶段 6 · 工具调用', link: '/tutorial2/06-工具调用/01-工具契约与内置工具' },
+          { text: '阶段 7 · 知识库 RAG', link: '/tutorial2/07-知识库RAG/01-知识库契约与pgvector建模' },
+          { text: '阶段 8 · 分支与循环', link: '/tutorial2/08-分支与循环/01-分支节点的契约与图校验' },
+          { text: '阶段 9 · 会话与记忆', link: '/tutorial2/09-会话与记忆/01-会话契约与数据建模' },
+          { text: '阶段 10 · 发布与 API', link: '/tutorial2/10-发布与API/01-发布语义与API-Key契约' },
+        ]
+      },
       { text: 'PostgreSQL', items: [
           { text: '系列首页', link: '/pgsql/index' },
           { text: '总大纲与技术点索引', link: '/pgsql/INDEX' },
@@ -540,6 +555,134 @@ export default defineConfig({
             { text: '03 ReAct 循环与上下文压缩', link: '/tutorial/11-自主Agent运行时/03-ReAct循环与上下文压缩' },
             { text: '04 前端 Agent 控制台与 SSE 重连', link: '/tutorial/11-自主Agent运行时/04-前端Agent控制台与SSE重连' },
             { text: '05 验收', link: '/tutorial/11-自主Agent运行时/05-验收' },
+          ]
+        },
+      ],
+      "/tutorial2/": [
+        {
+          collapsed: false,
+          text: '索引与进度',
+          link: '/tutorial2/INDEX'
+        },
+        {
+          collapsed: false,
+          text: '阶段 0 · 项目初始化',
+          items: [
+            { text: '01 环境与仓库骨架', link: '/tutorial2/00-项目初始化/01-环境与仓库骨架' },
+            { text: '02 契约包', link: '/tutorial2/00-项目初始化/02-契约包' },
+            { text: '03 NestJS 后端', link: '/tutorial2/00-项目初始化/03-NestJS后端' },
+            { text: '04 FastAPI 后端', link: '/tutorial2/00-项目初始化/04-FastAPI后端' },
+            { text: '05 Next.js 前端与验收', link: '/tutorial2/00-项目初始化/05-NextJS前端与验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 1 · 账号与认证',
+          items: [
+            { text: '01 契约扩展', link: '/tutorial2/01-账号与认证/01-契约扩展' },
+            { text: '02 Prisma 用户表', link: '/tutorial2/01-账号与认证/02-Prisma用户表' },
+            { text: '03 NestJS 注册登录', link: '/tutorial2/01-账号与认证/03-NestJS注册登录' },
+            { text: '04 SQLAlchemy 用户表', link: '/tutorial2/01-账号与认证/04-SQLAlchemy用户表' },
+            { text: '05 FastAPI 注册登录', link: '/tutorial2/01-账号与认证/05-FastAPI注册登录' },
+            { text: '06 前端登录页', link: '/tutorial2/01-账号与认证/06-前端登录页' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 2 · 应用管理',
+          items: [
+            { text: '01 契约扩展', link: '/tutorial2/02-应用管理/01-契约扩展' },
+            { text: '02 Prisma 关系', link: '/tutorial2/02-应用管理/02-Prisma关系' },
+            { text: '03 NestJS 应用模块', link: '/tutorial2/02-应用管理/03-NestJS应用模块' },
+            { text: '04 SQLAlchemy 关系', link: '/tutorial2/02-应用管理/04-SQLAlchemy关系' },
+            { text: '05 FastAPI 应用模块', link: '/tutorial2/02-应用管理/05-FastAPI应用模块' },
+            { text: '06 前端应用列表', link: '/tutorial2/02-应用管理/06-前端应用列表' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 3 · 画布',
+          items: [
+            { text: '01 图契约与校验', link: '/tutorial2/03-画布/01-图契约与校验' },
+            { text: '02 JSONB 存取', link: '/tutorial2/03-画布/02-JSONB存取' },
+            { text: '03 ReactFlow 画布', link: '/tutorial2/03-画布/03-ReactFlow画布' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 4 · 执行引擎',
+          items: [
+            { text: '01 SSE 事件协议', link: '/tutorial2/04-执行引擎/01-SSE事件协议' },
+            { text: '02 LangGraph 编译图', link: '/tutorial2/04-执行引擎/02-LangGraph编译图' },
+            { text: '03 NestJS 引擎', link: '/tutorial2/04-执行引擎/03-NestJS引擎' },
+            { text: '04 Python 引擎', link: '/tutorial2/04-执行引擎/04-Python引擎' },
+            { text: '05 前端流式面板', link: '/tutorial2/04-执行引擎/05-前端流式面板' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 5 · LLM 节点',
+          items: [
+            { text: '01 LLM 节点契约与模型配置', link: '/tutorial2/05-LLM节点/01-LLM节点契约与模型配置' },
+            { text: '02 真实模型调用与流式', link: '/tutorial2/05-LLM节点/02-真实模型调用与流式' },
+            { text: '03 LLM 错误映射', link: '/tutorial2/05-LLM节点/03-LLM错误映射' },
+            { text: '04 节点参数面板', link: '/tutorial2/05-LLM节点/04-节点参数面板' },
+            { text: '05 mock-LLM 与验收', link: '/tutorial2/05-LLM节点/05-mock-LLM与验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 6 · 工具调用',
+          items: [
+            { text: '01 工具契约与内置工具', link: '/tutorial2/06-工具调用/01-工具契约与内置工具' },
+            { text: '02 NestJS ReAct 循环与条件边', link: '/tutorial2/06-工具调用/02-NestJS-ReAct循环与条件边' },
+            { text: '03 Python 工具与 ReAct 对齐', link: '/tutorial2/06-工具调用/03-Python工具与ReAct对齐' },
+            { text: '04 前端工具选择面板', link: '/tutorial2/06-工具调用/04-前端工具选择面板' },
+            { text: '05 验收', link: '/tutorial2/06-工具调用/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 7 · 知识库 RAG',
+          items: [
+            { text: '01 知识库契约与 pgvector 建模', link: '/tutorial2/07-知识库RAG/01-知识库契约与pgvector建模' },
+            { text: '02 文档切分与向量化', link: '/tutorial2/07-知识库RAG/02-文档切分与向量化' },
+            { text: '03 NestJS 检索与检索节点', link: '/tutorial2/07-知识库RAG/03-NestJS检索与检索节点' },
+            { text: '04 Python 对齐与前端知识库页', link: '/tutorial2/07-知识库RAG/04-Python对齐与前端知识库页' },
+            { text: '05 验收', link: '/tutorial2/07-知识库RAG/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 8 · 分支与循环',
+          items: [
+            { text: '01 分支节点的契约与图校验', link: '/tutorial2/08-分支与循环/01-分支节点的契约与图校验' },
+            { text: '02 NestJS 条件边与变量聚合', link: '/tutorial2/08-分支与循环/02-NestJS条件边与变量聚合' },
+            { text: '03 迭代节点与跨语言数值对齐', link: '/tutorial2/08-分支与循环/03-迭代节点与跨语言数值对齐' },
+            { text: '04 前端多出口 Handle 与分支面板', link: '/tutorial2/08-分支与循环/04-前端多出口Handle与分支面板' },
+            { text: '05 验收', link: '/tutorial2/08-分支与循环/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 9 · 会话与记忆',
+          items: [
+            { text: '01 会话契约与数据建模', link: '/tutorial2/09-会话与记忆/01-会话契约与数据建模' },
+            { text: '02 历史加载与上下文注入（NestJS）', link: '/tutorial2/09-会话与记忆/02-历史加载与上下文注入-NestJS' },
+            { text: '03 checkpointer 与自建消息表', link: '/tutorial2/09-会话与记忆/03-checkpointer与自建消息表' },
+            { text: '04 Python 对齐与前端会话面板', link: '/tutorial2/09-会话与记忆/04-Python对齐与前端会话面板' },
+            { text: '05 验收', link: '/tutorial2/09-会话与记忆/05-验收' },
+          ]
+        },
+        {
+          collapsed: false,
+          text: '阶段 10 · 发布与 API',
+          items: [
+            { text: '01 发布语义与 API Key 契约', link: '/tutorial2/10-发布与API/01-发布语义与API-Key契约' },
+            { text: '02 API Key 安全设计', link: '/tutorial2/10-发布与API/02-API-Key安全设计' },
+            { text: '03 对外 SSE 接口与双后端对齐', link: '/tutorial2/10-发布与API/03-对外SSE接口与双后端对齐' },
+            { text: '04 前端发布面板与调用示例', link: '/tutorial2/10-发布与API/04-前端发布面板与调用示例' },
+            { text: '05 验收', link: '/tutorial2/10-发布与API/05-验收' },
           ]
         },
       ],

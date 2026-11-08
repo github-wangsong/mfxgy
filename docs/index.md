@@ -47,6 +47,9 @@ features:
   - title: agent开发教程
     details: 从 0 开发 mini-dify 的完整教学笔记（阶段 0–3）
     link: /tutorial/INDEX
+  - title: mini-dify 全栈实录（doc2）
+    details: 按真实开发顺序，从空目录写到可发布、可运行 Agent 的完整项目（阶段 0–10）
+    link: /tutorial2/INDEX
   - title: Python + FastAPI
     details: 从 0 开发 mini-dify 的完整教学笔记（阶段 0–3）
     link: /python/INDEX

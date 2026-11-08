@@ -1,4 +1,4 @@
-﻿<template>
+﻿﻿<template>
   <canvas ref="canvasRef" width="240" height="200" class="demo-canvas"></canvas>
 </template>
 
